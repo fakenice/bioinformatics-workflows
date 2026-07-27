@@ -1,0 +1,31 @@
+{
+  "id": "chip-seq",
+  "name": "ChIP-seq / CUT&RUN",
+  "nameZH": "ChIP-seq / CUT&RUN 分析",
+  "category": "epigenetics",
+  "tags": ["ChIP-seq", "CUT&RUN", "peak calling", "组蛋白修饰", "转录因子"],
+  "overview": "染色质免疫沉淀测序（ChIP-seq）和其升级版 CUT&RUN 的标准分析流程，涵盖 peak calling、注释、motif 分析和差异结合分析。",
+  "icon": "layers",
+  "sources": [
+    {
+      "id": "encode",
+      "name": "ENCODE Guidelines",
+      "type": "official",
+      "url": "https://www.encodeproject.org/chip-seq/",
+      "steps": [
+        { "id": "qc", "name": "质控 + 比对", "description": "FastQC + BWA-MEM / Bowtie2", "tools": [{ "name": "FastQC", "version": "0.12.1", "params": "", "docker": "biocontainers/fastqc:0.12.1" }, { "name": "Bowtie2", "version": "2.5", "params": "--very-sensitive", "docker": "biocontainers/bowtie2:2.5" }], "notes": "ChIP-seq 读段较短（50-75bp），Bowtie2 比 BWA 更适合短读段比对。关注 NSC/RSC 指标评估富集效率。", "position": { "x": 0, "y": 0 } },
+        { "id": "filter", "name": "读段过滤", "description": "去重 + 过滤低质量比对", "tools": [{ "name": "Samtools + Picard", "version": "1.18", "params": "-q 30", "docker": "biocontainers/samtools:1.18" }], "notes": "去除 MAPQ < 30 的读段。ChIP-seq 通常保留重复（生物学重复代表真实富集），转录因子 ChIP 例外。", "position": { "x": 0, "y": 120 } },
+        { "id": "peak", "name": "Peak Calling", "description": "鉴定显著富集区域", "tools": [{ "name": "MACS2 / MACS3", "version": "3.0", "params": "-g hs -q 0.05 --nomodel --extsize 200", "docker": "biocontainers/macs2:2.2" }], "notes": "窄峰（转录因子）用默认参数；宽峰（组蛋白修饰如 H3K27me3）加 --broad。有 input control 时必须提供。推荐 IDR（Irreproducible Discovery Rate）评估重复一致性。", "position": { "x": 0, "y": 240 } },
+        { "id": "qc_peak", "name": "Peak 质控 + 可视化", "description": "FRiP + TSS 富集 + BigWig 可视化", "tools": [{ "name": "deepTools", "version": "3.5", "params": "plotFingerprint, plotHeatmap", "docker": "biocontainers/deeptools:3.5" }], "notes": "FRiP（Fraction of Reads in Peaks）是核心质控指标，ENCODE 建议 > 1%。plotFingerprint 评估富集强度，plotProfile 展示 TSS 附近信号分布。", "position": { "x": 0, "y": 360 } },
+        { "id": "annotate", "name": "Peak 注释", "description": "基因组特征注释", "tools": [{ "name": "ChIPseeker (R)", "version": "1.38", "params": "", "docker": "bioconductor/bioconductor_docker" }], "notes": "ChIPseeker 注释 peak 到 promoter、5'UTR、exon、intron、intergenic。生成饼图和 upset plot。", "position": { "x": 0, "y": 480 } },
+        { "id": "motif", "name": "Motif 富集分析", "description": "de novo + known motif 发现", "tools": [{ "name": "MEME-ChIP / HOMER", "version": "5.5 / 4.11", "params": "", "docker": "biocontainers/meme:5.5" }], "notes": "HOMER findMotifsGenome.pl 是领域标准，MEME-ChIP 提供更全面的 de novo motif 发现。重点关注已知转录因子的 motif 富集。", "position": { "x": 0, "y": 600 } },
+        { "id": "diff", "name": "差异结合分析", "description": "两条件间差异 peak 鉴定", "tools": [{ "name": "DiffBind (R) / DESeq2", "version": "3.12", "params": "", "docker": "bioconductor/bioconductor_docker" }], "notes": "DiffBind 基于 reads count 在 peak 区域的计数矩阵，用 DESeq2 或 edgeR 进行差异分析。需要生物学重复。", "position": { "x": 0, "y": 720 } }
+      ],
+      "references": [
+        { "title": "ENCODE ChIP-seq Guidelines (Landt et al., 2012)", "url": "https://doi.org/10.1101/gr.136184.111", "type": "paper" },
+        { "title": "MACS3 Documentation", "url": "https://macs3-project.github.io/MACS/", "type": "official" },
+        { "title": "deepTools Documentation", "url": "https://deeptools.readthedocs.io/", "type": "official" }
+      ]
+    }
+  ]
+}

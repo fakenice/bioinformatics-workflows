@@ -1,0 +1,30 @@
+{
+  "id": "wes",
+  "name": "WES Variant Calling",
+  "nameZH": "WES 捕获测序分析",
+  "category": "dna",
+  "tags": ["外显子组", "捕获测序", "靶向"],
+  "overview": "全外显子组测序分析流程。与 WGS 类似，但需额外注意捕获区间限制、GC 偏倚和探针效率差异。",
+  "icon": "dna",
+  "sources": [
+    {
+      "id": "gatk",
+      "name": "GATK WES Guidelines",
+      "type": "official",
+      "url": "https://gatk.broadinstitute.org/hc/en-us/articles/360035535932",
+      "steps": [
+        { "id": "qc", "name": "质控 + 修剪", "description": "FastQC + Trimmomatic", "tools": [{ "name": "FastQC", "version": "0.12.1", "params": "", "docker": "biocontainers/fastqc:0.12.1" }], "notes": "WES 需特别关注 target region 覆盖深度和 uniformity。推荐用 Picard CollectHsMetrics 评估捕获效率。", "position": { "x": 0, "y": 0 } },
+        { "id": "align", "name": "比对 + 去重", "description": "BWA-MEM + MarkDuplicates", "tools": [{ "name": "BWA-MEM", "version": "0.7.17", "params": "-M -R", "docker": "biocontainers/bwa:0.7.17" }], "notes": "WES 数据 duplication rate 通常更高，标记即可，不推荐完全移除。", "position": { "x": 0, "y": 120 } },
+        { "id": "bqsr", "name": "BQSR", "description": "碱基质量重校准", "tools": [{ "name": "GATK BQSR", "version": "4.5", "params": "", "docker": "broadinstitute/gatk:4.5.0.0" }], "notes": "与 WGS 一致。", "position": { "x": 0, "y": 240 } },
+        { "id": "hc", "name": "HaplotypeCaller", "description": "变异检测（限制在捕获区间）", "tools": [{ "name": "GATK HaplotypeCaller", "version": "4.5", "params": "-L targets.interval_list -ERC GVCF", "docker": "broadinstitute/gatk:4.5.0.0" }], "notes": "使用 `-L` 参数限制到捕获区间，避免 off-target 区域的假阳性。推荐在区间外扩 100bp 以捕获剪接位点变异。", "position": { "x": 0, "y": 360 } },
+        { "id": "joint", "name": "联合基因分型", "description": "GenomicsDBImport + GenotypeGVCFs", "tools": [{ "name": "GATK GenomicsDBImport + GenotypeGVCFs", "version": "4.5", "params": "-L targets.interval_list", "docker": "broadinstitute/gatk:4.5.0.0" }], "notes": "同样限制在捕获区间。WES 样本可合并更多样本提高 calling 精度。", "position": { "x": 0, "y": 480 } },
+        { "id": "vqsr", "name": "VQSR / Hard Filtering", "description": "变异过滤", "tools": [{ "name": "GATK VQSR / VariantFiltration", "version": "4.5", "params": "", "docker": "broadinstitute/gatk:4.5.0.0" }], "notes": "WES 样本量小时 VQSR 效果不佳，推荐使用 Hard Filtering：QD<2, FS>60, MQ<40, SOR>3。", "position": { "x": 0, "y": 600 } },
+        { "id": "annotate", "name": "注释", "description": "ANNOVAR/VEP 注释", "tools": [{ "name": "ANNOVAR", "version": "2023", "params": "", "docker": "nongxd/annovar:latest" }], "notes": "WES 重点关注 coding region + splicing site 变异。按 ACMG 指南进行变异致病性分级。", "position": { "x": 0, "y": 720 } }
+      ],
+      "references": [
+        { "title": "GATK Best Practices", "url": "https://gatk.broadinstitute.org/hc/en-us/articles/360035535932", "type": "official" },
+        { "title": "ACMG variant interpretation guidelines (Richards et al., 2015)", "url": "https://doi.org/10.1038/gim.2015.30", "type": "paper" }
+      ]
+    }
+  ]
+}

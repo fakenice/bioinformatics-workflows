@@ -1,0 +1,30 @@
+{
+  "id": "scrna-seq",
+  "name": "Single-cell RNA-seq",
+  "nameZH": "单细胞 RNA-seq 分析",
+  "category": "rna",
+  "tags": ["单细胞", "Seurat", "Scanpy", "聚类", "细胞注释"],
+  "overview": "10x Genomics 单细胞转录组标准分析流程，涵盖数据预处理、降维聚类、差异分析和细胞类型注释。",
+  "icon": "microscope",
+  "sources": [
+    {
+      "id": "seurat",
+      "name": "Seurat (R)",
+      "type": "official",
+      "url": "https://satijalab.org/seurat/",
+      "steps": [
+        { "id": "preprocess", "name": "数据预处理", "description": "Cell Ranger 生成表达矩阵 + 过滤低质量细胞", "tools": [{ "name": "Cell Ranger", "version": "8.0", "params": "", "docker": "" }, { "name": "Seurat", "version": "5.1", "params": "min.cells=3, min.features=200", "docker": "" }], "notes": "10x 下机数据通过 Cell Ranger mkfastq + count 生成表达矩阵。过滤标准：nFeature_RNA > 200 & < 6000, percent.mt < 20%。", "position": { "x": 0, "y": 0 } },
+        { "id": "normalize", "name": "归一化 + 高变基因", "description": "SCTransform 或 LogNormalize", "tools": [{ "name": "Seurat SCTransform", "version": "5.1", "params": "vars.to.regress = percent.mt", "docker": "" }], "notes": "SCTransform 优于传统 LogNormalize，能更好地校正测序深度差异。回归掉线粒体基因比例。", "position": { "x": 0, "y": 120 } },
+        { "id": "dimreduce", "name": "降维", "description": "PCA → UMAP/t-SNE", "tools": [{ "name": "Seurat RunPCA + RunUMAP", "version": "5.1", "params": "dims=1:30", "docker": "" }], "notes": "先用 JackStraw/ElbowPlot 确定 PC 数量。UMAP 是目前主流可视化方法，t-SNE 可作为补充。", "position": { "x": 0, "y": 240 } },
+        { "id": "cluster", "name": "聚类", "description": "图聚类 + 差异分析", "tools": [{ "name": "Seurat FindNeighbors + FindClusters", "version": "5.1", "params": "resolution=0.5", "docker": "" }], "notes": "resolution 参数需根据预期细胞类型数调整（0.4-1.2）。每个 cluster 的 marker gene 用 FindAllMarkers 鉴定。", "position": { "x": 0, "y": 360 } },
+        { "id": "annotate", "name": "细胞类型注释", "description": "自动 + 手动注释", "tools": [{ "name": "SingleR / CellTypist", "version": "2.0 / 1.0", "params": "", "docker": "" }], "notes": "先用 SingleR 或 CellTypist 自动注释，再用已知 marker gene 手动校正。参考数据集推荐 Human Primary Cell Atlas 或 Blueprint/ENCODE。", "position": { "x": 0, "y": 480 } },
+        { "id": "advanced", "name": "高级分析", "description": "拟时序 / 细胞通讯 / 调控网络", "tools": [{ "name": "Monocle3 / CellChat / SCENIC", "version": "", "params": "", "docker": "" }], "notes": "根据研究目的选择：轨迹推断（Monocle3/Slingshot）、配体-受体（CellChat/NicheNet）、转录因子（SCENIC/pySCENIC）。", "position": { "x": 0, "y": 600 } }
+      ],
+      "references": [
+        { "title": "Seurat v5 Guided Tutorial", "url": "https://satijalab.org/seurat/articles/pbmc3k_tutorial", "type": "official" },
+        { "title": "Scanpy Tutorial", "url": "https://scanpy.readthedocs.io/en/stable/tutorials.html", "type": "official" },
+        { "title": "Current best practices in scRNA-seq (Luecken & Theis, 2019)", "url": "https://doi.org/10.15252/msb.20188746", "type": "paper" }
+      ]
+    }
+  ]
+}

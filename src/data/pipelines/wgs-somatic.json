@@ -1,0 +1,30 @@
+{
+  "id": "wgs-somatic",
+  "name": "WGS Somatic Variant Calling",
+  "nameZH": "WGS 体细胞变异分析",
+  "category": "dna",
+  "tags": ["肿瘤", "Mutect2", "配对样本"],
+  "overview": "肿瘤-正常配对样本的体细胞变异检测，鉴定 SNV、Indel 和 CNV。核心流程基于 GATK4 Mutect2 + 过滤 + 注释。",
+  "icon": "dna",
+  "sources": [
+    {
+      "id": "gatk4",
+      "name": "GATK4 Somatic",
+      "type": "official",
+      "url": "https://gatk.broadinstitute.org/hc/en-us/articles/360035894731-Somatic-short-variant-discovery-SNVs-Indels-",
+      "steps": [
+        { "id": "qc", "name": "质控 + 修剪", "description": "FastQC + fastp 质控修剪", "tools": [{ "name": "FastQC", "version": "0.12.1", "params": "", "docker": "biocontainers/fastqc:0.12.1" }, { "name": "fastp", "version": "0.23.4", "params": "--qualified_quality_phred 20", "docker": "biocontainers/fastp:0.23.4" }], "notes": "肿瘤样本通常测序深度较高（>60x），注意评估 duplication rate 和 coverage uniformity。", "position": { "x": 0, "y": 0 } },
+        { "id": "align", "name": "比对 + 去重", "description": "BWA-MEM 比对，MarkDuplicates 标记重复", "tools": [{ "name": "BWA-MEM", "version": "0.7.17", "params": "-M -R", "docker": "biocontainers/bwa:0.7.17" }, { "name": "GATK MarkDuplicates", "version": "4.5", "params": "", "docker": "broadinstitute/gatk:4.5.0.0" }], "notes": "肿瘤正常配对样本需使用相同参考基因组，确保后续变异 calling 的可比性。", "position": { "x": 0, "y": 120 } },
+        { "id": "bqsr", "name": "BQSR", "description": "碱基质量重校准", "tools": [{ "name": "GATK BaseRecalibrator + ApplyBQSR", "version": "4.5", "params": "", "docker": "broadinstitute/gatk:4.5.0.0" }], "notes": "此步可选但推荐。为每个样本独立运行 BQSR。", "position": { "x": 0, "y": 240 } },
+        { "id": "mutect", "name": "Mutect2 体细胞变异检测", "description": "配对肿瘤-正常模式检测体细胞突变", "tools": [{ "name": "GATK Mutect2", "version": "4.5", "params": "-tumor TUMOR -normal NORMAL --germline-resource af-only-gnomad.vcf", "docker": "broadinstitute/gatk:4.5.0.0" }], "notes": "需要 gnomAD 种系资源文件过滤常见种系多态。推荐使用 --panel-of-normals 进一步过滤技术假阳性。", "position": { "x": 0, "y": 360 } },
+        { "id": "filter", "name": "过滤体细胞变异", "description": "FilterMutectCalls + 自定义硬过滤", "tools": [{ "name": "GATK FilterMutectCalls", "version": "4.5", "params": "", "docker": "broadinstitute/gatk:4.5.0.0" }], "notes": "基于 Mutect2 内置统计模型过滤。可进一步按 TLOD（肿瘤 LOD 分数）、AF（等位基因频率）自定义过滤。", "position": { "x": 0, "y": 480 } },
+        { "id": "annotate", "name": "变异注释", "description": "功能注释 + 临床数据库注释", "tools": [{ "name": "VEP", "version": "112", "params": "--everything --fork 8", "docker": "ensemblorg/ensembl-vep:112" }, { "name": "maftools (R)", "version": "2.18", "params": "", "docker": "bioconductor/bioconductor_docker" }], "notes": "VEP 注释后推荐用 maftools 做突变全景图可视化、driver gene 分析和突变特征（mutational signature）提取。", "position": { "x": 0, "y": 600 } }
+      ],
+      "references": [
+        { "title": "GATK4 Somatic SNV + Indel Best Practices", "url": "https://gatk.broadinstitute.org/hc/en-us/articles/360035894731", "type": "official" },
+        { "title": "Mutect2 (Benjamin et al., 2019)", "url": "https://doi.org/10.1101/861054", "type": "paper" },
+        { "title": "TCGA MC3 somatic mutation calling (Ellrott et al., 2018)", "url": "https://doi.org/10.1016/j.cels.2018.03.002", "type": "paper" }
+      ]
+    }
+  ]
+}

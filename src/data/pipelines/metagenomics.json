@@ -1,0 +1,29 @@
+{
+  "id": "metagenomics",
+  "name": "Shotgun Metagenomics",
+  "nameZH": "宏基因组分析",
+  "category": "microbiome",
+  "tags": ["宏基因组", "微生物组", "MetaPhlAn", "功能注释"],
+  "overview": "鸟枪法宏基因组测序分析流程，涵盖宿主去除、分类学注释、功能注释和多样本比较。",
+  "icon": "bacteria",
+  "sources": [
+    {
+      "id": "biobakery",
+      "name": "bioBakery (MetaPhlAn + HUMAnN)",
+      "type": "official",
+      "url": "https://github.com/biobakery/biobakery",
+      "steps": [
+        { "id": "qc", "name": "质控 + 宿主去除", "description": "FastQC + KneadData", "tools": [{ "name": "FastQC", "version": "0.12.1", "params": "", "docker": "biocontainers/fastqc:0.12.1" }, { "name": "KneadData", "version": "0.12", "params": "--reference-db human_genome", "docker": "biobakery/kneaddata:0.12" }], "notes": "KneadData 先运行 Trimmomatic 去除低质量读段，再用 Bowtie2 比对到宿主参考基因组去除宿主 reads。人类粪便样本宿主去除率通常 80-99%。", "position": { "x": 0, "y": 0 } },
+        { "id": "taxonomy", "name": "分类学注释", "description": "MetaPhlAn 4 物种组成分析", "tools": [{ "name": "MetaPhlAn 4", "version": "4.0", "params": "--input_type fastq", "docker": "biobakery/metaphlan:4.0" }], "notes": "MetaPhlAn 基于 ~100 万 marker gene 数据库，提供种水平分辨率。输出相对丰度表，可进一步用 LEfSe 做差异物种分析。", "position": { "x": 0, "y": 120 } },
+        { "id": "function", "name": "功能注释", "description": "HUMAnN 3 通路/基因家族注释", "tools": [{ "name": "HUMAnN 3", "version": "3.8", "params": "", "docker": "biobakery/humann:3.8" }], "notes": "HUMAnN 将 reads mapping 到 UniRef90 基因家族和 MetaCyc 通路。输出 pathway abundance 表可用于多样本比较。", "position": { "x": 0, "y": 240 } },
+        { "id": "assembly", "name": "组装 + 分箱（可选）", "description": "MEGAHIT + MetaBAT2", "tools": [{ "name": "MEGAHIT", "version": "1.2", "params": "--min-contig-len 500", "docker": "biocontainers/megahit:1.2" }, { "name": "MetaBAT2", "version": "2.15", "params": "", "docker": "biocontainers/metabat2:2.15" }], "notes": "深度测序（> 10G per sample）可选从头组装，获取微生物基因组草图（MAGs）。CheckM 评估 MAG 完整性。", "position": { "x": 0, "y": 360 } },
+        { "id": "stat", "name": "统计分析与可视化", "description": "Alpha/Beta 多样性 + 差异分析", "tools": [{ "name": "R: vegan, phyloseq, MaAsLin2", "version": "", "params": "", "docker": "bioconductor/bioconductor_docker" }], "notes": "phyloseq 整合分类、功能和元数据。MaAsLin2 做多变量关联分析。可视化：PCoA、NMDS、堆叠柱状图、热图。", "position": { "x": 0, "y": 480 } }
+      ],
+      "references": [
+        { "title": "MetaPhlAn 4 Documentation", "url": "https://github.com/biobakery/MetaPhlAn", "type": "official" },
+        { "title": "HUMAnN 3 User Manual", "url": "https://github.com/biobakery/humann", "type": "official" },
+        { "title": "Integrating taxonomic, functional, and strain-level profiling (Beghini et al., 2021)", "url": "https://doi.org/10.7554/eLife.65088", "type": "paper" }
+      ]
+    }
+  ]
+}

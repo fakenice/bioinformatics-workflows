@@ -1,0 +1,30 @@
+{
+  "id": "16s",
+  "name": "16S rRNA Amplicon Sequencing",
+  "nameZH": "16S rRNA 扩增子测序",
+  "category": "microbiome",
+  "tags": ["16S", "扩增子", "QIIME2", "DADA2"],
+  "overview": "16S rRNA 基因扩增子测序标准分析流程，从原始读段到 ASV 表、物种注释和多样性分析。",
+  "icon": "bacteria",
+  "sources": [
+    {
+      "id": "qiime2",
+      "name": "QIIME 2 + DADA2",
+      "type": "official",
+      "url": "https://docs.qiime2.org/",
+      "steps": [
+        { "id": "import", "name": "数据导入", "description": "导入 FASTQ 并可视化质量", "tools": [{ "name": "QIIME 2 tools import", "version": "2024.5", "params": "--type SampleData[PairedEndSequencesWithQuality]", "docker": "quay.io/qiime2/core:2024.5" }], "notes": "需要准备 manifest 文件指定每个样本的 FASTQ 路径。先用 qiime demux summarize 查看测序质量。", "position": { "x": 0, "y": 0 } },
+        { "id": "denoise", "name": "去噪 + ASV 推断", "description": "DADA2 去噪生成 ASV 表", "tools": [{ "name": "QIIME 2 dada2 denoise-paired", "version": "2024.5", "params": "--p-trunc-len-f 240 --p-trunc-len-r 200", "docker": "quay.io/qiime2/core:2024.5" }], "notes": "DADA2 产生 ASV（Amplicon Sequence Variant），分辨率高于传统 OTU。trunc-len 需根据质量曲线选择（通常在质量骤降处截断）。", "position": { "x": 0, "y": 120 } },
+        { "id": "taxonomy", "name": "物种注释", "description": "训练分类器 + 物种分配", "tools": [{ "name": "QIIME 2 feature-classifier", "version": "2024.5", "params": "--p-classifier silva-138-99-classifier.qza", "docker": "quay.io/qiime2/core:2024.5" }], "notes": "推荐使用 SILVA 138 或 Greengenes2 数据库。先提取引物区段训练分类器以提高精度。生成物种丰度柱状图和热图。", "position": { "x": 0, "y": 240 } },
+        { "id": "phylogeny", "name": "系统发育树构建", "description": "多序列比对 + 系统发育推断", "tools": [{ "name": "QIIME 2 phylogeny", "version": "2024.5", "params": "align-to-tree-mafft-fasttree", "docker": "quay.io/qiime2/core:2024.5" }], "notes": "构建 ASV 的系统发育树，用于 UniFrac 距离计算。MAFFT 比对 + FastTree 建树是默认方案。", "position": { "x": 0, "y": 360 } },
+        { "id": "diversity", "name": "多样性分析", "description": "Alpha + Beta 多样性", "tools": [{ "name": "QIIME 2 diversity core-metrics-phylogenetic", "version": "2024.5", "params": "--p-sampling-depth 10000", "docker": "quay.io/qiime2/core:2024.5" }], "notes": "Alpha 多样性（Shannon、Faith PD、Observed features）；Beta 多样性（Weighted/Unweighted UniFrac、Bray-Curtis）。PCoA 可视化组间差异。", "position": { "x": 0, "y": 480 } },
+        { "id": "diff", "name": "差异分析", "description": "差异丰度分析", "tools": [{ "name": "ANCOM-BC / LEfSe", "version": "2024.5 / 1.0", "params": "", "docker": "quay.io/qiime2/core:2024.5" }], "notes": "ANCOM-BC 是 QIIME2 推荐的差异丰度分析方法，考虑了组成数据的特性。LEfSe 是经典方法，适合寻找生物标志物。", "position": { "x": 0, "y": 600 } }
+      ],
+      "references": [
+        { "title": "QIIME 2 Documentation", "url": "https://docs.qiime2.org/2024.5/", "type": "official" },
+        { "title": "DADA2 (Callahan et al., 2016)", "url": "https://doi.org/10.1038/nmeth.3869", "type": "paper" },
+        { "title": "ANCOM-BC (Lin & Peddada, 2020)", "url": "https://doi.org/10.1038/s41467-020-17041-7", "type": "paper" }
+      ]
+    }
+  ]
+}

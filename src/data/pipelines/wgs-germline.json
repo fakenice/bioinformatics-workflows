@@ -1,0 +1,198 @@
+{
+  "id": "wgs-germline",
+  "name": "WGS Germline Variant Calling",
+  "nameZH": "WGS 种系变异分析",
+  "category": "dna",
+  "tags": ["家系分析", "遗传病", "GATK", "BWA"],
+  "overview": "适用于遗传病家系或散发样本的全基因组种系变异检测。从原始 FASTQ 出发，经质控、比对、变异检测、过滤、注释，最终获得高质量变异列表用于下游临床解读。",
+  "icon": "dna",
+  "sources": [
+    {
+      "id": "gatk",
+      "name": "GATK Best Practices",
+      "type": "official",
+      "url": "https://gatk.broadinstitute.org/hc/en-us/articles/360035535932-Germline-short-variant-discovery-SNPs-Indels-",
+      "steps": [
+        {
+          "id": "qc-raw",
+          "name": "原始数据质控",
+          "description": "对 FASTQ 文件进行碱基质量、GC 含量、接头污染评估",
+          "tools": [
+            { "name": "FastQC", "version": "0.12.1", "params": "--extract", "docker": "biocontainers/fastqc:0.12.1" },
+            { "name": "MultiQC", "version": "1.21", "params": "", "docker": "multiqc/multiqc:1.21" }
+          ],
+          "notes": "重点关注 per base sequence quality、GC content、adapter content 指标。若 adapter 含量高，需在比对前用 Trimmomatic 或 fastp 去除。",
+          "position": { "x": 0, "y": 0 }
+        },
+        {
+          "id": "trim",
+          "name": "读段修剪（可选）",
+          "description": "去除低质量碱基和接头序列",
+          "tools": [
+            { "name": "fastp", "version": "0.23.4", "params": "--qualified_quality_phred 20 --length_required 50", "docker": "biocontainers/fastp:0.23.4" }
+          ],
+          "notes": "根据 FastQC 结果决定是否需要此步。GATK 不建议过度修剪以免影响变异检测灵敏度。",
+          "position": { "x": 0, "y": 120 }
+        },
+        {
+          "id": "align",
+          "name": "序列比对",
+          "description": "将读段比对到参考基因组",
+          "tools": [
+            { "name": "BWA-MEM", "version": "0.7.17", "params": "-M -R @RG\\t...", "docker": "biocontainers/bwa:0.7.17" }
+          ],
+          "notes": "使用 BWA-MEM 算法。`-M` 标记短 split hits 为 secondary，兼容 Picard。Read Group 信息必须完整。参考基因组推荐 hg38 / GRCh38。",
+          "position": { "x": 0, "y": 240 }
+        },
+        {
+          "id": "markdup",
+          "name": "标记重复序列",
+          "description": "标记 PCR 或光学重复读段",
+          "tools": [
+            { "name": "GATK MarkDuplicatesSpark", "version": "4.5", "params": "--remove-sequencing-duplicates", "docker": "broadinstitute/gatk:4.5.0.0" }
+          ],
+          "notes": "WGS 数据推荐使用 MarkDuplicatesSpark 提速。家系分析中不推荐完全移除重复，仅标记即可。",
+          "position": { "x": 0, "y": 360 }
+        },
+        {
+          "id": "bqsr",
+          "name": "碱基质量重校准 (BQSR)",
+          "description": "基于已知变异位点校正碱基质量分数",
+          "tools": [
+            { "name": "GATK BaseRecalibrator", "version": "4.5", "params": "--known-sites dbsnp.vcf", "docker": "broadinstitute/gatk:4.5.0.0" },
+            { "name": "GATK ApplyBQSR", "version": "4.5", "params": "", "docker": "broadinstitute/gatk:4.5.0.0" }
+          ],
+          "notes": "使用 dbSNP、1000G、Mills 等已知位点集。现代测序平台此步收益递减，非必需但推荐。",
+          "position": { "x": 0, "y": 480 }
+        },
+        {
+          "id": "hc",
+          "name": "变异检测",
+          "description": "单样本生成 gVCF",
+          "tools": [
+            { "name": "GATK HaplotypeCaller", "version": "4.5", "params": "-ERC GVCF --native-pair-hmm-threads 8", "docker": "broadinstitute/gatk:4.5.0.0" }
+          ],
+          "notes": "使用 GVCF 模式以便后续联合 calling。家系中每个样本独立运行。推荐开启多线程加速。",
+          "position": { "x": 0, "y": 600 }
+        },
+        {
+          "id": "joint",
+          "name": "联合基因分型",
+          "description": "合并多个 gVCF 进行群体水平的基因分型",
+          "tools": [
+            { "name": "GATK GenomicsDBImport", "version": "4.5", "params": "--genomicsdb-workspace-path gendb", "docker": "broadinstitute/gatk:4.5.0.0" },
+            { "name": "GATK GenotypeGVCFs", "version": "4.5", "params": "", "docker": "broadinstitute/gatk:4.5.0.0" }
+          ],
+          "notes": "家系分析的优势步骤：联合 calling 可共享等位基因信息，提高 rare variant 检出率。GenomicsDBImport 按区间并行导入。",
+          "position": { "x": 0, "y": 720 }
+        },
+        {
+          "id": "vqsr",
+          "name": "变异质控过滤 (VQSR)",
+          "description": "基于机器学习模型对 SNP/Indel 进行质量评分过滤",
+          "tools": [
+            { "name": "GATK VariantRecalibrator", "version": "4.5", "params": "-mode SNP -resource:hapmap,...", "docker": "broadinstitute/gatk:4.5.0.0" },
+            { "name": "GATK ApplyVQSR", "version": "4.5", "params": "--truth-sensitivity-filter-level 99.7", "docker": "broadinstitute/gatk:4.5.0.0" }
+          ],
+          "notes": "分别对 SNP 和 Indel 建模。需准备 hapmap、omni、1000G、mills 等训练资源。99.7 为 GATK 推荐的敏感度阈值。小样本可用 Hard Filtering 替代。",
+          "position": { "x": 0, "y": 840 }
+        },
+        {
+          "id": "annotate",
+          "name": "变异注释",
+          "description": "对过滤后的 VCF 进行功能和群体频率注释",
+          "tools": [
+            { "name": "ANNOVAR", "version": "2023", "params": "-protocol refGene,gnomad41_genome,clinvar", "docker": "nongxd/annovar:latest" },
+            { "name": "VEP", "version": "112", "params": "--everything --fork 8", "docker": "ensemblorg/ensembl-vep:112" }
+          ],
+          "notes": "ANNOVAR 和 VEP 任选其一。重点关注：gnomAD 人群频率、ClinVar 临床意义、dbNSFP 预测分数、OMIM 表型关联。",
+          "position": { "x": 0, "y": 960 }
+        },
+        {
+          "id": "family",
+          "name": "家系共分离分析",
+          "description": "基于家系遗传模式筛选候选变异",
+          "tools": [
+            { "name": "GATK PhaseByTransmission", "version": "4.5", "params": "--ped family.ped", "docker": "broadinstitute/gatk:4.5.0.0" },
+            { "name": "slivar", "version": "0.3", "params": "--ped family.ped --trio", "docker": "brentp/slivar:0.3" }
+          ],
+          "notes": "slivar 是家系分析利器，支持 de novo、compound het、AR homozygous、AD inherited 等多种遗传模式。结合表型信息可大幅缩小候选范围。",
+          "position": { "x": 0, "y": 1080 }
+        }
+      ],
+      "references": [
+        { "title": "GATK Best Practices for Germline SNP & Indel", "url": "https://gatk.broadinstitute.org/hc/en-us/articles/360035535932", "type": "official" },
+        { "title": "BWA-MEM: Aligning sequencing reads (Li H, 2013)", "url": "https://arxiv.org/abs/1303.3997", "type": "paper" },
+        { "title": "The Genome Analysis Toolkit (McKenna et al., 2010)", "url": "https://doi.org/10.1101/gr.107524.110", "type": "paper" },
+        { "title": "ANNOVAR: functional annotation of genetic variants (Wang et al., 2010)", "url": "https://doi.org/10.1093/nar/gkq603", "type": "paper" },
+        { "title": "slivar: rapid population-scale trio analysis", "url": "https://github.com/brentp/slivar", "type": "community" },
+        { "title": "nf-core/sarek: Germline/Somatic WGS/WES pipeline", "url": "https://nf-co.re/sarek", "type": "community" }
+      ]
+    },
+    {
+      "id": "nfcore",
+      "name": "nf-core/sarek",
+      "type": "community",
+      "url": "https://nf-co.re/sarek",
+      "steps": [
+        {
+          "id": "qc",
+          "name": "质控 + 修剪",
+          "description": "FastQC + Trim Galore / fastp 一体化处理",
+          "tools": [
+            { "name": "FastQC", "version": "0.12.1", "params": "", "docker": "nfcore/sarek:3.4" },
+            { "name": "Trim Galore", "version": "0.6.10", "params": "--fastqc", "docker": "nfcore/sarek:3.4" }
+          ],
+          "notes": "nf-core 将质控和修剪合并为一步。Trim Galore 自动检测并去除 adapter。",
+          "position": { "x": 0, "y": 0 }
+        },
+        {
+          "id": "align",
+          "name": "比对 + 标记重复",
+          "description": "BWA-MEM / DRAGMAP 比对并去重",
+          "tools": [
+            { "name": "BWA-MEM / DRAGMAP", "version": "0.7.17 / 3.5", "params": "", "docker": "nfcore/sarek:3.4" },
+            { "name": "GATK MarkDuplicates", "version": "4.5", "params": "", "docker": "nfcore/sarek:3.4" }
+          ],
+          "notes": "支持 BWA-MEM、DRAGMAP、Sentieon 三种比对工具。DRAGMAP 基于 Illumina DRAGEN，速度更快。",
+          "position": { "x": 0, "y": 120 }
+        },
+        {
+          "id": "bqsr",
+          "name": "BQSR",
+          "description": "碱基质量重校准",
+          "tools": [
+            { "name": "GATK BaseRecalibrator + ApplyBQSR", "version": "4.5", "params": "", "docker": "nfcore/sarek:3.4" }
+          ],
+          "notes": "此步可选，可通过 --no_bqsr 跳过。",
+          "position": { "x": 0, "y": 240 }
+        },
+        {
+          "id": "variant",
+          "name": "变异检测 + 过滤",
+          "description": "HaplotypeCaller / DeepVariant + 过滤",
+          "tools": [
+            { "name": "GATK HaplotypeCaller / DeepVariant / Strelka2", "version": "4.5 / 1.5 / 2.9", "params": "", "docker": "nfcore/sarek:3.4" },
+            { "name": "GATK VQSR / CNNScoreVariants", "version": "4.5", "params": "", "docker": "nfcore/sarek:3.4" }
+          ],
+          "notes": "支持多种变异检测工具。DeepVariant 基于深度学习，对 Indel 检出率更高。CNNScoreVariants 是 GATK 的 CNN 过滤方案。",
+          "position": { "x": 0, "y": 360 }
+        },
+        {
+          "id": "annotate",
+          "name": "注释 + 报告",
+          "description": "VEP/snpEff 注释 + MultiQC 汇总报告",
+          "tools": [
+            { "name": "VEP / snpEff", "version": "112 / 5.1", "params": "", "docker": "nfcore/sarek:3.4" }
+          ],
+          "notes": "自动产出 MultiQC 报告，包含各步骤统计指标。snpEff 比 VEP 轻量，适合快速注释。",
+          "position": { "x": 0, "y": 480 }
+        }
+      ],
+      "references": [
+        { "title": "nf-core/sarek Documentation", "url": "https://nf-co.re/sarek/3.4", "type": "official" },
+        { "title": "nf-core: community curated bioinformatics pipelines (Ewels et al., 2020)", "url": "https://doi.org/10.1038/s41587-020-0439-x", "type": "paper" }
+      ]
+    }
+  ]
+}

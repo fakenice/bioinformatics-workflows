@@ -1,0 +1,29 @@
+{
+  "id": "wgbs",
+  "name": "WGBS / RRBS Methylation",
+  "nameZH": "全基因组甲基化分析",
+  "category": "epigenetics",
+  "tags": ["甲基化", "WGBS", "Bismark", "DMR"],
+  "overview": "全基因组亚硫酸氢盐测序（WGBS）或简化代表性亚硫酸氢盐测序（RRBS）数据分析流程，涵盖比对、甲基化 calling 和差异甲基化区域鉴定。",
+  "icon": "layers",
+  "sources": [
+    {
+      "id": "bismark",
+      "name": "Bismark Pipeline",
+      "type": "official",
+      "url": "https://www.bioinformatics.babraham.ac.uk/projects/bismark/",
+      "steps": [
+        { "id": "qc", "name": "质控 + 修剪", "description": "FastQC + Trim Galore", "tools": [{ "name": "FastQC", "version": "0.12.1", "params": "", "docker": "biocontainers/fastqc:0.12.1" }, { "name": "Trim Galore", "version": "0.6.10", "params": "--rrbs (for RRBS)", "docker": "biocontainers/trim-galore:0.6.10" }], "notes": "WGBS 适配器修剪需加 --clip_R1 和 --clip_R2 去除亚硫酸氢盐转换引入的末端碱基偏倚。RRBS 需 --rrbs 参数。", "position": { "x": 0, "y": 0 } },
+        { "id": "align", "name": "亚硫酸氢盐比对", "description": "Bismark (Bowtie2) 三字母比对", "tools": [{ "name": "Bismark", "version": "0.24", "params": "--bowtie2 -N 1 -L 28", "docker": "biocontainers/bismark:0.24" }], "notes": "Bismark 将基因组和读段都 C→T 转换后进行比对。双端比对效率通常 > 70%。也可选择 BWA-Meth 或 BS-Seeker2。", "position": { "x": 0, "y": 120 } },
+        { "id": "dedup", "name": "去重", "description": "去除 PCR 重复", "tools": [{ "name": "Bismark deduplicate_bismark", "version": "0.24", "params": "", "docker": "biocontainers/bismark:0.24" }], "notes": "WGBS 高重复率（通常 10-20%）是正常的，因为基因组 CpG 位点有限。", "position": { "x": 0, "y": 240 } },
+        { "id": "extract", "name": "甲基化提取", "description": "提取每个 CpG 的甲基化状态", "tools": [{ "name": "Bismark methylation_extractor", "version": "0.24", "params": "--comprehensive --bedGraph", "docker": "biocontainers/bismark:0.24" }], "notes": "生成 coverage 文件和 genome-wide cytosine report。至少需要 5x 覆盖的 CpG 才纳入分析。", "position": { "x": 0, "y": 360 } },
+        { "id": "dmr", "name": "差异甲基化分析", "description": "鉴定差异甲基化区域 (DMR)", "tools": [{ "name": "DSS / methylKit (R)", "version": "2.48 / 1.28", "params": "", "docker": "bioconductor/bioconductor_docker" }], "notes": "DSS 基于贝叶斯层次模型，对生物学重复和低覆盖位点稳健。DMR 定义：|Δbeta| > 0.2 且 adjusted p < 0.05。", "position": { "x": 0, "y": 480 } },
+        { "id": "annotate", "name": "注释 + 可视化", "description": "DMR 基因组注释 + 可视化", "tools": [{ "name": "annotatr (R) / Gviz", "version": "", "params": "", "docker": "bioconductor/bioconductor_docker" }], "notes": "DMR 关联到 CpG island、shore、shelf、promoter 等区域。Gviz 绘制基因组浏览器视图。", "position": { "x": 0, "y": 600 } }
+      ],
+      "references": [
+        { "title": "Bismark User Guide", "url": "https://www.bioinformatics.babraham.ac.uk/projects/bismark/", "type": "official" },
+        { "title": "DSS: dispersion shrinkage for BS-seq (Wu et al., 2015)", "url": "https://doi.org/10.1093/nar/gkv558", "type": "paper" }
+      ]
+    }
+  ]
+}
