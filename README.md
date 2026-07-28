@@ -1,7 +1,6 @@
 
 # bioinformatics-workflows &middot; A workflow intelligence Skill
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 A **bioinformatics workflow intelligence Skill repository** for AI coding assistants. Provides structured knowledge of standardized NGS analysis pipelines, guiding LLMs to generate high-quality bioinformatics scripts and pipeline code.
 
@@ -174,4 +173,3 @@ Visit the [FlowSeq Demo](https://fakenice.github.io/bioinformatics-workflows) to
 ## License
 
 MIT
-*（内容由AI生成，仅供参考）*
