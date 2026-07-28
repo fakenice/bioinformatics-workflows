@@ -11,12 +11,15 @@ interface FlowSeqState {
   selectedSourceId: string;
   selectedStep: PipelineStep | null;
   pipelines: PipelineDefinition[];
+  searchOverlayOpen: boolean;
 
   setSearchQuery: (q: string) => void;
   setSelectedCategory: (c: string | null) => void;
   selectPipeline: (id: string) => void;
   setSelectedSourceId: (id: string) => void;
   setSelectedStep: (step: PipelineStep | null) => void;
+  toggleSearchOverlay: () => void;
+  setSearchOverlayOpen: (open: boolean) => void;
 }
 
 export const useStore = create<FlowSeqState>((set) => ({
@@ -26,6 +29,7 @@ export const useStore = create<FlowSeqState>((set) => ({
   selectedSourceId: "",
   selectedStep: null,
   pipelines,
+  searchOverlayOpen: false,
 
   setSearchQuery: (q) => set({ searchQuery: q }),
   setSelectedCategory: (c) => set({ selectedCategory: c }),
@@ -38,4 +42,6 @@ export const useStore = create<FlowSeqState>((set) => ({
 
   setSelectedSourceId: (id) => set({ selectedSourceId: id, selectedStep: null }),
   setSelectedStep: (step) => set({ selectedStep: step }),
+  toggleSearchOverlay: () => set((s) => ({ searchOverlayOpen: !s.searchOverlayOpen })),
+  setSearchOverlayOpen: (open) => set({ searchOverlayOpen: open }),
 }));

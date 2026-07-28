@@ -12,6 +12,7 @@
   ],
   "overview": "利用遗传变异作为工具变量评估暴露与结局的因果关系。支持双样本 MR（使用 GWAS summary statistics），覆盖 IV 选择、harmonization、多方法 MR 估计和敏感性分析。",
   "icon": "dna",
+  "version": "1.0.0",
   "sources": [
     {
       "id": "twosamplemr",

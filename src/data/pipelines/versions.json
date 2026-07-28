@@ -1,0 +1,19 @@
+{
+  "generated": "2026-07-28T12:28:21.668Z",
+  "pipelines": {
+    "family-trio-wgs": "1.0.0",
+    "gwas": "1.0.0",
+    "mendelian-randomization": "1.0.0",
+    "prs": "1.0.0",
+    "rare-variant": "1.0.0",
+    "wgs-germline": "1.0.0",
+    "wgs-somatic": "1.0.0",
+    "wes": "1.0.0",
+    "rna-seq": "1.0.0",
+    "scrna-seq": "1.0.0",
+    "chip-seq": "1.0.0",
+    "wgbs": "1.0.0",
+    "metagenomics": "1.0.0",
+    "16s": "1.0.0"
+  }
+}

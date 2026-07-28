@@ -12,6 +12,7 @@
   ],
   "overview": "适用于父母-子代 Trio 家系的全基因组种系变异联合检测。基于 GATK Best Practices (v4.5) 与 nf-core/sarek (v3.9)，覆盖 FASTQ→VCF 全链路，包含联合分型、de novo 检出、遗传模式筛选。",
   "icon": "dna",
+  "version": "1.0.0",
   "sources": [
     {
       "id": "gatk",

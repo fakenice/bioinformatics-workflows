@@ -31,6 +31,12 @@ export interface PipelineSource {
 
 export type Category = "dna" | "rna" | "epigenetics" | "microbiome";
 
+export interface ChangelogEntry {
+  version: string;
+  date: string;
+  changes: string[];
+}
+
 export interface PipelineDefinition {
   id: string;
   name: string;
@@ -40,4 +46,6 @@ export interface PipelineDefinition {
   overview: string;
   icon: string;
   sources: PipelineSource[];
+  version?: string;
+  changelog?: ChangelogEntry[];
 }

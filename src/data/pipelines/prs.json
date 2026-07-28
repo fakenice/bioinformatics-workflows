@@ -13,6 +13,7 @@
   ],
   "overview": "利用 GWAS summary statistics 预测个体遗传风险。支持 Clumping+Thresholding（PRSice-2）、Bayesian 连续收缩（LDpred2、PRS-CS）三种方法，覆盖数据准备、QC、PRS 计算和模型评估。",
   "icon": "dna",
+  "version": "1.0.0",
   "sources": [
     {
       "id": "prsice",

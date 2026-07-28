@@ -47,6 +47,12 @@ interface PipelineSource {
   references: Reference[];
 }
 
+interface ChangelogEntry {
+  version: string;
+  date: string;
+  changes: string[];
+}
+
 interface PipelineDefinition {
   id: string;
   name: string;
@@ -55,6 +61,8 @@ interface PipelineDefinition {
   tags: string[];
   overview: string;
   icon: string;
+  version?: string;
+  changelog?: ChangelogEntry[];
   sources: PipelineSource[];
 }
 
@@ -68,6 +76,7 @@ interface PipelineTemplate {
   tags: string[];
   overview: string;
   icon: string;
+  version: string;
   sources: {
     id: string;
     name: string;
@@ -96,6 +105,7 @@ const PIPELINES: PipelineTemplate[] = [
     nameZH: "家系WGS种系变异分析",
     category: "dna",
     tags: ["家系分析", "Trio", "GATK", "de novo", "遗传病"],
+    version: "1.0.0",
     overview:
       "适用于父母-子代 Trio 家系的全基因组种系变异联合检测。基于 GATK Best Practices (v4.5) 与 nf-core/sarek (v3.9)，覆盖 FASTQ→VCF 全链路，包含联合分型、de novo 检出、遗传模式筛选。",
     icon: "dna",
@@ -197,6 +207,7 @@ const PIPELINES: PipelineTemplate[] = [
     nameZH: "病例对照 GWAS 分析",
     category: "dna",
     tags: ["GWAS", "病例对照", "SAIGE", "REGENIE", "PLINK", "群体遗传"],
+    version: "1.0.0",
     overview:
       "全基因组关联分析标准流程，覆盖基因型 QC、群体分层校正、关联分析（PLINK/SAIGE/REGENIE）和结果解读。适用于常见变异（MAF > 1%）与二分类/连续表型的关联检测。",
     icon: "dna",
@@ -242,6 +253,7 @@ const PIPELINES: PipelineTemplate[] = [
     nameZH: "孟德尔随机化分析",
     category: "dna",
     tags: ["孟德尔随机化", "MR", "TwoSampleMR", "工具变量", "因果推断"],
+    version: "1.0.0",
     overview:
       "利用遗传变异作为工具变量评估暴露与结局的因果关系。支持双样本 MR（使用 GWAS summary statistics），覆盖 IV 选择、harmonization、多方法 MR 估计和敏感性分析。",
     icon: "dna",
@@ -290,6 +302,7 @@ const PIPELINES: PipelineTemplate[] = [
     nameZH: "多基因风险评分分析",
     category: "dna",
     tags: ["PRS", "多基因风险评分", "PRSice", "LDpred2", "PRS-CS", "风险预测"],
+    version: "1.0.0",
     overview:
       "利用 GWAS summary statistics 预测个体遗传风险。支持 Clumping+Thresholding（PRSice-2）、Bayesian 连续收缩（LDpred2、PRS-CS）三种方法，覆盖数据准备、QC、PRS 计算和模型评估。",
     icon: "dna",
@@ -334,6 +347,7 @@ const PIPELINES: PipelineTemplate[] = [
     nameZH: "罕见变异聚合分析",
     category: "dna",
     tags: ["罕见变异", "SKAT", "SKAT-O", "Burden test", "ACAT", "基因聚合检验"],
+    version: "1.0.0",
     overview:
       "针对罕见变异（MAF < 1%）统计效力不足的问题，通过基因级聚合检验提高检测效力。支持 Burden test（方向一致）、SKAT（方差分量）、SKAT-O（自适应混合）和 ACAT（超大样本）。",
     icon: "dna",
@@ -428,6 +442,7 @@ function buildPipeline(template: PipelineTemplate): PipelineDefinition {
     tags: template.tags,
     overview: template.overview,
     icon: template.icon,
+    version: template.version,
     sources,
   };
 }
@@ -452,13 +467,27 @@ function main() {
     console.log(`  ✓ ${template.id}.json (${pipeline.sources.length} sources, ${pipeline.sources.reduce((a, s) => a + s.steps.length, 0)} steps)`);
   }
 
-  // Generate index.ts — merges auto-generated study-design pipelines with
-  // manually maintained omics pipelines (wgs-germline, wgs-somatic, wes,
-  // rna-seq, scrna-seq, chip-seq, wgbs, metagenomics, 16s).
+  // Omics pipeline IDs (manually maintained)
   const omicsIds = [
     "wgs-germline", "wgs-somatic", "wes", "rna-seq", "scrna-seq",
     "chip-seq", "wgbs", "metagenomics", "16s",
   ];
+
+  // Generate versions.json
+  const versions: Record<string, string> = {};
+  for (const template of PIPELINES) {
+    versions[template.id] = template.version;
+  }
+  // Add omics pipelines (manually maintained, assumed v1.0.0)
+  for (const id of omicsIds) {
+    versions[id] = "1.0.0";
+  }
+  const versionsPayload = {
+    generated: new Date().toISOString(),
+    pipelines: versions,
+  };
+  writeFileSync(resolve(DATA_DIR, "versions.json"), JSON.stringify(versionsPayload, null, 2) + "\n", "utf-8");
+  console.log("  ✓ versions.json");
   const studyIds = PIPELINES.map((p) => p.id);
 
   const studyImports = PIPELINES.map(

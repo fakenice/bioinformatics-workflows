@@ -1,14 +1,27 @@
-import { useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, GitCompare } from "lucide-react";
+import { ArrowLeft, GitCompare, Code } from "lucide-react";
 import { useStore } from "../store/useStore";
 import PipelineMarkdown from "../components/PipelineMarkdown";
 import SourceSwitcher from "../components/SourceSwitcher";
 import ReferenceAccordion from "../components/ReferenceAccordion";
+import ExportModal from "../components/ExportModal";
+import { generateNextflowScript } from "../utils/scriptExporter";
 
 export default function PipelinePage() {
   const { id } = useParams<{ id: string }>();
   const { selectPipeline, selectedPipeline, selectedSourceId } = useStore();
+  const [exportOpen, setExportOpen] = useState(false);
+
+  const exportScript = useMemo(() => {
+    if (!selectedPipeline) return "";
+    return generateNextflowScript(selectedPipeline, selectedSourceId);
+  }, [selectedPipeline, selectedSourceId]);
+
+  const exportFileName = useMemo(() => {
+    if (!selectedPipeline) return "pipeline.nf";
+    return `${selectedPipeline.id}.nf`;
+  }, [selectedPipeline]);
 
   useEffect(() => {
     if (id) selectPipeline(id);
@@ -58,9 +71,29 @@ export default function PipelinePage() {
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div className="min-w-0">
-            <h1 className="text-lg font-bold truncate" style={{ color: "var(--color-text-primary)" }}>
-              {selectedPipeline.nameZH}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-bold truncate" style={{ color: "var(--color-text-primary)" }}>
+                {selectedPipeline.nameZH}
+              </h1>
+              {selectedPipeline.version && (
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "1px 7px",
+                    borderRadius: 999,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    background: "var(--color-accent-muted)",
+                    color: "var(--color-accent)",
+                    lineHeight: "18px",
+                    flexShrink: 0,
+                  }}
+                >
+                  v{selectedPipeline.version}
+                </span>
+              )}
+            </div>
             <p className="text-xs truncate" style={{ color: "var(--color-text-tertiary)" }}>
               {selectedPipeline.name}
             </p>
@@ -69,6 +102,29 @@ export default function PipelinePage() {
 
         <div className="flex items-center gap-3 shrink-0">
           <SourceSwitcher />
+          <button
+            onClick={() => setExportOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+            style={{
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              color: "var(--color-text-secondary)",
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.borderColor = "var(--color-accent)";
+              el.style.color = "var(--color-accent)";
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.borderColor = "var(--color-border)";
+              el.style.color = "var(--color-text-secondary)";
+            }}
+          >
+            <Code className="w-3.5 h-3.5" />
+            导出 .nf
+          </button>
           <Link
             to={`/compare/${selectedPipeline.id}`}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
@@ -101,6 +157,13 @@ export default function PipelinePage() {
           <ReferenceAccordion references={source.references} />
         </div>
       </main>
+
+      <ExportModal
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        script={exportScript}
+        fileName={exportFileName}
+      />
     </div>
   );
 }
