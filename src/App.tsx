@@ -7,7 +7,7 @@ import ComparePage from "./pages/ComparePage";
 export default function App() {
   return (
     <BrowserRouter basename="/flowseq">
-      <div className="min-h-screen bg-slate-950">
+      <div className="min-h-screen" style={{ background: "var(--color-page)" }}>
         <Header />
         <Routes>
           <Route path="/" element={<HomePage />} />

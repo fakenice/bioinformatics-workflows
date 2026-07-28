@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check, Minus } from "lucide-react";
 import { useStore } from "../store/useStore";
 import FlowCanvas from "../components/FlowCanvas";
+
+const COLORS = ["var(--color-node-dna)", "var(--color-node-rna)"];
 
 export default function ComparePage() {
   const { id } = useParams<{ id: string }>();
@@ -14,82 +16,109 @@ export default function ComparePage() {
 
   if (!selectedPipeline || selectedPipeline.sources.length < 2) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-        <p className="text-slate-500">此分析类型仅有一个参考来源，无法对比。</p>
-        <Link to={`/pipeline/${id}`} className="text-emerald-400 hover:underline text-sm mt-2 inline-block">
-          返回流程图
-        </Link>
+      <div
+        className="flex flex-col items-center justify-center min-h-[60vh]"
+        style={{ color: "var(--color-text-tertiary)" }}
+      >
+        <p className="text-lg">此分析类型仅有一个参考来源，无法对比�?/p>
+        <Link
+          to={`/pipeline/${id}`}
+          className="text-sm mt-2 underline"
+          style={{ color: "var(--color-accent)" }}
+        >
+          返回流程�?        </Link>
       </div>
     );
   }
 
-  const leftSource = selectedPipeline.sources[0];
-  const rightSource = selectedPipeline.sources[1];
-
-  const leftSteps = leftSource.steps;
-  const rightSteps = rightSource.steps;
-  const maxLen = Math.max(leftSteps.length, rightSteps.length);
+  const sources = selectedPipeline.sources.slice(0, 2);
+  const leftSource = sources[0];
+  const rightSource = sources[1];
+  const maxLen = Math.max(leftSource.steps.length, rightSource.steps.length);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      <div className="flex items-center gap-3 mb-4">
+    <div className="min-h-screen px-5 py-4" style={{ background: "var(--color-page)" }}>
+      <header
+        className="sticky top-0 z-20 mb-4 px-1 py-3 flex items-center gap-3"
+        style={{
+          background: "oklch(1 0 0 / 0.85)",
+          backdropFilter: "blur(16px) saturate(1.5)",
+          borderBottom: "1px solid var(--color-border)",
+        }}
+      >
         <Link
           to={`/pipeline/${selectedPipeline.id}`}
-          className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+          className="p-2 -ml-2 rounded-lg transition-colors"
+          style={{ color: "var(--color-text-tertiary)" }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "var(--color-surface-alt)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "transparent";
+          }}
         >
           <ArrowLeft className="w-4 h-4" />
         </Link>
-        <h1 className="text-xl font-bold text-white">
-          {selectedPipeline.nameZH} — 流程对比
+        <h1 className="text-lg font-bold" style={{ color: "var(--color-text-primary)" }}>
+          {selectedPipeline.nameZH}
         </h1>
-      </div>
+        <span
+          className="text-xs px-2 py-0.5 rounded-full font-medium"
+          style={{ background: "var(--color-accent-muted)", color: "var(--color-accent)" }}
+        >
+          流程对比
+        </span>
+      </header>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <h2 className="text-sm font-semibold text-emerald-400 mb-2">{leftSource.name}</h2>
-          <div className="h-[400px]">
-            <FlowCanvas steps={leftSteps} />
-          </div>
-          <StepList steps={leftSteps} maxLen={maxLen} color="emerald" />
-        </div>
-        <div>
-          <h2 className="text-sm font-semibold text-blue-400 mb-2">{rightSource.name}</h2>
-          <div className="h-[400px]">
-            <FlowCanvas steps={rightSteps} />
-          </div>
-          <StepList steps={rightSteps} maxLen={maxLen} color="blue" />
-        </div>
-      </div>
-    </div>
-  );
-}
+        {sources.map((source, si) => (
+          <div key={source.id}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: COLORS[si] }} />
+              <h2 className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
+                {source.name}
+              </h2>
+            </div>
 
-function StepList({
-  steps,
-  maxLen,
-  color,
-}: {
-  steps: { name: string }[];
-  maxLen: number;
-  color: string;
-}) {
-  return (
-    <div className="mt-3 space-y-1.5">
-      {Array.from({ length: maxLen }).map((_, i) => {
-        const step = steps[i];
-        return (
-          <div
-            key={i}
-            className={`text-xs px-2 py-1 rounded ${
-              step
-                ? `bg-${color}-500/10 text-${color}-300`
-                : "bg-slate-800/30 text-slate-600 italic"
-            }`}
-          >
-            {step ? step.name : "（无对应步骤）"}
+            <div
+              className="rounded-xl overflow-hidden mb-4"
+              style={{ height: 380, border: "1px solid var(--color-border)" }}
+            >
+              <FlowCanvas steps={source.steps} />
+            </div>
+
+            <div className="space-y-1.5">
+              {Array.from({ length: maxLen }).map((_, i) => {
+                const step = source.steps[i];
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
+                    style={{
+                      background: step
+                        ? `color-mix(in oklch, ${COLORS[si]} 6%, transparent)`
+                        : "var(--color-surface-alt)",
+                      border: step
+                        ? `1px solid color-mix(in oklch, ${COLORS[si]} 15%, transparent)`
+                        : "1px solid var(--color-border)",
+                      color: step ? "var(--color-text-primary)" : "var(--color-text-tertiary)",
+                    }}
+                  >
+                    {step ? (
+                      <Check className="w-3 h-3 shrink-0" style={{ color: COLORS[si] }} />
+                    ) : (
+                      <Minus className="w-3 h-3 shrink-0" style={{ color: "var(--color-text-tertiary)" }} />
+                    )}
+                    <span className={step ? "" : "italic"}>
+                      {step ? step.name : "（无对应步骤�?}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }

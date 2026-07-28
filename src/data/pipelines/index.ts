@@ -27,7 +27,7 @@ export const categoryLabels: Record<string, string> = {
   dna: "DNA",
   rna: "RNA",
   epigenetics: "表观遗传",
-  microbiome: "微生物",
+  microbiome: "微生�?,
 };
 
 export const categoryIcons: Record<string, string> = {

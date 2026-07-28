@@ -12,35 +12,49 @@ export default function ReferenceAccordion({ references }: { references: Referen
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="mt-6 border-t border-slate-800 pt-4">
+    <div
+      className="rounded-xl overflow-hidden"
+      style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
+    >
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between text-sm text-slate-400 hover:text-white transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 text-sm transition-colors"
+        style={{ color: "var(--color-text-secondary)" }}
       >
         <span className="flex items-center gap-2">
           <BookOpen className="w-4 h-4" />
-          参考文献 ({references.length})
+          参考文�?({references.length})
         </span>
         {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
       </button>
 
       {open && (
-        <div className="mt-3 space-y-2">
+        <div className="px-4 pb-3 space-y-1" style={{ borderTop: "1px solid var(--color-border)" }}>
           {references.map((ref, i) => (
             <a
               key={i}
               href={ref.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-start gap-2 p-2 rounded-lg hover:bg-slate-800 transition-colors group"
+              className="flex items-start gap-2.5 px-2 py-2 rounded-lg transition-colors group"
+              style={{ color: "var(--color-text-secondary)" }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "var(--color-surface-alt)";
+                (e.currentTarget as HTMLElement).style.color = "var(--color-accent)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "transparent";
+                (e.currentTarget as HTMLElement).style.color = "var(--color-text-secondary)";
+              }}
             >
-              <span className="text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 shrink-0 mt-0.5">
+              <span
+                className="text-xs px-1.5 py-0.5 rounded shrink-0 mt-0.5"
+                style={{ background: "var(--color-accent-muted)", color: "var(--color-accent)" }}
+              >
                 {typeLabels[ref.type] || ref.type}
               </span>
-              <span className="text-sm text-slate-300 group-hover:text-emerald-400 transition-colors flex-1">
-                {ref.title}
-              </span>
-              <ExternalLink className="w-3 h-3 text-slate-600 group-hover:text-slate-400 shrink-0 mt-0.5" />
+              <span className="text-sm flex-1">{ref.title}</span>
+              <ExternalLink className="w-3 h-3 shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
             </a>
           ))}
         </div>
