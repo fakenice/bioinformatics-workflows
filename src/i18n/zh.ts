@@ -14,6 +14,7 @@ const zh: I18nStrings = {
     noResultsHint: "尝试使用其他关键词或切换分类筛选",
   },
   categories: {
+    all: "全部",
     dna: "DNA 分析",
     rna: "RNA 分析",
     epigenetics: "表观遗传",

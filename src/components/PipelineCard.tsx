@@ -23,8 +23,6 @@ export default function PipelineCard({
   const Icon = iconMap[pipeline.icon] || Dna;
   const nameText = lang === "en" ? pipeline.name : pipeline.nameZH;
   const overviewText = lang === "en" ? (pipeline.overviewEn || pipeline.overview) : pipeline.overview;
-  const categoryText = t(`categories.${pipeline.category}`);
-
   return (
     <button
       onClick={() => navigate(`/pipeline/${pipeline.id}`)}
@@ -74,7 +72,7 @@ export default function PipelineCard({
                 color: accent,
               }}
             >
-              {categoryLabels[pipeline.category] || pipeline.category}
+              {t(`categories.${pipeline.category}`)}
             </span>
             {pipeline.tags.slice(0, 2).map((tag) => (
               <span
