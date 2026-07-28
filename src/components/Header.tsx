@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, Dna, BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useStore } from "../store/useStore";
+import { useLanguage, useT } from "../i18n";
 import SearchOverlay from "./SearchOverlay";
 
 export default function Header() {
@@ -9,6 +10,12 @@ export default function Header() {
     useStore();
   const [focused, setFocused] = useState(false);
   const location = useLocation();
+  const { lang, setLang } = useLanguage();
+  const t = useT();
+
+  const toggleLang = () => {
+    setLang(lang === "zh" ? "en" : "zh");
+  };
 
   // Ctrl+K / Cmd+K shortcut
   useEffect(() => {
@@ -60,7 +67,7 @@ export default function Header() {
             />
             <input
               type="text"
-              placeholder="搜索分析类型、工具名称… (Ctrl+K)"
+              placeholder={t("header.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setFocused(true)}
@@ -93,8 +100,23 @@ export default function Header() {
             }}
           >
             <BookOpen size={14} />
-            Skill 文档
+            {t("header.docs")}
           </Link>
+
+          <button
+            onClick={toggleLang}
+            className="shrink-0 px-2 py-1 rounded-md text-xs font-semibold transition-colors hover:bg-surface-alt"
+            style={{
+              color: "var(--color-text-secondary)",
+              background: "var(--color-surface-alt)",
+              border: "1px solid var(--color-border)",
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+            aria-label="Switch language"
+          >
+            {lang === "zh" ? "EN" : "中"}
+          </button>
 
           <a
             href="https://github.com/fakenice/flowseq"

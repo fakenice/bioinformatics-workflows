@@ -1,24 +1,27 @@
 import { useMemo } from "react";
+import { useT } from "../i18n";
 import { useStore } from "../store/useStore";
 import CategoryTabs from "../components/CategoryTabs";
 import PipelineCard from "../components/PipelineCard";
 import type { PipelineDefinition } from "../types/pipeline";
 
 const CATEGORY_META: Record<string, { label: string; accent: string }> = {
-  dna: { label: "DNA 分析", accent: "var(--color-node-dna)" },
-  rna: { label: "RNA 分析", accent: "var(--color-node-rna)" },
-  epigenetics: { label: "表观遗传", accent: "var(--color-node-epi)" },
-  microbiome: { label: "微生物组", accent: "var(--color-node-micro)" },
+  dna: { label: "categories.dna", accent: "var(--color-node-dna)" },
+  rna: { label: "categories.rna", accent: "var(--color-node-rna)" },
+  epigenetics: { label: "categories.epigenetics", accent: "var(--color-node-epi)" },
+  microbiome: { label: "categories.microbiome", accent: "var(--color-node-micro)" },
 };
 
 function Section({
   title,
   items,
   accent,
+  t,
 }: {
   title: string;
   items: PipelineDefinition[];
   accent: string;
+  t: (key: string) => string;
 }) {
   return (
     <div style={{ marginBottom: 48 }}>
@@ -35,7 +38,7 @@ function Section({
           className="text-xs font-bold uppercase tracking-widest"
           style={{ color: "var(--color-text-tertiary)" }}
         >
-          {title}
+          {t(title)}
         </h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -48,6 +51,7 @@ function Section({
 }
 
 export default function HomePage() {
+  const t = useT();
   const { searchQuery, selectedCategory, pipelines } = useStore();
 
   const filtered = useMemo(() => {
@@ -84,13 +88,13 @@ export default function HomePage() {
             className="text-[28px] font-bold tracking-tight leading-tight"
             style={{ color: "var(--color-text-primary)" }}
           >
-            生物信息学分析流程导航
+            {t("home.title")}
           </h1>
           <p
             className="mt-2.5 text-[15px] max-w-lg leading-relaxed"
             style={{ color: "var(--color-text-secondary)" }}
           >
-            选择分析场景，查看标准化流程、推荐工具与权威文献。覆盖 DNA、RNA、表观遗传和微生物四大领域。
+            {t("home.subtitle")}
           </p>
         </header>
 
@@ -99,22 +103,22 @@ export default function HomePage() {
         </div>
 
         {dnaPipeline.length > 0 && (
-          <Section title="DNA 分析" items={dnaPipeline} accent={CATEGORY_META.dna.accent} />
+          <Section title="categories.dna" items={dnaPipeline} t={t} accent={CATEGORY_META.dna.accent} />
         )}
         {rnaPipeline.length > 0 && (
-          <Section title="RNA 分析" items={rnaPipeline} accent={CATEGORY_META.rna.accent} />
+          <Section title="categories.rna" items={rnaPipeline} t={t} accent={CATEGORY_META.rna.accent} />
         )}
         {epiPipeline.length > 0 && (
-          <Section title="表观遗传" items={epiPipeline} accent={CATEGORY_META.epigenetics.accent} />
+          <Section title="categories.epigenetics" items={epiPipeline} t={t} accent={CATEGORY_META.epigenetics.accent} />
         )}
         {microPipeline.length > 0 && (
-          <Section title="微生物组" items={microPipeline} accent={CATEGORY_META.microbiome.accent} />
+          <Section title="categories.microbiome" items={microPipeline} t={t} accent={CATEGORY_META.microbiome.accent} />
         )}
 
         {filtered.length === 0 && (
           <div className="text-center py-24" style={{ color: "var(--color-text-tertiary)" }}>
-            <p className="text-base">没有找到匹配的分析流程</p>
-            <p className="text-sm mt-1.5">尝试使用其他关键词或切换分类筛选</p>
+            <p className="text-base">{t("home.noResults")}</p>
+            <p className="text-sm mt-1.5">{t("home.noResultsHint")}</p>
           </div>
         )}
       </div>

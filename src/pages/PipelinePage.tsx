@@ -1,7 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
+﻿import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, GitCompare, Code } from "lucide-react";
 import { useStore } from "../store/useStore";
+import { useT } from "../i18n";
 import PipelineMarkdown from "../components/PipelineMarkdown";
 import SourceSwitcher from "../components/SourceSwitcher";
 import ReferenceAccordion from "../components/ReferenceAccordion";
@@ -12,6 +13,7 @@ export default function PipelinePage() {
   const { id } = useParams<{ id: string }>();
   const { selectPipeline, selectedPipeline, selectedSourceId } = useStore();
   const [exportOpen, setExportOpen] = useState(false);
+  const t = useT();
 
   const exportScript = useMemo(() => {
     if (!selectedPipeline) return "";
@@ -41,7 +43,7 @@ export default function PipelinePage() {
               borderTopColor: "transparent",
             }}
           />
-          <p className="text-sm">加载分析流程...</p>
+          <p className="text-sm">{t("pipeline.loading")}</p>
         </div>
       </div>
     );
@@ -123,7 +125,7 @@ export default function PipelinePage() {
             }}
           >
             <Code className="w-3.5 h-3.5" />
-            导出 .nf
+            {t("pipeline.export")}
           </button>
           <Link
             to={`/compare/${selectedPipeline.id}`}
@@ -145,7 +147,7 @@ export default function PipelinePage() {
             }}
           >
             <GitCompare className="w-3.5 h-3.5" />
-            对比模式
+            {t("pipeline.compareMode")}
           </Link>
         </div>
       </header>

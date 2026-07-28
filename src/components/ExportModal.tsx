@@ -1,4 +1,5 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+import { useT } from "../i18n";
 import { Code, Copy, Download, X } from "lucide-react";
 
 interface ExportModalProps {
@@ -14,6 +15,7 @@ export default function ExportModal({
   script,
   fileName,
 }: ExportModalProps) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
 
   if (!open) return null;
@@ -88,7 +90,7 @@ export default function ExportModal({
                 color: "var(--color-text-primary)",
               }}
             >
-              导出 Nextflow 脚本
+              {t("export.title")}
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -110,7 +112,7 @@ export default function ExportModal({
               }}
             >
               <Copy size={14} />
-              {copied ? "已复制" : "复制脚本"}
+              {copied ? t("export.copied") : t("export.copy")}
             </button>
             <button
               onClick={handleDownload}
@@ -130,7 +132,7 @@ export default function ExportModal({
               }}
             >
               <Download size={14} />
-              下载 .nf
+              {t("export.download")}
             </button>
             <button
               onClick={onClose}

@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X, Dna, BookOpen } from "lucide-react";
+import { useT } from "../i18n";
 import { searchAll, type SearchResult } from "../utils/searchEngine";
 
 interface SearchOverlayProps {
@@ -9,6 +10,7 @@ interface SearchOverlayProps {
 }
 
 export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -94,7 +96,7 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
           <input
             ref={inputRef}
             type="text"
-            placeholder="搜索管线、文档…"
+            placeholder={t("search.placeholder")}
             value={query}
             onChange={(e) => handleInput(e.target.value)}
             style={{
@@ -148,7 +150,7 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
                   }}
                 >
                   <Dna size={12} />
-                  管线
+                  {t("search.pipelines")}
                 </div>
                 {pipeResults.map((r, i) => (
                   <button
@@ -214,7 +216,7 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
                   }}
                 >
                   <BookOpen size={12} />
-                  文档
+                  {t("search.docs")}
                 </div>
                 {docResults.map((r, i) => (
                   <button
@@ -290,7 +292,7 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
               color: "var(--color-text-tertiary)",
             }}
           >
-            未找到匹配结果
+            {t("search.noResults")}
           </div>
         )}
       </div>
