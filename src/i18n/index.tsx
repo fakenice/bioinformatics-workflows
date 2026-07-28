@@ -7,7 +7,7 @@ type Lang = "zh" | "en";
 
 const strings: Record<Lang, I18nStrings> = { zh, en };
 
-const STORAGE_KEY = "flowseq-lang";
+const STORAGE_KEY = "bioinformatics-workflows-lang";
 
 function getInitialLang(): Lang {
   try {

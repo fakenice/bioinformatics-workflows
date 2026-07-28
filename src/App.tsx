@@ -7,7 +7,7 @@ import DocsPage from "./pages/DocsPage";
 
 export default function App() {
   return (
-    <BrowserRouter basename="/flowseq">
+    <BrowserRouter basename="/bioinformatics-workflows">
       <div className="min-h-screen" style={{ background: "var(--color-page)" }}>
         <Header />
         <Routes>

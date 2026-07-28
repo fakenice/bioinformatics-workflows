@@ -115,11 +115,11 @@ export default function Header() {
             }}
             aria-label="Switch language"
           >
-            {lang === "zh" ? "EN" : "ä¸­"}
+            {lang === "zh" ? "EN" : "ä¸?}
           </button>
 
           <a
-            href="https://github.com/fakenice/flowseq"
+            href="https://github.com/fakenice/bioinformatics-workflows"
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 p-1.5 rounded-lg transition-colors hover:bg-surface-alt"
