@@ -63,7 +63,7 @@ export default function HomePage() {
         p.name.toLowerCase().includes(q) ||
         p.nameZH.toLowerCase().includes(q) ||
         p.tags.some((t) => t.toLowerCase().includes(q)) ||
-        p.overview.toLowerCase().includes(q) ||
+        (p.overviewEn || p.overview).toLowerCase().includes(q) || p.overview.toLowerCase().includes(q) ||
         p.sources.some((s) =>
           s.steps.some(
             (st) =>

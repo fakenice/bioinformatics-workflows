@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import type { PipelineDefinition } from "../types/pipeline";
 import { Dna, Microscope, Layers, Bug, ArrowRight } from "lucide-react";
-import { useLanguage, useT } from "../i18n";
+import { useLanguage, useT, useTagT } from "../i18n";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   dna: Dna,
@@ -20,6 +20,7 @@ export default function PipelineCard({
   const navigate = useNavigate();
   const { lang } = useLanguage();
   const t = useT();
+  const tt = useTagT();
   const Icon = iconMap[pipeline.icon] || Dna;
   const nameText = lang === "en" ? pipeline.name : pipeline.nameZH;
   const overviewText = lang === "en" ? (pipeline.overviewEn || pipeline.overview) : pipeline.overview;
@@ -74,18 +75,18 @@ export default function PipelineCard({
             >
               {t(`categories.${pipeline.category}`)}
             </span>
-            {pipeline.tags.slice(0, 2).map((tag) => (
+            {pipeline.tags.slice(0, 2).map((tag) => { const displayTag = tt(tag); return (
               <span
-                key={tag}
+                key={displayTag}
                 className="text-[11px] px-2 py-0.5 rounded-md"
                 style={{
                   background: "var(--color-surface-alt)",
                   color: "var(--color-text-tertiary)",
                 }}
               >
-                {tag}
+                {displayTag}
               </span>
-            ))}
+            ); })}
             {pipeline.tags.length > 2 && (
               <span className="text-[11px]" style={{ color: "var(--color-text-tertiary)" }}>
                 +{pipeline.tags.length - 2}

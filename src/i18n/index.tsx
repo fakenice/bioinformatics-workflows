@@ -72,3 +72,13 @@ export function useT(): (path: string) => string {
 }
 
 export { strings };
+
+export function useTagT(): (tag: string) => string {
+  const { lang } = useContext(LangContext);
+  const dict = strings[lang] as unknown as Record<string, unknown>;
+  const translations = (dict.tagTranslations as Record<string, string>) || {};
+  return useCallback(
+    (tag: string) => translations[tag] || tag,
+    [translations]
+  );
+}

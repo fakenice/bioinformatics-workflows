@@ -52,6 +52,39 @@ const en = {
     footerNote:
       "This page renders SKILL.md + references/ from the Skill repository, sharing the same data source as FlowSeq pipelines.",
   },
+,
+  tagTranslations: {
+    "扩增子": "Amplicon",
+    "组蛋白修饰": "Histone Mod.",
+    "转录因子": "Transcription Factor",
+    "家系分析": "Family Analysis",
+    "遗传病": "Genetic Disease",
+    "病例对照": "Case-Control",
+    "群体遗传": "Population Genetics",
+    "孟德尔随机化": "Mendelian Random.",
+    "工具变量": "Instrumental Var.",
+    "因果推断": "Causal Inference",
+    "微生物组": "Microbiome",
+    "功能注释": "Functional Annotation",
+    "多基因风险评分": "Polygenic Risk",
+    "风险预测": "Risk Prediction",
+    "罕见变异": "Rare Variant",
+    "基因聚合检验": "Gene Aggregation",
+    "转录组": "Transcriptome",
+    "差异表达": "Differential Expression",
+    "富集分析": "Enrichment Analysis",
+    "单细胞": "Single-Cell",
+    "聚类": "Clustering",
+    "细胞注释": "Cell Annotation",
+    "外显子组": "Exome",
+    "捕获测序": "Capture Sequencing",
+    "靶向": "Targeted",
+    "甲基化": "Methylation",
+    "肿瘤": "Tumor",
+    "配对样本": "Paired Sample",
+    "宏基因组": "Metagenomics",
+  }
+
 };
 
 export default en;

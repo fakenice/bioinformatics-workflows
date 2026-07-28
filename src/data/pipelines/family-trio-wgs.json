@@ -406,5 +406,6 @@
         }
       ]
     }
-  ]
+  ],
+  "overviewEn": "Joint germline variant detection for parent-child trio families using GATK Best Practices (v4.5) and nf-core/sarek (v3.9). Covers the full FASTQ-to-VCF pipeline including joint genotyping, de novo detection, and inheritance pattern filtering."
 }
