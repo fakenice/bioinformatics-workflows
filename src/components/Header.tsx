@@ -39,7 +39,7 @@ export default function Header() {
           <Search className="w-4 h-4 shrink-0" style={{ color: "var(--color-text-tertiary)" }} />
           <input
             type="text"
-            placeholder="搜索分析类型、工具名�?.."
+            placeholder="搜索分析类型、工具名称.."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setFocused(true)}

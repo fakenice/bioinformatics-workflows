@@ -88,9 +88,9 @@ export default function HomePage() {
             className="text-2xl font-bold tracking-tight"
             style={{ color: "var(--color-text-primary)" }}
           >
-            生物信息学分析流程导�?          </h1>
+            生物信息学分析流程导航          </h1>
           <p className="mt-2 text-sm max-w-lg" style={{ color: "var(--color-text-secondary)" }}>
-            选择分析场景，查看标准化流程、推荐工具与权威文献。覆�?DNA、RNA、表观遗传和微生物四大领域�?          </p>
+            选择分析场景，查看标准化流程、推荐工具与权威文献。覆盖DNA、RNA、表观遗传和微生物四大领域。          </p>
         </header>
 
         <div className="mb-8">
@@ -113,7 +113,7 @@ export default function HomePage() {
         {filtered.length === 0 && (
           <div className="text-center py-20" style={{ color: "var(--color-text-tertiary)" }}>
             <p className="text-lg">未找到匹配的分析流程</p>
-            <p className="text-sm mt-1">尝试更换搜索词或分类筛�?/p>
+            <p className="text-sm mt-1">尝试更换搜索词或分类筛选。</p>
           </div>
         )}
       </div>

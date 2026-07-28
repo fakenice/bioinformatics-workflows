@@ -20,13 +20,13 @@ export default function ComparePage() {
         className="flex flex-col items-center justify-center min-h-[60vh]"
         style={{ color: "var(--color-text-tertiary)" }}
       >
-        <p className="text-lg">此分析类型仅有一个参考来源，无法对比�?/p>
+        <p className="text-lg">此分析类型仅有一个参考来源，无法对比。</p>
         <Link
           to={`/pipeline/${id}`}
           className="text-sm mt-2 underline"
           style={{ color: "var(--color-accent)" }}
         >
-          返回流程�?        </Link>
+          返回流程图        </Link>
       </div>
     );
   }
@@ -110,7 +110,7 @@ export default function ComparePage() {
                       <Minus className="w-3 h-3 shrink-0" style={{ color: "var(--color-text-tertiary)" }} />
                     )}
                     <span className={step ? "" : "italic"}>
-                      {step ? step.name : "（无对应步骤�?}
+                      {step ? step.name : "（无对应步骤）"}
                     </span>
                   </div>
                 );

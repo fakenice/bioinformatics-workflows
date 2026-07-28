@@ -8,7 +8,7 @@ export default function SourceSwitcher() {
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs shrink-0" style={{ color: "var(--color-text-tertiary)" }}>
-        参考来�?      </span>
+        参考来源      </span>
       <div
         className="flex rounded-lg p-0.5 gap-0.5"
         style={{ background: "var(--color-surface-alt)", border: "1px solid var(--color-border)" }}

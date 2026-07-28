@@ -23,7 +23,7 @@ export default function ReferenceAccordion({ references }: { references: Referen
       >
         <span className="flex items-center gap-2">
           <BookOpen className="w-4 h-4" />
-          参考文�?({references.length})
+          参考文献({references.length})
         </span>
         {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
       </button>
