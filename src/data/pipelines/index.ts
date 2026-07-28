@@ -10,9 +10,15 @@ import wgbs from "./wgbs.json";
 import metagenomics from "./metagenomics.json";
 import rrna16s from "./16s.json";
 import familyTrioWgs from "./family-trio-wgs.json";
+import mendelianRandomization from "./mendelian-randomization.json";
+import prs from "./prs.json";
+import rareVariant from "./rare-variant.json";
 
 export const pipelines: PipelineDefinition[] = [
   familyTrioWgs,
+  mendelianRandomization,
+  prs,
+  rareVariant,
   wgsGermline,
   wgsSomatic,
   wes,

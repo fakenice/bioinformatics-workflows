@@ -1,0 +1,156 @@
+{
+  "id": "prs",
+  "name": "Polygenic Risk Score",
+  "nameZH": "多基因风险评分",
+  "category": "dna",
+  "tags": [
+    "PRS",
+    "多基因风险评分",
+    "LDpred2",
+    "PRSice-2",
+    "PRS-CS",
+    "风险预测"
+  ],
+  "overview": "利用 GWAS summary statistics 预测个体遗传风险。三种主流方法：C+T（Clumping + Thresholding, PRSice-2）、Bayesian 连续收缩（LDpred2-auto）、Bayesian 稀疏先验（PRS-CS-auto）。适用于疾病风险分层和预后评估。",
+  "icon": "dna",
+  "sources": [
+    {
+      "id": "prsice",
+      "name": "PRSice-2 (C+T)",
+      "type": "official",
+      "url": "https://www.prsice.info/",
+      "steps": [
+        {
+          "id": "prepare",
+          "name": "准备数据",
+          "description": "Base (GWAS) + Target (个体基因型) 对齐",
+          "tools": [
+            {
+              "name": "PRSice-2",
+              "version": "2.3",
+              "params": "",
+              "docker": ""
+            }
+          ],
+          "notes": "Base: GWAS summary statistics（β/OR, SE, P, EA, OA）。Target: PLINK 格式个体基因型。确保相同参考基因组和效应等位基因。",
+          "position": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": "qc",
+          "name": "质量控制",
+          "description": "Base + Target 双重 QC",
+          "tools": [
+            {
+              "name": "PLINK 1.9 + PRSice-2",
+              "version": "1.9 / 2.3",
+              "params": "--maf 0.01 --info 0.8",
+              "docker": ""
+            }
+          ],
+          "notes": "Base: 移除 MAF < 0.01, INFO < 0.8, 非双等位基因变异。Target: 标准 GWAS QC（缺失率/MAF/HWE/杂合度/亲缘关系）。",
+          "position": {
+            "x": 0,
+            "y": 120
+          }
+        },
+        {
+          "id": "prsice-calc",
+          "name": "PRSice-2 计算",
+          "description": "Clumping + Thresholding 多 P 阈值扫描",
+          "tools": [
+            {
+              "name": "PRSice-2",
+              "version": "2.3",
+              "params": "--bar-levels 5e-8,1e-6,1e-4,0.001,0.01,0.05,0.1,0.5,1",
+              "docker": ""
+            }
+          ],
+          "notes": "Clumping r² < 0.001, window 250kb。多 P 阈值扫描自动选最优。纳入 PC + 年龄 + 性别作为协变量。",
+          "position": {
+            "x": 0,
+            "y": 240
+          }
+        },
+        {
+          "id": "ldpred2",
+          "name": "LDpred2-auto（推荐）",
+          "description": "Bayesian 连续收缩先验，自动调参",
+          "tools": [
+            {
+              "name": "LDpred2 (R bigsnpr)",
+              "version": "1.12+",
+              "params": "snp_ldpred2_auto()",
+              "docker": ""
+            }
+          ],
+          "notes": "无需手动调参。利用 LD 参考面板对效应量做连续收缩。预测精度优于 C+T 方法。需 HapMap3 SNP 子集。",
+          "position": {
+            "x": 0,
+            "y": 360
+          }
+        },
+        {
+          "id": "prscs",
+          "name": "PRS-CS-auto",
+          "description": "Bayesian 稀疏先验，大规模推荐",
+          "tools": [
+            {
+              "name": "PRS-CS",
+              "version": "2024",
+              "params": "--auto",
+              "docker": ""
+            }
+          ],
+          "notes": "Python 实现。贝叶斯连续收缩 + 全局-局部稀疏先验。自动调参，大规模 GWAS 推荐。需 1000G/UKB LD 参考面板。",
+          "position": {
+            "x": 0,
+            "y": 480
+          }
+        },
+        {
+          "id": "evaluate",
+          "name": "模型评估",
+          "description": "R² / AUC / OR per SD / 分层分析",
+          "tools": [
+            {
+              "name": "R / PRSice-2",
+              "version": "",
+              "params": "",
+              "docker": ""
+            }
+          ],
+          "notes": "连续表型：R²（变异解释率）。二分类：AUC、Nagelkerke pseudo-R²。分层：最高 5%/10% vs 最低。十折交叉验证。",
+          "position": {
+            "x": 0,
+            "y": 600
+          }
+        }
+      ],
+      "references": [
+        {
+          "title": "PRSice-2: Polygenic Risk Score software (Choi & O'Reilly, 2019)",
+          "url": "https://doi.org/10.1093/gigascience/giz082",
+          "type": "paper"
+        },
+        {
+          "title": "LDpred2: better, faster, stronger (Privé et al., 2020)",
+          "url": "https://doi.org/10.1093/bioinformatics/btaa1029",
+          "type": "paper"
+        },
+        {
+          "title": "PRS-CS: polygenic prediction (Ge et al., 2019)",
+          "url": "https://doi.org/10.1038/s41467-019-09718-5",
+          "type": "paper"
+        },
+        {
+          "title": "Tutorial: PRS analyses (Choi et al., 2020)",
+          "url": "https://doi.org/10.1038/s41596-020-0353-1",
+          "type": "paper"
+        }
+      ]
+    }
+  ]
+}

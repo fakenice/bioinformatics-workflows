@@ -1,0 +1,155 @@
+{
+  "id": "mendelian-randomization",
+  "name": "Mendelian Randomization",
+  "nameZH": "孟德尔随机化",
+  "category": "dna",
+  "tags": [
+    "孟德尔随机化",
+    "MR",
+    "因果推断",
+    "GWAS",
+    "工具变量"
+  ],
+  "overview": "利用遗传变异作为工具变量（IV），评估暴露与结局的因果关系。双样本 MR 使用 GWAS summary statistics，无需个体基因型数据。包含 IV 选择、正链对齐、MR 估计（IVW/MR-Egger/加权中位数）和敏感性分析（异质性/多效性/leave-one-out）。",
+  "icon": "dna",
+  "sources": [
+    {
+      "id": "twosamplemr",
+      "name": "TwoSampleMR (MRC IEU)",
+      "type": "official",
+      "url": "https://mrcieu.github.io/TwoSampleMR/",
+      "steps": [
+        {
+          "id": "select-iv",
+          "name": "选择工具变量",
+          "description": "从暴露 GWAS 提取显著 SNP 并 clumping",
+          "tools": [
+            {
+              "name": "TwoSampleMR (R)",
+              "version": "0.5+",
+              "params": "p1=5e-8, r2=0.001, kb=10000",
+              "docker": ""
+            }
+          ],
+          "notes": "P < 5×10⁻⁸，LD clumping r² < 0.001（10Mb window）。F-statistic > 10（F = β²/se²），弱 IV 会引入偏差。",
+          "position": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": "extract-outcome",
+          "name": "提取结局 SNP",
+          "description": "从结局 GWAS 提取对应 IV 的效应量",
+          "tools": [
+            {
+              "name": "TwoSampleMR extract_outcome_data()",
+              "version": "0.5+",
+              "params": "",
+              "docker": ""
+            }
+          ],
+          "notes": "确保暴露和结局 GWAS 来自不同人群，避免样本重叠（overlap bias）。",
+          "position": {
+            "x": 0,
+            "y": 120
+          }
+        },
+        {
+          "id": "harmonize",
+          "name": "正链对齐",
+          "description": "Harmonization：链方向对齐 & 去除回文 SNP",
+          "tools": [
+            {
+              "name": "TwoSampleMR harmonise_data()",
+              "version": "0.5+",
+              "params": "action=2",
+              "docker": ""
+            }
+          ],
+          "notes": "确保暴露和结局效应等位基因一致。去除回文 SNP（MAF > 0.4 中间等位基因），避免链方向不确定。",
+          "position": {
+            "x": 0,
+            "y": 240
+          }
+        },
+        {
+          "id": "mr-estimate",
+          "name": "MR 估计",
+          "description": "IVW / MR-Egger / 加权中位数 / 加权模式",
+          "tools": [
+            {
+              "name": "TwoSampleMR mr()",
+              "version": "0.5+",
+              "params": "",
+              "docker": ""
+            }
+          ],
+          "notes": "IVW（逆方差加权）为主分析方法（要求无水平多效性）。MR-Egger 允许截距项 ≠ 0。加权中位数在 < 50% 无效 IV 时仍稳健。",
+          "position": {
+            "x": 0,
+            "y": 360
+          }
+        },
+        {
+          "id": "sensitivity",
+          "name": "敏感性分析",
+          "description": "异质性 + 多效性 + Leave-one-out",
+          "tools": [
+            {
+              "name": "TwoSampleMR / MR-PRESSO",
+              "version": "0.5+ / 1.0",
+              "params": "",
+              "docker": ""
+            }
+          ],
+          "notes": "Cochran's Q 检验异质性（P > 0.05）。MR-Egger 截距检验水平多效性（P > 0.05）。MR-PRESSO 检测离群 SNP 并校正。Steiger filtering 验证因果方向。",
+          "position": {
+            "x": 0,
+            "y": 480
+          }
+        },
+        {
+          "id": "multivariable",
+          "name": "多变量 MR（可选）",
+          "description": "控制混杂暴露的独立因果效应",
+          "tools": [
+            {
+              "name": "MVMR / TwoSampleMR",
+              "version": "",
+              "params": "",
+              "docker": ""
+            }
+          ],
+          "notes": "当多个暴露存在遗传相关时，MVMR 可估计各暴露的独立因果效应。需注意 IV 强度和条件 F-statistic。",
+          "position": {
+            "x": 0,
+            "y": 600
+          }
+        }
+      ],
+      "references": [
+        {
+          "title": "TwoSampleMR R Package (Hemani et al., 2018)",
+          "url": "https://doi.org/10.7554/eLife.34408",
+          "type": "paper"
+        },
+        {
+          "title": "MR-PRESSO: Pleiotropy RESidual Sum and Outlier (Verbanck et al., 2018)",
+          "url": "https://doi.org/10.1038/s41588-018-0099-7",
+          "type": "paper"
+        },
+        {
+          "title": "Guidelines for performing Mendelian randomization (Burgess et al., 2020)",
+          "url": "https://doi.org/10.12688/wellcomeopenres.15555.3",
+          "type": "paper"
+        },
+        {
+          "title": "MRC IEU OpenGWAS Database",
+          "url": "https://gwas.mrcieu.ac.uk/",
+          "type": "official"
+        }
+      ]
+    }
+  ]
+}

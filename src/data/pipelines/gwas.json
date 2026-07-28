@@ -1,29 +1,173 @@
 {
   "id": "gwas",
-  "name": "GWAS",
-  "nameZH": "全基因组关联分析",
+  "name": "GWAS Case-Control",
+  "nameZH": "病例对照 GWAS",
   "category": "dna",
-  "tags": ["GWAS", "PLINK", "关联研究", "群体遗传"],
-  "overview": "全基因组关联分析标准流程，从基因型数据出发，通过质控、主成分分析、关联检验和注释，鉴定与性状显著关联的遗传位点。",
+  "tags": [
+    "GWAS",
+    "PLINK",
+    "SAIGE",
+    "REGENIE",
+    "关联研究",
+    "群体遗传"
+  ],
+  "overview": "全基因组关联分析标准流程。从基因型数据出发，经样本/变异 QC、群体分层校正（PCA）、关联检验（PLINK/SAIGE/REGENIE）到结果解读，鉴定与性状显著关联的遗传位点（P < 5×10⁻⁸）。",
   "icon": "dna",
   "sources": [
     {
-      "id": "standard",
-      "name": "GWAS Standard",
+      "id": "plink",
+      "name": "PLINK GWAS Standard",
       "type": "official",
       "url": "https://www.cog-genomics.org/plink/",
       "steps": [
-        { "id": "qc-snp", "name": "SNP 质控", "description": "过滤低质量 SNP", "tools": [{ "name": "PLINK 1.9", "version": "1.9", "params": "--geno 0.05 --hwe 1e-6 --maf 0.01", "docker": "biocontainers/plink1.9" }], "notes": "标准过滤：call rate > 95%, HWE p > 1e-6, MAF > 1%。对 case-control 设计 HWE 仅在 control 中评估。", "position": { "x": 0, "y": 0 } },
-        { "id": "qc-sample", "name": "样本质控", "description": "过滤异常样本", "tools": [{ "name": "PLINK 1.9", "version": "1.9", "params": "--mind 0.05", "docker": "biocontainers/plink1.9" }], "notes": "去除 individual call rate < 95% 的样本。检查 gender check 和 heterozygosity rate 异常样本。", "position": { "x": 0, "y": 120 } },
-        { "id": "ancestry", "name": "群体分层分析", "description": "PCA 评估群体结构", "tools": [{ "name": "PLINK 1.9", "version": "1.9", "params": "--pca 10", "docker": "biocontainers/plink1.9" }], "notes": "LD pruning 后进行 PCA。检查 PC1/PC2 是否区分主要群体，筛选遗传背景一致的分析子集。", "position": { "x": 0, "y": 240 } },
-        { "id": "impute", "name": "基因型填补", "description": "使用参考面板填补未分型变异", "tools": [{ "name": "SHAPEIT4 + IMPUTE5 / Minimac4", "version": "4.1 / 1.2", "params": "", "docker": "biocontainers/shapeit4" }], "notes": "推荐使用 TOPMed 或 1000G Phase 3 作为参考面板。填补后过滤 info score < 0.3 的变异。", "position": { "x": 0, "y": 360 } },
-        { "id": "assoc", "name": "关联检验", "description": "回归模型检验 SNP-性状关联", "tools": [{ "name": "PLINK 2.0 / SAIGE", "version": "2.0 / 1.3", "params": "--glm --covar pc1,pc2,age,sex", "docker": "biocontainers/plink2" }], "notes": "纳入年龄、性别和前 5-10 个 PC 作为协变量。SAIGE 对不平衡 case-control 和 rare variant 效果更优。Manhattan plot + QQ plot 可视化。", "position": { "x": 0, "y": 480 } },
-        { "id": "annotate", "name": "位点注释与精细定位", "description": "显著位点功能注释 + 精细定位", "tools": [{ "name": "FUMA / LocusZoom", "version": "1.5", "params": "", "docker": "" }], "notes": "GWAS 显著阈值 p < 5e-8。FUMA 在线平台进行基因注释、通路富集和 eQTL 整合。LocusZoom 绘制区域关联图。", "position": { "x": 0, "y": 600 } }
+        {
+          "id": "qc-snp",
+          "name": "变异 QC",
+          "description": "过滤低质量 SNP：缺失率、MAF、HWE",
+          "tools": [
+            {
+              "name": "PLINK 1.9",
+              "version": "1.9",
+              "params": "--geno 0.02 --hwe 1e-6 --maf 0.01",
+              "docker": "biocontainers/plink1.9"
+            }
+          ],
+          "notes": "缺失率 < 2%，MAF > 1%，HWE P > 1×10⁻⁶（仅对照）。差异缺失 P > 1×10⁻⁵。",
+          "position": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": "qc-sample",
+          "name": "样本 QC",
+          "description": "过滤异常样本 + 亲缘关系",
+          "tools": [
+            {
+              "name": "PLINK 1.9",
+              "version": "1.9",
+              "params": "--mind 0.03 --het --king-cutoff 0.0884",
+              "docker": "biocontainers/plink1.9"
+            }
+          ],
+          "notes": "缺失率 < 3%。杂合度 ±3 SD。KING 移除二级以上亲属（PI_HAT < 0.0884）。",
+          "position": {
+            "x": 0,
+            "y": 120
+          }
+        },
+        {
+          "id": "pca",
+          "name": "群体分层校正",
+          "description": "PCA 主成分分析",
+          "tools": [
+            {
+              "name": "GCTA / PLINK 2.0",
+              "version": "1.94 / 2.0",
+              "params": "--pca 20",
+              "docker": ""
+            }
+          ],
+          "notes": "LD pruning 后 PCA。PC1-PC10 作为协变量纳入关联模型。可视化 PC1 vs PC2 检查群体异常样本。",
+          "position": {
+            "x": 0,
+            "y": 240
+          }
+        },
+        {
+          "id": "assoc-plink",
+          "name": "PLINK 关联检验",
+          "description": "逻辑/线性回归",
+          "tools": [
+            {
+              "name": "PLINK 2.0",
+              "version": "2.0",
+              "params": "--glm --covar PC1-PC10,age,sex",
+              "docker": "biocontainers/plink2"
+            }
+          ],
+          "notes": "纳入年龄、性别和前 5-10 PC 作为协变量。二分类用逻辑回归，连续表型用线性回归。λ_GC 目标 0.95-1.05。",
+          "position": {
+            "x": 0,
+            "y": 360
+          }
+        },
+        {
+          "id": "assoc-saige",
+          "name": "SAIGE 混合模型",
+          "description": "大规模 + 病例不平衡场景",
+          "tools": [
+            {
+              "name": "SAIGE",
+              "version": "1.3",
+              "params": "--minMAF 0.001 --minMAC 20",
+              "docker": ""
+            }
+          ],
+          "notes": "两步法：Step 1 拟合空模型 → Step 2 关联检验。对不平衡 case-control（如 1:100）和稀有变异（MAF < 1%）效果显著优于 PLINK。",
+          "position": {
+            "x": 0,
+            "y": 480
+          }
+        },
+        {
+          "id": "assoc-regenie",
+          "name": "REGENIE 两步法",
+          "description": "UKB 级别超大规模 GWAS",
+          "tools": [
+            {
+              "name": "REGENIE",
+              "version": "3.4",
+              "params": "--bsize 1000 --lowmem",
+              "docker": ""
+            }
+          ],
+          "notes": "Step 1 全基因组 ridge 回归预测 → Step 2 Firth/SPA 检验。适合百万级样本。",
+          "position": {
+            "x": 0,
+            "y": 600
+          }
+        },
+        {
+          "id": "results",
+          "name": "结果解读",
+          "description": "Manhattan/QQ plot + LD clumping + 注释",
+          "tools": [
+            {
+              "name": "FUMA / LocusZoom",
+              "version": "1.5",
+              "params": "",
+              "docker": ""
+            }
+          ],
+          "notes": "全基因组显著性 P < 5×10⁻⁸。LD clumping r² < 0.001, window 10Mb。FUMA 在线平台基因注释、通路富集和 eQTL 整合。",
+          "position": {
+            "x": 0,
+            "y": 720
+          }
+        }
       ],
       "references": [
-        { "title": "PLINK 1.9/2.0 Documentation", "url": "https://www.cog-genomics.org/plink/", "type": "official" },
-        { "title": "SAIGE: Scalable GWAS for biobank-scale data (Zhou et al., 2018)", "url": "https://doi.org/10.1038/s41588-018-0184-y", "type": "paper" },
-        { "title": "FUMA: Functional Mapping and Annotation (Watanabe et al., 2017)", "url": "https://doi.org/10.1038/s41467-017-00281-5", "type": "paper" }
+        {
+          "title": "PLINK 1.9/2.0 Documentation",
+          "url": "https://www.cog-genomics.org/plink/",
+          "type": "official"
+        },
+        {
+          "title": "SAIGE: Scalable GWAS for biobank-scale data (Zhou et al., 2018)",
+          "url": "https://doi.org/10.1038/s41588-018-0184-y",
+          "type": "paper"
+        },
+        {
+          "title": "REGENIE: whole genome regression modelling (Mbatchou et al., 2021)",
+          "url": "https://doi.org/10.1038/s41588-021-00870-7",
+          "type": "paper"
+        },
+        {
+          "title": "FUMA: Functional Mapping and Annotation (Watanabe et al., 2017)",
+          "url": "https://doi.org/10.1038/s41467-017-00281-5",
+          "type": "paper"
+        }
       ]
     }
   ]
