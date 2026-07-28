@@ -26,8 +26,8 @@ export const pipelines: PipelineDefinition[] = [
 export const categoryLabels: Record<string, string> = {
   dna: "DNA",
   rna: "RNA",
-  epigenetics: "琛ㄨ閬椾紶",
-  microbiome: "寰敓鐗?,
+  epigenetics: "表观遗传",
+  microbiome: "微生物",
 };
 
 export const categoryIcons: Record<string, string> = {
