@@ -1,8 +1,8 @@
-﻿import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, GitCompare, Code } from "lucide-react";
 import { useStore } from "../store/useStore";
-import { useT } from "../i18n";
+import { useT, useLanguage } from "../i18n";
 import PipelineMarkdown from "../components/PipelineMarkdown";
 import SourceSwitcher from "../components/SourceSwitcher";
 import ReferenceAccordion from "../components/ReferenceAccordion";
@@ -14,6 +14,7 @@ export default function PipelinePage() {
   const { selectPipeline, selectedPipeline, selectedSourceId } = useStore();
   const [exportOpen, setExportOpen] = useState(false);
   const t = useT();
+  const { lang } = useLanguage();
 
   const exportScript = useMemo(() => {
     if (!selectedPipeline) return "";
@@ -75,7 +76,7 @@ export default function PipelinePage() {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-bold truncate" style={{ color: "var(--color-text-primary)" }}>
-                {selectedPipeline.nameZH}
+                {lang === "en" ? selectedPipeline.name : selectedPipeline.nameZH}
               </h1>
               {selectedPipeline.version && (
                 <span
@@ -97,7 +98,7 @@ export default function PipelinePage() {
               )}
             </div>
             <p className="text-xs truncate" style={{ color: "var(--color-text-tertiary)" }}>
-              {selectedPipeline.name}
+              {lang === "en" ? selectedPipeline.nameZH : selectedPipeline.name}
             </p>
           </div>
         </div>

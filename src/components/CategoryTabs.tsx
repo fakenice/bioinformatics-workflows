@@ -1,5 +1,5 @@
 import { useStore } from "../store/useStore";
-import { categoryLabels } from "../data/pipelines";
+import { useT } from "../i18n";
 
 const CAT_ACCENTS: Record<string, string> = {
   dna: "var(--color-node-dna)",
@@ -12,6 +12,7 @@ const categories = ["dna", "rna", "epigenetics", "microbiome"];
 
 export default function CategoryTabs() {
   const { selectedCategory, setSelectedCategory } = useStore();
+  const t = useT();
 
   return (
     <div className="flex gap-1 flex-wrap">
@@ -24,7 +25,7 @@ export default function CategoryTabs() {
             : { color: "var(--color-text-tertiary)" }
         }
       >
-        全部
+        {t("categories.all")}
         {selectedCategory === null && (
           <span
             className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full"
@@ -44,7 +45,7 @@ export default function CategoryTabs() {
               color: isActive ? accent : "var(--color-text-tertiary)",
             }}
           >
-            {categoryLabels[cat] || cat}
+            {t(`categories.${cat}`)}
             {isActive && (
               <span
                 className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full"

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Check, Minus } from "lucide-react";
 import { useStore } from "../store/useStore";
+import { useT, useLanguage } from "../i18n";
 import FlowCanvas from "../components/FlowCanvas";
 
 const COLORS = ["var(--color-node-dna)", "var(--color-node-rna)"];
@@ -9,6 +10,8 @@ const COLORS = ["var(--color-node-dna)", "var(--color-node-rna)"];
 export default function ComparePage() {
   const { id } = useParams<{ id: string }>();
   const { selectPipeline, selectedPipeline } = useStore();
+  const t = useT();
+  const { lang } = useLanguage();
 
   useEffect(() => {
     if (id) selectPipeline(id);
@@ -20,13 +23,14 @@ export default function ComparePage() {
         className="flex flex-col items-center justify-center min-h-[60vh]"
         style={{ color: "var(--color-text-tertiary)" }}
       >
-        <p className="text-lg">此分析类型仅有一个参考来源，无法对比。</p>
+        <p className="text-lg">{t("compare.singleSourceNotice")}</p>
         <Link
           to={`/pipeline/${id}`}
           className="text-sm mt-2 underline"
           style={{ color: "var(--color-accent)" }}
         >
-          返回流程图        </Link>
+          {t("compare.backToPipeline")}
+        </Link>
       </div>
     );
   }
@@ -35,6 +39,8 @@ export default function ComparePage() {
   const leftSource = sources[0];
   const rightSource = sources[1];
   const maxLen = Math.max(leftSource.steps.length, rightSource.steps.length);
+
+  const pipelineName = lang === "en" ? selectedPipeline.name : selectedPipeline.nameZH;
 
   return (
     <div className="min-h-screen px-5 py-4" style={{ background: "var(--color-page)" }}>
@@ -60,13 +66,13 @@ export default function ComparePage() {
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <h1 className="text-lg font-bold" style={{ color: "var(--color-text-primary)" }}>
-          {selectedPipeline.nameZH}
+          {pipelineName}
         </h1>
         <span
           className="text-xs px-2 py-0.5 rounded-full font-medium"
           style={{ background: "var(--color-accent-muted)", color: "var(--color-accent)" }}
         >
-          流程对比
+          {t("compare.title")}
         </span>
       </header>
 
@@ -76,7 +82,7 @@ export default function ComparePage() {
             <div className="flex items-center gap-2 mb-3">
               <div className="w-2.5 h-2.5 rounded-full" style={{ background: COLORS[si] }} />
               <h2 className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
-                {source.name}
+                {lang === "en" ? (source.nameEn || source.name) : source.name}
               </h2>
             </div>
 
@@ -110,7 +116,11 @@ export default function ComparePage() {
                       <Minus className="w-3 h-3 shrink-0" style={{ color: "var(--color-text-tertiary)" }} />
                     )}
                     <span className={step ? "" : "italic"}>
-                      {step ? step.name : "（无对应步骤）"}
+                      {step
+                        ? lang === "en"
+                          ? step.nameEn || step.name
+                          : step.name
+                        : t("compare.noCorrespondingStep")}
                     </span>
                   </div>
                 );

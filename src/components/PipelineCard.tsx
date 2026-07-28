@@ -1,8 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import type { PipelineDefinition } from "../types/pipeline";
 import { Dna, Microscope, Layers, Bug, ArrowRight } from "lucide-react";
-import { categoryLabels } from "../data/pipelines";
-import { useLanguage } from "../i18n";
+import { useLanguage, useT } from "../i18n";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   dna: Dna,
@@ -20,8 +19,11 @@ export default function PipelineCard({
 }) {
   const navigate = useNavigate();
   const { lang } = useLanguage();
+  const t = useT();
   const Icon = iconMap[pipeline.icon] || Dna;
+  const nameText = lang === "en" ? pipeline.name : pipeline.nameZH;
   const overviewText = lang === "en" ? (pipeline.overviewEn || pipeline.overview) : pipeline.overview;
+  const categoryText = t(`categories.${pipeline.category}`);
 
   return (
     <button
@@ -56,7 +58,7 @@ export default function PipelineCard({
             className="font-semibold text-[15px] leading-snug"
             style={{ color: "var(--color-text-primary)" }}
           >
-            {pipeline.nameZH}
+            {nameText}
           </h3>
           <p
             className="text-[13px] mt-1.5 line-clamp-2 leading-relaxed"

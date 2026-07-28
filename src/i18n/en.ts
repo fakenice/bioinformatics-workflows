@@ -12,6 +12,7 @@ const en = {
     noResultsHint: "Try different keywords or switch category filters",
   },
   categories: {
+    all: "All",
     dna: "DNA Analysis",
     rna: "RNA Analysis",
     epigenetics: "Epigenetics",
@@ -39,6 +40,17 @@ const en = {
     docs: "Docs",
     noResults: "No results found",
     close: "Close",
+  },
+  compare: {
+    title: "Workflow Comparison",
+    singleSourceNotice: "This pipeline has only one reference source, unable to compare.",
+    backToPipeline: "Back to Pipeline",
+    noCorrespondingStep: "(No corresponding step)",
+  },
+  docs: {
+    sidebarTitle: "Skill Docs",
+    footerNote:
+      "This page renders SKILL.md + references/ from the Skill repository, sharing the same data source as FlowSeq pipelines.",
   },
 };
 

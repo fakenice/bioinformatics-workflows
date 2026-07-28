@@ -42,6 +42,17 @@ const zh: I18nStrings = {
     noResults: "未找到匹配结果",
     close: "关闭",
   },
+  compare: {
+    title: "流程对比",
+    singleSourceNotice: "此分析类型仅有一个参考来源，无法对比。",
+    backToPipeline: "返回流程图",
+    noCorrespondingStep: "（无对应步骤）",
+  },
+  docs: {
+    sidebarTitle: "Skill 文档",
+    footerNote:
+      "本文档即 Skill 仓库的 SKILL.md + references/ 内容，与 FlowSeq 管线数据共享同一数据源。",
+  },
 };
 
 export default zh;

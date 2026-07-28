@@ -149,12 +149,16 @@ Visit http://localhost:5173/bioinformatics-workflows/
 
 Load this repository as a Skill for your AI coding assistant to automatically receive:
 
+**Auto language detection**: Auto-detects your language from input — Chinese queries get Chinese output, English queries get English output. No manual switching needed.
+
 1. **Experimental design guidance** &mdash; recommends the most suitable NGS approach for your scientific question.
 2. **Standardized workflow generation** &mdash; produces analysis scripts following GATK / nf-core and other authoritative sources.
 3. **Parameter best practices** &mdash; sensible defaults ready to use, minimizing trial-and-error.
 4. **Quality validation checklists** &mdash; output inspection rules for every step.
 
 将本仓库作为 AI 编码助手的 Skill 加载，即可在生信分析任务中自动获得：
+
+**自动语言检测**：自动检测输入语言——中文输入获得中文输出，英文输入获得英文输出，无需手动切换。
 
 1. **实验设计选型指导** &mdash; 根据科学问题推荐最合适的 NGS 方案。
 2. **标准化流程生成** &mdash; 按 GATK / nf-core 等权威来源生成分析脚本。

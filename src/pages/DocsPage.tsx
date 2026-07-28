@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { BookOpen, ChevronRight, FileText } from "lucide-react";
+import { useT } from "../i18n";
 
 interface DocEntry {
   slug: string;
@@ -36,6 +37,7 @@ export default function DocsPage() {
   const { slug } = useParams<{ slug?: string }>();
   const navigate = useNavigate();
   const [activeSlug, setActiveSlug] = useState<string>(slug || "skill");
+  const t = useT();
 
   useEffect(() => {
     if (slug) setActiveSlug(slug);
@@ -74,7 +76,7 @@ export default function DocsPage() {
         >
           <BookOpen size={16} style={{ color: "var(--color-accent)" }} />
           <span style={{ fontWeight: 600, fontSize: 14, color: "var(--color-text-primary)" }}>
-            Skill 文档
+            {t("docs.sidebarTitle")}
           </span>
         </div>
 
@@ -121,7 +123,7 @@ export default function DocsPage() {
             lineHeight: 1.5,
           }}
         >
-          本文档即 Skill 仓库的 SKILL.md + references/ 内容，与 FlowSeq 管线数据共享同一数据源。
+          {t("docs.footerNote")}
         </div>
       </aside>
 
