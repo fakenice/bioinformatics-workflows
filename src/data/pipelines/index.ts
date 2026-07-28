@@ -9,8 +9,10 @@ import chipSeq from "./chip-seq.json";
 import wgbs from "./wgbs.json";
 import metagenomics from "./metagenomics.json";
 import rrna16s from "./16s.json";
+import familyTrioWgs from "./family-trio-wgs.json";
 
 export const pipelines: PipelineDefinition[] = [
+  familyTrioWgs,
   wgsGermline,
   wgsSomatic,
   wes,
@@ -26,8 +28,8 @@ export const pipelines: PipelineDefinition[] = [
 export const categoryLabels: Record<string, string> = {
   dna: "DNA",
   rna: "RNA",
-  epigenetics: "±í¹ÛÒÅ´«",
-  microbiome: "Î¢ÉúÎï",
+  epigenetics: "è¡¨è§‚é—ä¼ ",
+  microbiome: "å¾®ç”Ÿç‰©",
 };
 
 export const categoryIcons: Record<string, string> = {
