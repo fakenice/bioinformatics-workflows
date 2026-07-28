@@ -20,7 +20,7 @@
       "url": "https://gatk.broadinstitute.org/hc/en-us/articles/360035535932",
       "steps": [
         {
-          "id": "align",
+          "id": "step-1",
           "name": "比对 (BWA-MEM2)",
           "description": "将 Clean Reads 比对到 hg38 参考基因组",
           "tools": [
@@ -38,7 +38,7 @@
           }
         },
         {
-          "id": "markdup",
+          "id": "step-2",
           "name": "标记重复 + BQSR",
           "description": "标记 PCR 重复并对碱基质量进行重校准",
           "tools": [
@@ -68,7 +68,7 @@
           }
         },
         {
-          "id": "hc",
+          "id": "step-3",
           "name": "单样本 GVCF",
           "description": "HaplotypeCaller GVCF 模式，每个样本独立生成",
           "tools": [
@@ -86,7 +86,7 @@
           }
         },
         {
-          "id": "genomicsdb",
+          "id": "step-4",
           "name": "GVCF 整合",
           "description": "将 3 个 GVCF 导入 GenomicsDB 数据库",
           "tools": [
@@ -104,7 +104,7 @@
           }
         },
         {
-          "id": "joint",
+          "id": "step-5",
           "name": "联合基因分型",
           "description": "基于 GenomicsDB 进行家系联合分型",
           "tools": [
@@ -122,7 +122,7 @@
           }
         },
         {
-          "id": "vqsr",
+          "id": "step-6",
           "name": "VQSR 过滤 / Hard-Filtering",
           "description": "分别对 SNP 和 Indel 进行 VQSR 质量重校准；小样本备选硬过滤",
           "tools": [
@@ -152,7 +152,7 @@
           }
         },
         {
-          "id": "denovo",
+          "id": "step-7",
           "name": "De Novo 检测",
           "description": "基于 PED 家系文件识别新发变异",
           "tools": [
@@ -170,7 +170,7 @@
           }
         },
         {
-          "id": "family",
+          "id": "step-8",
           "name": "家系遗传模式筛选",
           "description": "按 AD/AR/X-linked 等遗传模式 + 表型过滤候选基因",
           "tools": [
@@ -194,7 +194,7 @@
           }
         },
         {
-          "id": "annotate",
+          "id": "step-9",
           "name": "变异注释 + QC 报告",
           "description": "功能注释 + MultiQC 汇总",
           "tools": [
@@ -248,7 +248,7 @@
       "url": "https://nf-co.re/sarek/3.9",
       "steps": [
         {
-          "id": "qc",
+          "id": "step-1",
           "name": "质控 + 修剪",
           "description": "FastQC + fastp 一体化 QC",
           "tools": [
@@ -272,7 +272,7 @@
           }
         },
         {
-          "id": "align",
+          "id": "step-2",
           "name": "比对 + 去重",
           "description": "BWA-MEM2 / DragMap 比对并 MarkDuplicates",
           "tools": [
@@ -296,7 +296,7 @@
           }
         },
         {
-          "id": "bqsr",
+          "id": "step-3",
           "name": "BQSR (可选)",
           "description": "碱基质量重校准，可通过 --no_bqsr 跳过",
           "tools": [
@@ -314,7 +314,7 @@
           }
         },
         {
-          "id": "variant",
+          "id": "step-4",
           "name": "变异检测",
           "description": "HaplotypeCaller / DeepVariant / Strelka2 多工具可选",
           "tools": [
@@ -344,7 +344,7 @@
           }
         },
         {
-          "id": "annotate",
+          "id": "step-5",
           "name": "注释 + MultiQC 报告",
           "description": "snpEff/VEP 注释 + 全流程 QC 汇总",
           "tools": [

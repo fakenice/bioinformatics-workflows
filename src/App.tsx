@@ -3,6 +3,7 @@ import Header from "./components/Header";
 import HomePage from "./pages/HomePage";
 import PipelinePage from "./pages/PipelinePage";
 import ComparePage from "./pages/ComparePage";
+import DocsPage from "./pages/DocsPage";
 
 export default function App() {
   return (
@@ -13,6 +14,8 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/pipeline/:id" element={<PipelinePage />} />
           <Route path="/compare/:id" element={<ComparePage />} />
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/docs/:slug" element={<DocsPage />} />
         </Routes>
       </div>
     </BrowserRouter>

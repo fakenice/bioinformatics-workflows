@@ -1,34 +1,34 @@
 import type { PipelineDefinition } from "../../types/pipeline";
-import wgsGermline from "./wgs-germline.json";
-import wgsSomatic from "./wgs-somatic.json";
-import wes from "./wes.json";
+import familytriowgs from "./family-trio-wgs.json";
 import gwas from "./gwas.json";
-import rnaSeq from "./rna-seq.json";
-import scrnaSeq from "./scrna-seq.json";
-import chipSeq from "./chip-seq.json";
+import mendelianrandomization from "./mendelian-randomization.json";
+import prs from "./prs.json";
+import rarevariant from "./rare-variant.json";
+import wgsgermline from "./wgs-germline.json";
+import wgssomatic from "./wgs-somatic.json";
+import wes from "./wes.json";
+import rnaseq from "./rna-seq.json";
+import scrnaseq from "./scrna-seq.json";
+import chipseq from "./chip-seq.json";
 import wgbs from "./wgbs.json";
 import metagenomics from "./metagenomics.json";
-import rrna16s from "./16s.json";
-import familyTrioWgs from "./family-trio-wgs.json";
-import mendelianRandomization from "./mendelian-randomization.json";
-import prs from "./prs.json";
-import rareVariant from "./rare-variant.json";
+import pipe_16s from "./16s.json";
 
 export const pipelines: PipelineDefinition[] = [
-  familyTrioWgs,
-  mendelianRandomization,
-  prs,
-  rareVariant,
-  wgsGermline,
-  wgsSomatic,
-  wes,
+  familytriowgs,
   gwas,
-  rnaSeq,
-  scrnaSeq,
-  chipSeq,
+  mendelianrandomization,
+  prs,
+  rarevariant,
+  wgsgermline,
+  wgssomatic,
+  wes,
+  rnaseq,
+  scrnaseq,
+  chipseq,
   wgbs,
   metagenomics,
-  rrna16s,
+  pipe_16s,
 ] as PipelineDefinition[];
 
 export const categoryLabels: Record<string, string> = {

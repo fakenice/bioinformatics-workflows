@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Search, Dna } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Search, Dna, BookOpen } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { useStore } from "../store/useStore";
 
 export default function Header() {
   const { searchQuery, setSearchQuery } = useStore();
   const [focused, setFocused] = useState(false);
+  const location = useLocation();
 
   return (
     <header
@@ -49,6 +50,31 @@ export default function Header() {
             style={{ color: "var(--color-text-primary)" }}
           />
         </div>
+
+        <Link
+          to="/docs"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+            padding: "6px 12px",
+            borderRadius: 8,
+            fontSize: 13,
+            fontWeight: 500,
+            textDecoration: "none",
+            color: location.pathname.startsWith("/docs")
+              ? "var(--color-accent)"
+              : "var(--color-text-secondary)",
+            background: location.pathname.startsWith("/docs")
+              ? "var(--color-accent-muted)"
+              : "transparent",
+            transition: "background 0.15s",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <BookOpen size={14} />
+          Skill 文档
+        </Link>
 
         <a
           href="https://github.com/fakenice/flowseq"

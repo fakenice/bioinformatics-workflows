@@ -21,7 +21,7 @@
       "url": "https://www.hsph.harvard.edu/skat/",
       "steps": [
         {
-          "id": "qc",
+          "id": "step-1",
           "name": "变异 QC",
           "description": "测序数据变异级质控",
           "tools": [
@@ -39,7 +39,7 @@
           }
         },
         {
-          "id": "annotation",
+          "id": "step-2",
           "name": "功能注释",
           "description": "基因级注释，确定变异-基因映射",
           "tools": [
@@ -57,7 +57,7 @@
           }
         },
         {
-          "id": "null-model",
+          "id": "step-3",
           "name": "拟合空模型",
           "description": "仅协变量的 null model",
           "tools": [
@@ -75,7 +75,7 @@
           }
         },
         {
-          "id": "burden",
+          "id": "step-4",
           "name": "Burden test",
           "description": "基因内罕见变异计数求和",
           "tools": [
@@ -93,7 +93,7 @@
           }
         },
         {
-          "id": "skat",
+          "id": "step-5",
           "name": "SKAT 检验",
           "description": "方差分量检验",
           "tools": [
@@ -111,80 +111,62 @@
           }
         },
         {
-          "id": "skato",
+          "id": "step-6",
           "name": "SKAT-O（推荐）",
           "description": "Burden + SKAT 自适应混合",
           "tools": [
             {
               "name": "SKAT SKAT()",
               "version": "2.2+",
-              "params": "r.corr=NA (adaptive)",
+              "params": "r.corr=NA",
               "docker": ""
             }
           ],
-          "notes": "数据自适应地在 Burden 和 SKAT 间选择最优权重。方向未知时的默认推荐方法。",
+          "notes": "SKAT-O 自动选择最优 r.corr 参数，推荐作为默认方法。",
           "position": {
             "x": 0,
             "y": 600
           }
         },
         {
-          "id": "acat",
-          "name": "ACAT（大样本）",
-          "description": "从单个变异 P 值聚合",
-          "tools": [
-            {
-              "name": "ACAT R 包",
-              "version": "",
-              "params": "",
-              "docker": ""
-            }
-          ],
-          "notes": "计算效率高，适合百万级样本和全基因组扫描。对变异间 LD 不敏感。",
-          "position": {
-            "x": 0,
-            "y": 720
-          }
-        },
-        {
-          "id": "fdr",
+          "id": "step-7",
           "name": "多重检验校正",
-          "description": "FDR 校正 + 结果解读",
+          "description": "全基因组 per-gene 检验 + FDR 校正",
           "tools": [
             {
-              "name": "R stats::p.adjust()",
-              "version": "",
+              "name": "R p.adjust()",
+              "version": "4.3+",
               "params": "method='BH'",
               "docker": ""
             }
           ],
-          "notes": "全基因组按基因数做 Benjamini-Hochberg FDR 校正。显著性：FDR q < 0.05。候选基因交集 ClinVar/OMIM 验证。",
+          "notes": "FDR 校正，显著性阈值 q < 0.05。",
           "position": {
             "x": 0,
-            "y": 840
+            "y": 720
           }
         }
       ],
       "references": [
         {
-          "title": "SKAT: Sequence Kernel Association Test (Wu et al., 2011)",
+          "title": "SKAT: SNP-set Kernel Association Test (Wu et al., 2011)",
           "url": "https://doi.org/10.1016/j.ajhg.2011.05.029",
           "type": "paper"
         },
         {
-          "title": "SKAT-O: Optimal unified association test (Lee et al., 2012)",
-          "url": "https://doi.org/10.1093/biostatistics/kxs014",
+          "title": "SKAT-O: Optimal unified test (Lee et al., 2012)",
+          "url": "https://doi.org/10.1016/j.ajhg.2012.06.004",
           "type": "paper"
         },
         {
           "title": "ACAT: Aggregated Cauchy Association Test (Liu et al., 2019)",
-          "url": "https://doi.org/10.1016/j.ajhg.2018.12.002",
+          "url": "https://doi.org/10.1016/j.ajhg.2019.02.009",
           "type": "paper"
         },
         {
-          "title": "Rare-variant association analysis: study designs (Lee et al., 2014)",
-          "url": "https://doi.org/10.1146/annurev-genom-091212-153421",
-          "type": "paper"
+          "title": "SKAT R package documentation",
+          "url": "https://www.hsph.harvard.edu/skat/",
+          "type": "official"
         }
       ]
     }

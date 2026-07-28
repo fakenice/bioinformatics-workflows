@@ -1,16 +1,16 @@
 {
   "id": "mendelian-randomization",
   "name": "Mendelian Randomization",
-  "nameZH": "孟德尔随机化",
+  "nameZH": "孟德尔随机化分析",
   "category": "dna",
   "tags": [
     "孟德尔随机化",
     "MR",
-    "因果推断",
-    "GWAS",
-    "工具变量"
+    "TwoSampleMR",
+    "工具变量",
+    "因果推断"
   ],
-  "overview": "利用遗传变异作为工具变量（IV），评估暴露与结局的因果关系。双样本 MR 使用 GWAS summary statistics，无需个体基因型数据。包含 IV 选择、正链对齐、MR 估计（IVW/MR-Egger/加权中位数）和敏感性分析（异质性/多效性/leave-one-out）。",
+  "overview": "利用遗传变异作为工具变量评估暴露与结局的因果关系。支持双样本 MR（使用 GWAS summary statistics），覆盖 IV 选择、harmonization、多方法 MR 估计和敏感性分析。",
   "icon": "dna",
   "sources": [
     {
@@ -20,134 +20,134 @@
       "url": "https://mrcieu.github.io/TwoSampleMR/",
       "steps": [
         {
-          "id": "select-iv",
+          "id": "step-1",
           "name": "选择工具变量",
-          "description": "从暴露 GWAS 提取显著 SNP 并 clumping",
+          "description": "从暴露 GWAS 选 IV（P < 5e-8），Clumping（r² < 0.001, 10Mb），检查 F-statistic > 10",
           "tools": [
             {
-              "name": "TwoSampleMR (R)",
-              "version": "0.5+",
-              "params": "p1=5e-8, r2=0.001, kb=10000",
+              "name": "TwoSampleMR R 包",
+              "version": "0.6+",
+              "params": "extract_instruments(p1=5e-8, clump=T, r2=0.001, kb=10000)",
               "docker": ""
             }
           ],
-          "notes": "P < 5×10⁻⁸，LD clumping r² < 0.001（10Mb window）。F-statistic > 10（F = β²/se²），弱 IV 会引入偏差。",
+          "notes": "F-statistic = beta²/se²，要求 F > 10。",
           "position": {
             "x": 0,
             "y": 0
           }
         },
         {
-          "id": "extract-outcome",
-          "name": "提取结局 SNP",
-          "description": "从结局 GWAS 提取对应 IV 的效应量",
+          "id": "step-2",
+          "name": "提取结局 SNP + Harmonization",
+          "description": "提取结局 GWAS 对应 SNP，正链对齐，去除回文 SNP（MAF > 0.4）",
           "tools": [
             {
-              "name": "TwoSampleMR extract_outcome_data()",
-              "version": "0.5+",
-              "params": "",
+              "name": "TwoSampleMR harmonise_data()",
+              "version": "0.6+",
+              "params": "action=2",
               "docker": ""
             }
           ],
-          "notes": "确保暴露和结局 GWAS 来自不同人群，避免样本重叠（overlap bias）。",
+          "notes": "action=2 去除回文 SNP（MAF > 0.4）。",
           "position": {
             "x": 0,
             "y": 120
           }
         },
         {
-          "id": "harmonize",
-          "name": "正链对齐",
-          "description": "Harmonization：链方向对齐 & 去除回文 SNP",
+          "id": "step-3",
+          "name": "MR 估计",
+          "description": "IVW（主方法）、MR-Egger、加权中位数、加权模式、最多似然法",
           "tools": [
             {
-              "name": "TwoSampleMR harmonise_data()",
-              "version": "0.5+",
-              "params": "action=2",
+              "name": "TwoSampleMR mr()",
+              "version": "0.6+",
+              "params": "method_list=c('mr_ivw','mr_egger_regression','mr_weighted_median')",
               "docker": ""
             }
           ],
-          "notes": "确保暴露和结局效应等位基因一致。去除回文 SNP（MAF > 0.4 中间等位基因），避免链方向不确定。",
+          "notes": "IVW 为主方法。MR-Egger 检验水平多效性。",
           "position": {
             "x": 0,
             "y": 240
           }
         },
         {
-          "id": "mr-estimate",
-          "name": "MR 估计",
-          "description": "IVW / MR-Egger / 加权中位数 / 加权模式",
+          "id": "step-4",
+          "name": "敏感性分析",
+          "description": "Cochran's Q 异质性、MR-Egger 截距多效性、Leave-one-out、MR-PRESSO 离群值、Steiger 因果方向",
           "tools": [
             {
-              "name": "TwoSampleMR mr()",
-              "version": "0.5+",
+              "name": "TwoSampleMR mr_heterogeneity()",
+              "version": "0.6+",
+              "params": "",
+              "docker": ""
+            },
+            {
+              "name": "TwoSampleMR mr_pleiotropy_test()",
+              "version": "0.6+",
+              "params": "",
+              "docker": ""
+            },
+            {
+              "name": "MR-PRESSO",
+              "version": "1.0",
+              "params": "NbDistribution=1000, SignifThreshold=0.05",
+              "docker": ""
+            },
+            {
+              "name": "TwoSampleMR mr_leaveoneout()",
+              "version": "0.6+",
               "params": "",
               "docker": ""
             }
           ],
-          "notes": "IVW（逆方差加权）为主分析方法（要求无水平多效性）。MR-Egger 允许截距项 ≠ 0。加权中位数在 < 50% 无效 IV 时仍稳健。",
+          "notes": "Cochran's Q P < 0.05 表示异质性。 MR-Egger 截距 P < 0.05 表示水平多效性。 离群值检测 + 失真检验。 逐个 SNP 剔除，检查是否有单一 SNP 驱动结果。",
           "position": {
             "x": 0,
             "y": 360
           }
         },
         {
-          "id": "sensitivity",
-          "name": "敏感性分析",
-          "description": "异质性 + 多效性 + Leave-one-out",
+          "id": "step-5",
+          "name": "多变量 MR (可选)",
+          "description": "控制混杂暴露，评估独立因果效应",
           "tools": [
             {
-              "name": "TwoSampleMR / MR-PRESSO",
-              "version": "0.5+ / 1.0",
+              "name": "TwoSampleMR mv_multivariable_mr()",
+              "version": "0.6+",
               "params": "",
               "docker": ""
             }
           ],
-          "notes": "Cochran's Q 检验异质性（P > 0.05）。MR-Egger 截距检验水平多效性（P > 0.05）。MR-PRESSO 检测离群 SNP 并校正。Steiger filtering 验证因果方向。",
+          "notes": "多变量 MR 控制混杂暴露。",
           "position": {
             "x": 0,
             "y": 480
-          }
-        },
-        {
-          "id": "multivariable",
-          "name": "多变量 MR（可选）",
-          "description": "控制混杂暴露的独立因果效应",
-          "tools": [
-            {
-              "name": "MVMR / TwoSampleMR",
-              "version": "",
-              "params": "",
-              "docker": ""
-            }
-          ],
-          "notes": "当多个暴露存在遗传相关时，MVMR 可估计各暴露的独立因果效应。需注意 IV 强度和条件 F-statistic。",
-          "position": {
-            "x": 0,
-            "y": 600
           }
         }
       ],
       "references": [
         {
-          "title": "TwoSampleMR R Package (Hemani et al., 2018)",
+          "title": "TwoSampleMR R package documentation",
+          "url": "https://mrcieu.github.io/TwoSampleMR/",
+          "type": "official"
+        },
+        {
+          "title": "MR-PRESSO: detection of horizontal pleiotropy (Verbanck et al., 2018)",
+          "url": "https://doi.org/10.1038/s41588-018-0099-2",
+          "type": "paper"
+        },
+        {
+          "title": "Davey Smith & Hemani (2014) Mendelian randomization",
+          "url": "https://doi.org/10.1093/hmg/ddu328",
+          "type": "paper"
+        },
+        {
+          "title": "Hemani et al. (2018) The MR-Base platform",
           "url": "https://doi.org/10.7554/eLife.34408",
           "type": "paper"
-        },
-        {
-          "title": "MR-PRESSO: Pleiotropy RESidual Sum and Outlier (Verbanck et al., 2018)",
-          "url": "https://doi.org/10.1038/s41588-018-0099-7",
-          "type": "paper"
-        },
-        {
-          "title": "Guidelines for performing Mendelian randomization (Burgess et al., 2020)",
-          "url": "https://doi.org/10.12688/wellcomeopenres.15555.3",
-          "type": "paper"
-        },
-        {
-          "title": "MRC IEU OpenGWAS Database",
-          "url": "https://gwas.mrcieu.ac.uk/",
-          "type": "official"
         }
       ]
     }
