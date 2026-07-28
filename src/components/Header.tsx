@@ -115,7 +115,7 @@ export default function Header() {
             }}
             aria-label="Switch language"
           >
-            {lang === "zh" ? "EN" : "中}
+            {lang === "zh" ? "EN" : "中"}
           </button>
 
           <a
