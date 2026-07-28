@@ -52,7 +52,6 @@ const en = {
     footerNote:
       "This page renders SKILL.md + references/ from the Skill repository, sharing the same data source as FlowSeq pipelines.",
   },
-,
   tagTranslations: {
     "扩增子": "Amplicon",
     "组蛋白修饰": "Histone Mod.",
@@ -83,7 +82,7 @@ const en = {
     "肿瘤": "Tumor",
     "配对样本": "Paired Sample",
     "宏基因组": "Metagenomics",
-  }
+  },
 
 };
 

@@ -54,7 +54,6 @@ const zh: I18nStrings = {
     footerNote:
       "本文档即 Skill 仓库的 SKILL.md + references/ 内容，与 FlowSeq 管线数据共享同一数据源。",
   },
-,
   tagTranslations: {
     "扩增子": "扩增子",
     "组蛋白修饰": "组蛋白修饰",
@@ -85,7 +84,7 @@ const zh: I18nStrings = {
     "肿瘤": "肿瘤",
     "配对样本": "配对样本",
     "宏基因组": "宏基因组",
-  }
+  },
 
 };
 
