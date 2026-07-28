@@ -4,7 +4,7 @@
 
 面向 AI 编码助手的**生物信息学工作流智能 Skill 仓库**。为 LLM 提供标准化 NGS 分析流程的结构化知识，指导 AI 生成高质量的生信分析脚本与管线代码。
 
-本仓库同时包含 **FlowSeq** 可视化 Demo，用于交互式浏览和验证 Skill 中定义的分析流程。
+本仓库同时包含 **FlowSeq**——既是 Skill 知识库的在线文档前端，也是交互式分析管线浏览器，一站式浏览和验证 Skill 定义的所有内容。
 
 **FlowSeq 在线体验**: https://fakenice.github.io/flowseq
 
@@ -43,13 +43,14 @@
 
 ---
 
-## FlowSeq — 可视化 Demo
+## FlowSeq — Skill 知识库与管线浏览器
 
-交互式生物信息学标准分析流程导航平台，以 Markdown 渲染方式展示每条管线的步骤、推荐工具、关键参数与参考文献。
+既可在线浏览 Skill 仓库的全部文档（SKILL.md + 4 个 reference），也可交互式探索 14 条分析管线的步骤、工具、参数与参考文献。
 
 ### 功能
 
-- **Markdown 管线视图**: 结构化的流程步骤表格，推荐工具 + 参数一目了然
+- **Skill 文档浏览**: 侧边栏导航，在线渲染 SKILL.md 及 `references/` 下全部 Markdown 文件
+- **Markdown 管线视图**: 结构化的流程步骤表格，推荐工具 + 参数一目了然（支持 GFM 表格）
 - **权威来源切换**: 同一分析类型可切换 GATK / nf-core 等不同参考来源
 - **对比模式**: 并排对比不同来源的流程差异
 - **反向搜索**: 输入工具名即可找到属于哪个分析流程
@@ -85,20 +86,23 @@ npm run dev
 │   ├── patterns.md
 │   ├── sharp_edges.md
 │   └── validations.md
-├── app/                      # FlowSeq 可视化 Demo（即本目录）
+├── scripts/
+│   └── build-pipelines.ts    # 构建时从模板自动生成研究设计管线 JSON
+├── app/                      # FlowSeq（Skill 文档前端 + 管线浏览器）
 │   ├── src/
 │   │   ├── components/       # UI 组件
-│   │   │   ├── PipelineMarkdown  # Markdown 管线渲染
+│   │   │   ├── PipelineMarkdown  # Markdown 管线渲染（GFM）
 │   │   │   ├── SourceSwitcher     # 参考来源切换
 │   │   │   ├── ReferenceAccordion # 参考文献折叠区
 │   │   │   ├── PipelineCard       # 分析场景卡片
 │   │   │   ├── CategoryTabs       # 分类标签
-│   │   │   └── Header             # 顶栏 + 搜索
+│   │   │   └── Header             # 顶栏 + 搜索 + Skill 文档入口
 │   │   ├── pages/            # 页面
 │   │   │   ├── HomePage           # 首页场景选择
 │   │   │   ├── PipelinePage       # 流程详情
+│   │   │   ├── DocsPage           # Skill 文档在线浏览
 │   │   │   └── ComparePage        # 对比模式
-│   │   ├── data/pipelines/   # 14 个分析流程 JSON 定义
+│   │   ├── data/pipelines/   # 管线 JSON（5 个研究设计构建时生成 + 9 个组学手动维护）
 │   │   ├── store/            # Zustand 状态管理
 │   │   ├── types/            # TypeScript 类型定义
 │   │   └── utils/            # 工具函数
@@ -120,7 +124,7 @@ npm run dev
 
 ### 作为参考浏览
 
-直接访问 [FlowSeq Demo](https://fakenice.github.io/flowseq) 交互式浏览所有分析管线。
+直接访问 [FlowSeq Demo](https://fakenice.github.io/flowseq)，既可浏览 Skill 全部文档，也可交互式探索所有分析管线。
 
 ## License
 
