@@ -1,4 +1,4 @@
-# FlowSeq — 生物信息学分析流程交互导航(disfinshed)
+# FlowSeq — 生物信息学分析流程交互导航(unfinshed)
 
 [![Deploy Status](https://github.com/fakenice/flowseq/actions/workflows/deploy.yml/badge.svg)](https://github.com/fakenice/flowseq/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
