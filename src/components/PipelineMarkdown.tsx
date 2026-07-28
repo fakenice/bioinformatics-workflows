@@ -1,4 +1,5 @@
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { PipelineDefinition } from "../types/pipeline";
 import { pipelineToMarkdown } from "../utils/pipelineToMarkdown";
 
@@ -101,7 +102,7 @@ export default function PipelineMarkdown({ pipeline, sourceId }: PipelineMarkdow
         }
       `}</style>
       <div className="pipeline-md prose prose-sm max-w-none">
-        <ReactMarkdown>{markdown}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
       </div>
     </div>
   );
