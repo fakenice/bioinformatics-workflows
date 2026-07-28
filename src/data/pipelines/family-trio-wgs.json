@@ -29,7 +29,8 @@
               "name": "BWA-MEM2",
               "version": "2.2",
               "params": "-M -R @RG\\tID:sample\\tSM:sample\\tPL:ILLUMINA",
-              "docker": "biocontainers/bwa-mem2:2.2.1"
+              "docker": "biocontainers/bwa-mem2:2.2.1",
+              "notes": "BWA-MEM2 比 BWA-MEM 快约 2×。也可选 DragMap 提速 3-5×。"
             }
           ],
           "notes": "BWA-MEM2 比 BWA-MEM 快约 2×。也可选 DragMap 提速 3-5×。",
@@ -47,7 +48,8 @@
               "name": "GATK MarkDuplicates",
               "version": "4.5",
               "params": "",
-              "docker": "broadinstitute/gatk:4.5.0.0"
+              "docker": "broadinstitute/gatk:4.5.0.0",
+              "notes": "BQSR 基于 dbSNP/1000G/Mills 等已知位点集。家系分析中不推荐完全移除重复，仅标记即可。"
             },
             {
               "name": "GATK BaseRecalibrator",
@@ -77,7 +79,8 @@
               "name": "GATK HaplotypeCaller",
               "version": "4.5",
               "params": "-ERC GVCF --native-pair-hmm-threads 8",
-              "docker": "broadinstitute/gatk:4.5.0.0"
+              "docker": "broadinstitute/gatk:4.5.0.0",
+              "notes": "GVCF 模式便于后续增量联合 calling。Trio 中 3 个样本完全并行。"
             }
           ],
           "notes": "GVCF 模式便于后续增量联合 calling。Trio 中 3 个样本完全并行。",
@@ -95,7 +98,8 @@
               "name": "GATK GenomicsDBImport",
               "version": "4.5",
               "params": "--genomicsdb-workspace-path gendb --intervals chr.list",
-              "docker": "broadinstitute/gatk:4.5.0.0"
+              "docker": "broadinstitute/gatk:4.5.0.0",
+              "notes": "按染色体区间并行导入。3 个样本的 Trio 直接全基因组导入即可。"
             }
           ],
           "notes": "按染色体区间并行导入。3 个样本的 Trio 直接全基因组导入即可。",
@@ -113,7 +117,8 @@
               "name": "GATK GenotypeGVCFs",
               "version": "4.5",
               "params": "--include-non-variant-sites",
-              "docker": "broadinstitute/gatk:4.5.0.0"
+              "docker": "broadinstitute/gatk:4.5.0.0",
+              "notes": "联合分型可利用群体信息提高稀有变异敏感性，并输出一致的基因型矩阵。对 Trio 设计增益明显。"
             }
           ],
           "notes": "联合分型可利用群体信息提高稀有变异敏感性，并输出一致的基因型矩阵。对 Trio 设计增益明显。",
@@ -131,7 +136,8 @@
               "name": "GATK VariantRecalibrator",
               "version": "4.5",
               "params": "-mode SNP --max-gaussians 4",
-              "docker": "broadinstitute/gatk:4.5.0.0"
+              "docker": "broadinstitute/gatk:4.5.0.0",
+              "notes": "⚠ VQSR 至少需要 30 样本才稳健。Trio 小样本建议 Hard-Filtering：QD<2.0, FS>60, MQ<40, SOR>3.0。"
             },
             {
               "name": "GATK ApplyVQSR",
@@ -161,7 +167,8 @@
               "name": "GATK PossibleDeNovo",
               "version": "4.5",
               "params": "--ped family.ped --max-parent-af 0.001",
-              "docker": "broadinstitute/gatk:4.5.0.0"
+              "docker": "broadinstitute/gatk:4.5.0.0",
+              "notes": "筛选仅先证者存在、父母为参考纯合的变异。结合 gnomAD MAF<0.01 及功能注释进一步缩窄候选。"
             }
           ],
           "notes": "筛选仅先证者存在、父母为参考纯合的变异。结合 gnomAD MAF<0.01 及功能注释进一步缩窄候选。",
@@ -179,7 +186,8 @@
               "name": "slivar",
               "version": "0.3",
               "params": "--ped family.ped --trio --gnomad-max-af 0.01 --impactful",
-              "docker": "brentp/slivar:0.3"
+              "docker": "brentp/slivar:0.3",
+              "notes": "slivar 一站式支持 de novo、compound het、AR homozygous、AD inherited 等模式。结合表型 HPO 词条效果更佳。"
             },
             {
               "name": "GATK SelectVariants",
@@ -203,7 +211,8 @@
               "name": "Ensembl VEP",
               "version": "112",
               "params": "--everything --fork 8 --pick",
-              "docker": "ensemblorg/ensembl-vep:112"
+              "docker": "ensemblorg/ensembl-vep:112",
+              "notes": "VEP 输出含 gnomAD AF、ClinVar 临床意义、CADD/SIFT/PolyPhen 预测分数。MultiQC 汇总覆盖度、Ti/Tv、比对率等。"
             },
             {
               "name": "MultiQC",
@@ -257,7 +266,8 @@
               "name": "FastQC",
               "version": "0.12.1",
               "params": "",
-              "docker": "nfcore/sarek:3.9"
+              "docker": "nfcore/sarek:3.9",
+              "notes": "fastp 一步完成质控、接头去除、质量裁剪，效率高于 Trim Galore。"
             },
             {
               "name": "fastp",
@@ -281,7 +291,8 @@
               "name": "BWA-MEM2 / DragMap / Sentieon",
               "version": "—",
               "params": "",
-              "docker": "nfcore/sarek:3.9"
+              "docker": "nfcore/sarek:3.9",
+              "notes": "三选一。DragMap 速度最快（DRAGEN 算法），Sentieon 商用精度最高。"
             },
             {
               "name": "GATK MarkDuplicates",
@@ -305,7 +316,8 @@
               "name": "GATK BaseRecalibrator + ApplyBQSR",
               "version": "4.5",
               "params": "",
-              "docker": "nfcore/sarek:3.9"
+              "docker": "nfcore/sarek:3.9",
+              "notes": "现代测序平台此步收益递减，但临床级分析仍推荐保留。"
             }
           ],
           "notes": "现代测序平台此步收益递减，但临床级分析仍推荐保留。",
@@ -323,7 +335,8 @@
               "name": "GATK HaplotypeCaller",
               "version": "4.5",
               "params": "",
-              "docker": "nfcore/sarek:3.9"
+              "docker": "nfcore/sarek:3.9",
+              "notes": "DeepVariant 基于 CNN，对 Indel 灵敏度最高。可多工具并行取交集提升准确性。"
             },
             {
               "name": "DeepVariant",
@@ -353,7 +366,8 @@
               "name": "snpEff / VEP",
               "version": "5.1 / 112",
               "params": "",
-              "docker": "nfcore/sarek:3.9"
+              "docker": "nfcore/sarek:3.9",
+              "notes": "snpEff 比 VEP 轻量。自动产出 MultiQC HTML 报告，含覆盖度、GC bias、insert size 等。"
             },
             {
               "name": "MultiQC",

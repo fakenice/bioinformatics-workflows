@@ -11,28 +11,35 @@
     "因果推断"
   ],
   "overview": "利用遗传变异作为工具变量评估暴露与结局的因果关系。支持双样本 MR（使用 GWAS summary statistics），覆盖 IV 选择、harmonization、多方法 MR 估计和敏感性分析。",
+  "overviewEn": "Uses genetic variants as instrumental variables to assess causal relationships between exposures and outcomes. Supports two-sample MR (using GWAS summary statistics), covering IV selection, harmonization, multi-method MR estimation, and sensitivity analysis.",
   "icon": "dna",
   "version": "1.0.0",
   "sources": [
     {
       "id": "twosamplemr",
       "name": "TwoSampleMR (MRC IEU)",
+      "nameEn": "TwoSampleMR (MRC IEU)",
       "type": "official",
       "url": "https://mrcieu.github.io/TwoSampleMR/",
       "steps": [
         {
           "id": "step-1",
           "name": "选择工具变量",
+          "nameEn": "Select Instrumental Variables",
           "description": "从暴露 GWAS 选 IV（P < 5e-8），Clumping（r² < 0.001, 10Mb），检查 F-statistic > 10",
+          "descriptionEn": "Select IVs from exposure GWAS (P < 5e-8), clumping (r² < 0.001, 10Mb), check F-statistic > 10",
           "tools": [
             {
               "name": "TwoSampleMR R 包",
               "version": "0.6+",
               "params": "extract_instruments(p1=5e-8, clump=T, r2=0.001, kb=10000)",
-              "docker": ""
+              "docker": "",
+              "notes": "F-statistic = beta²/se²，要求 F > 10。",
+              "notesEn": "F-statistic = beta²/se²; threshold F > 10."
             }
           ],
           "notes": "F-statistic = beta²/se²，要求 F > 10。",
+          "notesEn": "F-statistic = beta²/se²; threshold F > 10.",
           "position": {
             "x": 0,
             "y": 0
@@ -41,16 +48,21 @@
         {
           "id": "step-2",
           "name": "提取结局 SNP + Harmonization",
+          "nameEn": "Extract Outcome SNPs + Harmonization",
           "description": "提取结局 GWAS 对应 SNP，正链对齐，去除回文 SNP（MAF > 0.4）",
+          "descriptionEn": "Extract corresponding SNPs from outcome GWAS, align to forward strand, remove palindromic SNPs (MAF > 0.4)",
           "tools": [
             {
               "name": "TwoSampleMR harmonise_data()",
               "version": "0.6+",
               "params": "action=2",
-              "docker": ""
+              "docker": "",
+              "notes": "action=2 去除回文 SNP（MAF > 0.4）。",
+              "notesEn": "action=2 removes palindromic SNPs (MAF > 0.4)."
             }
           ],
           "notes": "action=2 去除回文 SNP（MAF > 0.4）。",
+          "notesEn": "action=2 removes palindromic SNPs (MAF > 0.4).",
           "position": {
             "x": 0,
             "y": 120
@@ -59,16 +71,21 @@
         {
           "id": "step-3",
           "name": "MR 估计",
+          "nameEn": "MR Estimation",
           "description": "IVW（主方法）、MR-Egger、加权中位数、加权模式、最多似然法",
+          "descriptionEn": "IVW (primary), MR-Egger, weighted median, weighted mode, maximum likelihood",
           "tools": [
             {
               "name": "TwoSampleMR mr()",
               "version": "0.6+",
               "params": "method_list=c('mr_ivw','mr_egger_regression','mr_weighted_median')",
-              "docker": ""
+              "docker": "",
+              "notes": "IVW 为主方法。MR-Egger 检验水平多效性。",
+              "notesEn": "IVW is the primary method. MR-Egger tests for horizontal pleiotropy."
             }
           ],
           "notes": "IVW 为主方法。MR-Egger 检验水平多效性。",
+          "notesEn": "IVW is the primary method. MR-Egger tests for horizontal pleiotropy.",
           "position": {
             "x": 0,
             "y": 240
@@ -77,34 +94,45 @@
         {
           "id": "step-4",
           "name": "敏感性分析",
+          "nameEn": "Sensitivity Analysis",
           "description": "Cochran's Q 异质性、MR-Egger 截距多效性、Leave-one-out、MR-PRESSO 离群值、Steiger 因果方向",
+          "descriptionEn": "Cochran's Q heterogeneity, MR-Egger intercept pleiotropy, leave-one-out, MR-PRESSO outliers, Steiger directionality",
           "tools": [
             {
               "name": "TwoSampleMR mr_heterogeneity()",
               "version": "0.6+",
               "params": "",
-              "docker": ""
+              "docker": "",
+              "notes": "Cochran's Q P < 0.05 表示异质性。",
+              "notesEn": "Cochran's Q P < 0.05 indicates heterogeneity."
             },
             {
               "name": "TwoSampleMR mr_pleiotropy_test()",
               "version": "0.6+",
               "params": "",
-              "docker": ""
+              "docker": "",
+              "notes": "MR-Egger 截距 P < 0.05 表示水平多效性。",
+              "notesEn": "MR-Egger intercept P < 0.05 indicates horizontal pleiotropy."
             },
             {
               "name": "MR-PRESSO",
               "version": "1.0",
               "params": "NbDistribution=1000, SignifThreshold=0.05",
-              "docker": ""
+              "docker": "",
+              "notes": "离群值检测 + 失真检验。",
+              "notesEn": "Outlier detection + distortion test."
             },
             {
               "name": "TwoSampleMR mr_leaveoneout()",
               "version": "0.6+",
               "params": "",
-              "docker": ""
+              "docker": "",
+              "notes": "逐个 SNP 剔除，检查是否有单一 SNP 驱动结果。",
+              "notesEn": "Leave-one-out analysis to check if a single SNP drives the result."
             }
           ],
           "notes": "Cochran's Q P < 0.05 表示异质性。 MR-Egger 截距 P < 0.05 表示水平多效性。 离群值检测 + 失真检验。 逐个 SNP 剔除，检查是否有单一 SNP 驱动结果。",
+          "notesEn": "Cochran's Q P < 0.05 indicates heterogeneity. MR-Egger intercept P < 0.05 indicates horizontal pleiotropy. Outlier detection + distortion test. Leave-one-out analysis to check if a single SNP drives the result.",
           "position": {
             "x": 0,
             "y": 360
@@ -113,16 +141,21 @@
         {
           "id": "step-5",
           "name": "多变量 MR (可选)",
+          "nameEn": "Multivariable MR (optional)",
           "description": "控制混杂暴露，评估独立因果效应",
+          "descriptionEn": "Control for confounding exposures, assess independent causal effects",
           "tools": [
             {
               "name": "TwoSampleMR mv_multivariable_mr()",
               "version": "0.6+",
               "params": "",
-              "docker": ""
+              "docker": "",
+              "notes": "多变量 MR 控制混杂暴露。",
+              "notesEn": "Multivariable MR controls for confounding exposures."
             }
           ],
           "notes": "多变量 MR 控制混杂暴露。",
+          "notesEn": "Multivariable MR controls for confounding exposures.",
           "position": {
             "x": 0,
             "y": 480

@@ -3,7 +3,12 @@
   "name": "RNA-seq Differential Expression",
   "nameZH": "RNA-seq 差异表达分析",
   "category": "rna",
-  "tags": ["转录组", "差异表达", "DESeq2", "富集分析"],
+  "tags": [
+    "转录组",
+    "差异表达",
+    "DESeq2",
+    "富集分析"
+  ],
   "overview": "转录组测序标准分析流程，从原始 FASTQ 到差异表达基因列表及功能富集。支持有生物学重复的 case-control 设计。",
   "icon": "microscope",
   "sources": [
@@ -13,17 +18,132 @@
       "type": "community",
       "url": "https://nf-co.re/rnaseq",
       "steps": [
-        { "id": "qc", "name": "质控 + 修剪", "description": "FastQC + Trim Galore", "tools": [{ "name": "FastQC", "version": "0.12.1", "params": "", "docker": "nfcore/rnaseq:3.14" }, { "name": "Trim Galore", "version": "0.6.10", "params": "--fastqc", "docker": "nfcore/rnaseq:3.14" }], "notes": "自动检测 adapter 并修剪低质量碱基。", "position": { "x": 0, "y": 0 } },
-        { "id": "align", "name": "比对 + 定量", "description": "STAR 比对 + Salmon 定量", "tools": [{ "name": "STAR", "version": "2.7.11", "params": "--twopassMode Basic", "docker": "nfcore/rnaseq:3.14" }, { "name": "Salmon", "version": "1.10", "params": "", "docker": "nfcore/rnaseq:3.14" }], "notes": "STAR 双步比对提高 junction 准确性。Salmon 提供转录本水平的定量，也可选择 RSEM。", "position": { "x": 0, "y": 120 } },
-        { "id": "qc2", "name": "比对后质控", "description": "RSeQC + Preseq + MultiQC", "tools": [{ "name": "RSeQC", "version": "5.0", "params": "", "docker": "nfcore/rnaseq:3.14" }], "notes": "评估基因体覆盖均一性、链特异性、rRNA 比例。", "position": { "x": 0, "y": 240 } },
-        { "id": "de", "name": "差异表达分析", "description": "DESeq2 / edgeR 差异分析", "tools": [{ "name": "DESeq2 (R/Bioconductor)", "version": "1.44", "params": "design = ~ condition", "docker": "bioconductor/bioconductor_docker" }], "notes": "需要生物学重复（每个条件≥3）。log2FC > 1 且 padj < 0.05 作为显著阈值。可视化：MA plot、火山图、样本间距离热图。", "position": { "x": 0, "y": 360 } },
-        { "id": "enrich", "name": "功能富集分析", "description": "GO/KEGG/GSEA 富集", "tools": [{ "name": "clusterProfiler (R)", "version": "4.10", "params": "", "docker": "bioconductor/bioconductor_docker" }], "notes": "clusterProfiler 一站式完成 GO、KEGG、Reactome 富集。GSEA 适合分析连续变化趋势，不依赖固定阈值。", "position": { "x": 0, "y": 480 } }
+        {
+          "id": "qc",
+          "name": "质控 + 修剪",
+          "description": "FastQC + Trim Galore",
+          "tools": [
+            {
+              "name": "FastQC",
+              "version": "0.12.1",
+              "params": "",
+              "docker": "nfcore/rnaseq:3.14"
+            },
+            {
+              "name": "Trim Galore",
+              "version": "0.6.10",
+              "params": "--fastqc",
+              "docker": "nfcore/rnaseq:3.14"
+            }
+          ],
+          "notes": "自动检测 adapter 并修剪低质量碱基。",
+          "position": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": "align",
+          "name": "比对 + 定量",
+          "description": "STAR 比对 + Salmon 定量",
+          "tools": [
+            {
+              "name": "STAR",
+              "version": "2.7.11",
+              "params": "--twopassMode Basic",
+              "docker": "nfcore/rnaseq:3.14"
+            },
+            {
+              "name": "Salmon",
+              "version": "1.10",
+              "params": "",
+              "docker": "nfcore/rnaseq:3.14"
+            }
+          ],
+          "notes": "STAR 双步比对提高 junction 准确性。Salmon 提供转录本水平的定量，也可选择 RSEM。",
+          "position": {
+            "x": 0,
+            "y": 120
+          },
+          "nameEn": "Alignment + Quantification",
+          "descriptionEn": "STAR alignment + Salmon quantification"
+        },
+        {
+          "id": "qc2",
+          "name": "比对后质控",
+          "description": "RSeQC + Preseq + MultiQC",
+          "tools": [
+            {
+              "name": "RSeQC",
+              "version": "5.0",
+              "params": "",
+              "docker": "nfcore/rnaseq:3.14"
+            }
+          ],
+          "notes": "评估基因体覆盖均一性、链特异性、rRNA 比例。",
+          "position": {
+            "x": 0,
+            "y": 240
+          }
+        },
+        {
+          "id": "de",
+          "name": "差异表达分析",
+          "description": "DESeq2 / edgeR 差异分析",
+          "tools": [
+            {
+              "name": "DESeq2 (R/Bioconductor)",
+              "version": "1.44",
+              "params": "design = ~ condition",
+              "docker": "bioconductor/bioconductor_docker"
+            }
+          ],
+          "notes": "需要生物学重复（每个条件≥3）。log2FC > 1 且 padj < 0.05 作为显著阈值。可视化：MA plot、火山图、样本间距离热图。",
+          "position": {
+            "x": 0,
+            "y": 360
+          }
+        },
+        {
+          "id": "enrich",
+          "name": "功能富集分析",
+          "description": "GO/KEGG/GSEA 富集",
+          "tools": [
+            {
+              "name": "clusterProfiler (R)",
+              "version": "4.10",
+              "params": "",
+              "docker": "bioconductor/bioconductor_docker"
+            }
+          ],
+          "notes": "clusterProfiler 一站式完成 GO、KEGG、Reactome 富集。GSEA 适合分析连续变化趋势，不依赖固定阈值。",
+          "position": {
+            "x": 0,
+            "y": 480
+          },
+          "nameEn": "Functional Enrichment",
+          "descriptionEn": "GO/KEGG enrichment and GSEA analysis"
+        }
       ],
       "references": [
-        { "title": "nf-core/rnaseq Documentation", "url": "https://nf-co.re/rnaseq/3.14", "type": "official" },
-        { "title": "DESeq2 (Love et al., 2014)", "url": "https://doi.org/10.1186/s13059-014-0550-8", "type": "paper" },
-        { "title": "clusterProfiler (Wu et al., 2021)", "url": "https://doi.org/10.1016/j.xinn.2021.100141", "type": "paper" }
-      ]
+        {
+          "title": "nf-core/rnaseq Documentation",
+          "url": "https://nf-co.re/rnaseq/3.14",
+          "type": "official"
+        },
+        {
+          "title": "DESeq2 (Love et al., 2014)",
+          "url": "https://doi.org/10.1186/s13059-014-0550-8",
+          "type": "paper"
+        },
+        {
+          "title": "clusterProfiler (Wu et al., 2021)",
+          "url": "https://doi.org/10.1016/j.xinn.2021.100141",
+          "type": "paper"
+        }
+      ],
+      "nameEn": "nf-core/rnaseq"
     }
-  ]
+  ],
+  "overviewEn": "Standard RNA-seq differential expression analysis pipeline. From FASTQ through QC, alignment/quantification, expression matrix construction, differential expression analysis, and functional enrichment. Suitable for transcriptome profiling studies."
 }

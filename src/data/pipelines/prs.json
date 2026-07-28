@@ -12,28 +12,35 @@
     "风险预测"
   ],
   "overview": "利用 GWAS summary statistics 预测个体遗传风险。支持 Clumping+Thresholding（PRSice-2）、Bayesian 连续收缩（LDpred2、PRS-CS）三种方法，覆盖数据准备、QC、PRS 计算和模型评估。",
+  "overviewEn": "Uses GWAS summary statistics to predict individual genetic risk. Supports Clumping+Thresholding (PRSice-2) and Bayesian continuous shrinkage (LDpred2, PRS-CS) methods, covering data preparation, QC, PRS calculation, and model evaluation.",
   "icon": "dna",
   "version": "1.0.0",
   "sources": [
     {
       "id": "prsice",
       "name": "PRSice-2",
+      "nameEn": "PRSice-2",
       "type": "official",
       "url": "https://www.prsice.info/",
       "steps": [
         {
           "id": "step-1",
           "name": "准备数据",
+          "nameEn": "Prepare Data",
           "description": "Base data: GWAS summary statistics（β, SE, P, SNP, EA, OA）；Target data: 个体基因型（PLINK format）",
+          "descriptionEn": "Base data: GWAS summary statistics (β, SE, P, SNP, EA, OA); Target data: individual genotypes (PLINK format)",
           "tools": [
             {
               "name": "PLINK",
               "version": "1.9 / 2.0",
               "params": "--bfile",
-              "docker": ""
+              "docker": "",
+              "notes": "Target data 需为 PLINK 格式（bed/bim/fam）。",
+              "notesEn": "Target data must be in PLINK format (bed/bim/fam)."
             }
           ],
           "notes": "Target data 需为 PLINK 格式（bed/bim/fam）。",
+          "notesEn": "Target data must be in PLINK format (bed/bim/fam).",
           "position": {
             "x": 0,
             "y": 0
@@ -42,16 +49,21 @@
         {
           "id": "step-2",
           "name": "质量控制",
+          "nameEn": "Quality Control",
           "description": "Base: 移除低质量 SNP（MAF < 0.01, INFO < 0.8）；Target: 标准 GWAS QC；正链对齐",
+          "descriptionEn": "Base: remove low-quality SNPs (MAF < 0.01, INFO < 0.8); Target: standard GWAS QC; forward-strand alignment",
           "tools": [
             {
               "name": "PLINK / QCTOOL",
               "version": "2.0 / 2",
               "params": "--maf 0.01 --info 0.8",
-              "docker": ""
+              "docker": "",
+              "notes": "Base data 过滤：MAF > 0.01, INFO > 0.8。",
+              "notesEn": "Base data filtering: MAF > 0.01, INFO > 0.8."
             }
           ],
           "notes": "Base data 过滤：MAF > 0.01, INFO > 0.8。",
+          "notesEn": "Base data filtering: MAF > 0.01, INFO > 0.8.",
           "position": {
             "x": 0,
             "y": 120
@@ -60,28 +72,37 @@
         {
           "id": "step-3",
           "name": "PRS 计算",
+          "nameEn": "PRS Calculation",
           "description": "C+T（PRSice-2）/ Bayesian 连续收缩（LDpred2, PRS-CS）",
+          "descriptionEn": "C+T (PRSice-2) / Bayesian continuous shrinkage (LDpred2, PRS-CS)",
           "tools": [
             {
               "name": "PRSice-2",
               "version": "2.3+",
               "params": "--bar-levels 5e-8,1e-6,...,1 --fastscore",
-              "docker": ""
+              "docker": "",
+              "notes": "C+T 方法。--fastscore 只计算指定阈值。",
+              "notesEn": "C+T method. --fastscore computes only specified thresholds."
             },
             {
               "name": "LDpred2 (bigsnpr)",
               "version": "1.12+",
               "params": "snp_ldpred2_auto()",
-              "docker": ""
+              "docker": "",
+              "notes": "Bayesian 自动调参，推荐。需要 LD 参考面板。",
+              "notesEn": "Bayesian auto-tuning, recommended. Requires LD reference panel."
             },
             {
               "name": "PRS-CS",
               "version": "1.0",
               "params": "--n_gwas=<N>",
-              "docker": ""
+              "docker": "",
+              "notes": "Bayesian 连续收缩，大样本推荐。PRS-CS-auto 自动调参。",
+              "notesEn": "Bayesian continuous shrinkage, recommended for large samples. PRS-CS-auto for auto-tuning."
             }
           ],
           "notes": "C+T 方法。--fastscore 只计算指定阈值。 Bayesian 自动调参，推荐。需要 LD 参考面板。 Bayesian 连续收缩，大样本推荐。PRS-CS-auto 自动调参。",
+          "notesEn": "C+T method. --fastscore computes only specified thresholds. Bayesian auto-tuning, recommended. Requires LD reference panel. Bayesian continuous shrinkage, recommended for large samples. PRS-CS-auto for auto-tuning.",
           "position": {
             "x": 0,
             "y": 240
@@ -90,16 +111,21 @@
         {
           "id": "step-4",
           "name": "模型评估",
+          "nameEn": "Model Evaluation",
           "description": "R² / AUC / OR per SD / 十折交叉验证 / 分层分析",
+          "descriptionEn": "R² / AUC / OR per SD / 10-fold cross-validation / stratified analysis",
           "tools": [
             {
               "name": "R / PLINK",
               "version": "4.3+ / 2.0",
               "params": "--score",
-              "docker": ""
+              "docker": "",
+              "notes": "评估指标：R²（连续）、AUC（二分类）、OR per SD。",
+              "notesEn": "Evaluation metrics: R² (continuous), AUC (binary), OR per SD."
             }
           ],
           "notes": "评估指标：R²（连续）、AUC（二分类）、OR per SD。",
+          "notesEn": "Evaluation metrics: R² (continuous), AUC (binary), OR per SD.",
           "position": {
             "x": 0,
             "y": 360

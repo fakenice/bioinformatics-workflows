@@ -3,6 +3,8 @@ export interface ToolInfo {
   version: string;
   params: string;
   docker: string;
+  notes?: string;
+  notesEn?: string;
 }
 
 export interface Reference {
@@ -14,15 +16,19 @@ export interface Reference {
 export interface PipelineStep {
   id: string;
   name: string;
+  nameEn?: string;
   description: string;
+  descriptionEn?: string;
   tools: ToolInfo[];
   notes: string;
+  notesEn?: string;
   position: { x: number; y: number };
 }
 
 export interface PipelineSource {
   id: string;
   name: string;
+  nameEn?: string;
   type: "official" | "community" | "paper";
   url: string;
   steps: PipelineStep[];
@@ -44,6 +50,7 @@ export interface PipelineDefinition {
   category: Category;
   tags: string[];
   overview: string;
+  overviewEn?: string;
   icon: string;
   sources: PipelineSource[];
   version?: string;

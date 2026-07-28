@@ -139,6 +139,18 @@ interface Reference {
 
 ## 工作流程
 
+## Language Selection · 语言选择
+
+Before generating any pipeline code or documentation, ask the user:
+**"Would you like the pipeline output in English or Chinese?"**
+（在生成任何管线代码或文档前，先询问用户首选语言。）
+
+- If **English**: generate all comments, parameter descriptions, tool notes, and documentation in English.
+- If **Chinese (中文)**: generate all comments, parameter descriptions, tool notes, and documentation in Chinese.
+
+This ensures the generated pipeline is immediately usable for the user without manual translation.
+此步骤确保生成的管线无需用户手动翻译即可直接使用。
+
 ### Step 1: 理解用户需求
 确定分析类型 → 分类（DNA/RNA/表观遗传/微生物组/研究设计）→ 查阅上方"快速参考表"判断是否属于内置覆盖范围
 

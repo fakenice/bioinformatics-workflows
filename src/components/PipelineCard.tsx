@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import type { PipelineDefinition } from "../types/pipeline";
 import { Dna, Microscope, Layers, Bug, ArrowRight } from "lucide-react";
 import { categoryLabels } from "../data/pipelines";
+import { useLanguage } from "../i18n";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   dna: Dna,
@@ -18,7 +19,9 @@ export default function PipelineCard({
   accent: string;
 }) {
   const navigate = useNavigate();
+  const { lang } = useLanguage();
   const Icon = iconMap[pipeline.icon] || Dna;
+  const overviewText = lang === "en" ? (pipeline.overviewEn || pipeline.overview) : pipeline.overview;
 
   return (
     <button
@@ -59,7 +62,7 @@ export default function PipelineCard({
             className="text-[13px] mt-1.5 line-clamp-2 leading-relaxed"
             style={{ color: "var(--color-text-secondary)" }}
           >
-            {pipeline.overview}
+            {overviewText}
           </p>
           <div className="flex gap-1.5 mt-3.5 flex-wrap items-center">
             <span

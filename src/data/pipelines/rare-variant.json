@@ -12,28 +12,35 @@
     "基因聚合检验"
   ],
   "overview": "针对罕见变异（MAF < 1%）统计效力不足的问题，通过基因级聚合检验提高检测效力。支持 Burden test（方向一致）、SKAT（方差分量）、SKAT-O（自适应混合）和 ACAT（超大样本）。",
+  "overviewEn": "Addresses the statistical power limitation of rare variants (MAF < 1%) through gene-level aggregation tests. Supports Burden test (same-direction effects), SKAT (variance component), SKAT-O (adaptive hybrid), and ACAT (ultra-large samples).",
   "icon": "dna",
   "version": "1.0.0",
   "sources": [
     {
       "id": "skat",
       "name": "SKAT/SKAT-O",
+      "nameEn": "SKAT/SKAT-O",
       "type": "official",
       "url": "https://www.hsph.harvard.edu/skat/",
       "steps": [
         {
           "id": "step-1",
           "name": "变异 QC",
+          "nameEn": "Variant QC",
           "description": "测序数据变异级质控",
+          "descriptionEn": "Variant-level QC for sequencing data",
           "tools": [
             {
               "name": "GATK / BCFtools",
               "version": "4.5 / 1.17",
               "params": "QUAL>30, DP>10, MAF<0.01",
-              "docker": ""
+              "docker": "",
+              "notes": "QUAL > 30, DP > 10, MAF < 1%。仅保留功能性变异（missense/nonsense/splice-site）。CADD > 20 进一步过滤。",
+              "notesEn": "QUAL > 30, DP > 10, MAF < 1%. Retain only functional variants (missense/nonsense/splice-site). CADD > 20 for further filtering."
             }
           ],
           "notes": "QUAL > 30, DP > 10, MAF < 1%。仅保留功能性变异（missense/nonsense/splice-site）。CADD > 20 进一步过滤。",
+          "notesEn": "QUAL > 30, DP > 10, MAF < 1%. Retain only functional variants (missense/nonsense/splice-site). CADD > 20 for further filtering.",
           "position": {
             "x": 0,
             "y": 0
@@ -42,16 +49,21 @@
         {
           "id": "step-2",
           "name": "功能注释",
+          "nameEn": "Functional Annotation",
           "description": "基因级注释，确定变异-基因映射",
+          "descriptionEn": "Gene-level annotation, determine variant-gene mapping",
           "tools": [
             {
               "name": "VEP / ANNOVAR",
               "version": "112 / 2023",
               "params": "--everything",
-              "docker": "ensemblorg/ensembl-vep:112"
+              "docker": "ensemblorg/ensembl-vep:112",
+              "notes": "按基因分组变异。通常排除 synonymous。可选按功能域分层（如 LOFTEE、REVEL > 0.5）。",
+              "notesEn": "Group variants by gene. Usually exclude synonymous. Optional functional domain stratification (e.g., LOFTEE, REVEL > 0.5)."
             }
           ],
           "notes": "按基因分组变异。通常排除 synonymous。可选按功能域分层（如 LOFTEE、REVEL > 0.5）。",
+          "notesEn": "Group variants by gene. Usually exclude synonymous. Optional functional domain stratification (e.g., LOFTEE, REVEL > 0.5).",
           "position": {
             "x": 0,
             "y": 120
@@ -60,16 +72,21 @@
         {
           "id": "step-3",
           "name": "拟合空模型",
+          "nameEn": "Fit Null Model",
           "description": "仅协变量的 null model",
+          "descriptionEn": "Covariate-only null model",
           "tools": [
             {
               "name": "SKAT R 包",
               "version": "2.2+",
               "params": "out_type='D' or 'C'",
-              "docker": ""
+              "docker": "",
+              "notes": "SKAT_Null_Model(y ~ PC1+PC2+Age+Sex, out_type='D')。out_type='D' 二分类，'C' 连续。",
+              "notesEn": "SKAT_Null_Model(y ~ PC1+PC2+Age+Sex, out_type='D'). out_type='D' for binary, 'C' for continuous."
             }
           ],
           "notes": "SKAT_Null_Model(y ~ PC1+PC2+Age+Sex, out_type='D')。out_type='D' 二分类，'C' 连续。",
+          "notesEn": "SKAT_Null_Model(y ~ PC1+PC2+Age+Sex, out_type='D'). out_type='D' for binary, 'C' for continuous.",
           "position": {
             "x": 0,
             "y": 240
@@ -78,16 +95,21 @@
         {
           "id": "step-4",
           "name": "Burden test",
+          "nameEn": "Burden Test",
           "description": "基因内罕见变异计数求和",
+          "descriptionEn": "Per-gene rare variant count summation",
           "tools": [
             {
               "name": "SKAT Burden()",
               "version": "2.2+",
               "params": "r.corr=1",
-              "docker": ""
+              "docker": "",
+              "notes": "假设基因内所有罕见变异方向一致（同向效应时效力最高）。方向不一致时效力显著下降。",
+              "notesEn": "Assumes all rare variants within a gene have the same direction (highest power when true). Power drops significantly with mixed directions."
             }
           ],
           "notes": "假设基因内所有罕见变异方向一致（同向效应时效力最高）。方向不一致时效力显著下降。",
+          "notesEn": "Assumes all rare variants within a gene have the same direction (highest power when true). Power drops significantly with mixed directions.",
           "position": {
             "x": 0,
             "y": 360
@@ -96,16 +118,21 @@
         {
           "id": "step-5",
           "name": "SKAT 检验",
+          "nameEn": "SKAT Test",
           "description": "方差分量检验",
+          "descriptionEn": "Variance component test",
           "tools": [
             {
               "name": "SKAT SKAT()",
               "version": "2.2+",
               "params": "r.corr=0",
-              "docker": ""
+              "docker": "",
+              "notes": "不假设变异方向一致，对双向效应（既有保护性又有致病性变异）效力更高。",
+              "notesEn": "No direction assumption; higher power for bi-directional effects (both protective and pathogenic variants)."
             }
           ],
           "notes": "不假设变异方向一致，对双向效应（既有保护性又有致病性变异）效力更高。",
+          "notesEn": "No direction assumption; higher power for bi-directional effects (both protective and pathogenic variants).",
           "position": {
             "x": 0,
             "y": 480
@@ -114,16 +141,21 @@
         {
           "id": "step-6",
           "name": "SKAT-O（推荐）",
+          "nameEn": "SKAT-O (recommended)",
           "description": "Burden + SKAT 自适应混合",
+          "descriptionEn": "Adaptive hybrid of Burden + SKAT",
           "tools": [
             {
               "name": "SKAT SKAT()",
               "version": "2.2+",
               "params": "r.corr=NA",
-              "docker": ""
+              "docker": "",
+              "notes": "SKAT-O 自动选择最优 r.corr 参数，推荐作为默认方法。",
+              "notesEn": "SKAT-O automatically selects optimal r.corr parameter; recommended as default method."
             }
           ],
           "notes": "SKAT-O 自动选择最优 r.corr 参数，推荐作为默认方法。",
+          "notesEn": "SKAT-O automatically selects optimal r.corr parameter; recommended as default method.",
           "position": {
             "x": 0,
             "y": 600
@@ -132,16 +164,21 @@
         {
           "id": "step-7",
           "name": "多重检验校正",
+          "nameEn": "Multiple Testing Correction",
           "description": "全基因组 per-gene 检验 + FDR 校正",
+          "descriptionEn": "Genome-wide per-gene testing + FDR correction",
           "tools": [
             {
               "name": "R p.adjust()",
               "version": "4.3+",
               "params": "method='BH'",
-              "docker": ""
+              "docker": "",
+              "notes": "FDR 校正，显著性阈值 q < 0.05。",
+              "notesEn": "FDR correction, significance threshold q < 0.05."
             }
           ],
           "notes": "FDR 校正，显著性阈值 q < 0.05。",
+          "notesEn": "FDR correction, significance threshold q < 0.05.",
           "position": {
             "x": 0,
             "y": 720

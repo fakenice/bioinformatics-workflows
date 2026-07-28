@@ -2,6 +2,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { PipelineDefinition } from "../types/pipeline";
 import { pipelineToMarkdown } from "../utils/pipelineToMarkdown";
+import { useLanguage } from "../i18n";
 
 interface PipelineMarkdownProps {
   pipeline: PipelineDefinition;
@@ -9,7 +10,8 @@ interface PipelineMarkdownProps {
 }
 
 export default function PipelineMarkdown({ pipeline, sourceId }: PipelineMarkdownProps) {
-  const markdown = pipelineToMarkdown(pipeline, sourceId);
+  const { lang } = useLanguage();
+  const markdown = pipelineToMarkdown(pipeline, sourceId, lang);
 
   return (
     <div
