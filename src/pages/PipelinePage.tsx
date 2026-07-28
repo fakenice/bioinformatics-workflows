@@ -2,8 +2,7 @@ import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, GitCompare } from "lucide-react";
 import { useStore } from "../store/useStore";
-import FlowCanvas from "../components/FlowCanvas";
-import DetailPanel from "../components/DetailPanel";
+import PipelineMarkdown from "../components/PipelineMarkdown";
 import SourceSwitcher from "../components/SourceSwitcher";
 import ReferenceAccordion from "../components/ReferenceAccordion";
 
@@ -97,10 +96,7 @@ export default function PipelinePage() {
 
       {/* 主体 */}
       <main className="px-5 py-4">
-        <div style={{ height: "calc(100vh - 152px)" }}>
-          <FlowCanvas steps={source.steps} />
-        </div>
-        <DetailPanel />
+        <PipelineMarkdown pipeline={selectedPipeline} sourceId={selectedSourceId} />
         <div className="mt-4">
           <ReferenceAccordion references={source.references} />
         </div>
