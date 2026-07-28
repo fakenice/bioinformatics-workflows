@@ -21,9 +21,16 @@ function Section({
   accent: string;
 }) {
   return (
-    <div style={{ marginBottom: 40 }}>
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-2 h-2 rounded-full" style={{ background: accent }} />
+    <div style={{ marginBottom: 48 }}>
+      <div className="flex items-center gap-2.5 mb-4">
+        <div
+          style={{
+            width: 20,
+            height: 3,
+            borderRadius: 2,
+            background: accent,
+          }}
+        />
         <h2
           className="text-xs font-bold uppercase tracking-widest"
           style={{ color: "var(--color-text-tertiary)" }}
@@ -31,7 +38,7 @@ function Section({
           {title}
         </h2>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {items.map((p) => (
           <PipelineCard key={p.id} pipeline={p} accent={accent} />
         ))}
@@ -70,27 +77,21 @@ export default function HomePage() {
   const microPipeline = filtered.filter((p) => p.category === "microbiome");
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: "var(--color-page)" }}>
-      <div className="max-w-4xl mx-auto">
-        <header className="mb-8">
-          <div className="flex items-center gap-2 mb-1">
-            <div
-              className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
-              style={{
-                background: "var(--color-accent-muted)",
-                color: "var(--color-accent)",
-              }}
-            >
-              FlowSeq
-            </div>
-          </div>
+    <div className="min-h-screen px-4 py-10" style={{ background: "var(--color-page)" }}>
+      <div className="max-w-5xl mx-auto">
+        <header className="mb-10">
           <h1
-            className="text-2xl font-bold tracking-tight"
+            className="text-[28px] font-bold tracking-tight leading-tight"
             style={{ color: "var(--color-text-primary)" }}
           >
-            生物信息学分析流程导航          </h1>
-          <p className="mt-2 text-sm max-w-lg" style={{ color: "var(--color-text-secondary)" }}>
-            选择分析场景，查看标准化流程、推荐工具与权威文献。覆盖DNA、RNA、表观遗传和微生物四大领域。          </p>
+            生物信息学分析流程导航
+          </h1>
+          <p
+            className="mt-2.5 text-[15px] max-w-lg leading-relaxed"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            选择分析场景，查看标准化流程、推荐工具与权威文献。覆盖 DNA、RNA、表观遗传和微生物四大领域。
+          </p>
         </header>
 
         <div className="mb-8">
@@ -111,9 +112,9 @@ export default function HomePage() {
         )}
 
         {filtered.length === 0 && (
-          <div className="text-center py-20" style={{ color: "var(--color-text-tertiary)" }}>
-            <p className="text-lg">未找到匹配的分析流程</p>
-            <p className="text-sm mt-1">尝试更换搜索词或分类筛选。</p>
+          <div className="text-center py-24" style={{ color: "var(--color-text-tertiary)" }}>
+            <p className="text-base">没有找到匹配的分析流程</p>
+            <p className="text-sm mt-1.5">尝试使用其他关键词或切换分类筛选</p>
           </div>
         )}
       </div>

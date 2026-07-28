@@ -14,11 +14,11 @@ export default function PipelineMarkdown({ pipeline, sourceId }: PipelineMarkdow
     <div
       style={{
         background: "var(--color-surface)",
-        border: "1px solid var(--color-border)",
-        borderRadius: 12,
+        borderRadius: 16,
         padding: "32px 36px",
         maxWidth: 900,
         margin: "0 auto",
+        boxShadow: "var(--shadow-sm)",
       }}
     >
       <style>{`
@@ -32,7 +32,7 @@ export default function PipelineMarkdown({ pipeline, sourceId }: PipelineMarkdow
           text-align: left;
           padding: 10px 12px;
           background: var(--color-surface-alt);
-          border-bottom: 2px solid var(--color-border);
+          border-bottom: 2px solid var(--color-accent-muted);
           color: var(--color-text-secondary);
           font-weight: 600;
           font-size: 13px;
@@ -44,7 +44,7 @@ export default function PipelineMarkdown({ pipeline, sourceId }: PipelineMarkdow
           vertical-align: top;
         }
         .pipeline-md tr:nth-child(even) td {
-          background: var(--color-surface-alt);
+          background: oklch(0.97 0.004 150 / 0.5);
         }
         .pipeline-md h1 {
           font-size: 24px;
@@ -59,7 +59,7 @@ export default function PipelineMarkdown({ pipeline, sourceId }: PipelineMarkdow
           margin-top: 28px;
           margin-bottom: 12px;
           padding-bottom: 6px;
-          border-bottom: 1px solid var(--color-border);
+          border-bottom: 1px solid var(--color-accent-muted);
         }
         .pipeline-md p {
           color: var(--color-text-secondary);

@@ -44,9 +44,9 @@ export default function PipelinePage() {
       <header
         className="sticky top-0 z-20 px-5 py-3 flex items-center justify-between"
         style={{
-          background: "oklch(1 0 0 / 0.85)",
-          backdropFilter: "blur(16px) saturate(1.5)",
-          borderBottom: "1px solid var(--color-border)",
+          background: "oklch(0.993 0.002 140 / 0.88)",
+          backdropFilter: "blur(24px) saturate(1.5)",
+          boxShadow: "var(--shadow-sm)",
         }}
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -95,7 +95,7 @@ export default function PipelinePage() {
       </header>
 
       {/* 主体 */}
-      <main className="px-5 py-4">
+      <main className="px-5 py-6">
         <PipelineMarkdown pipeline={selectedPipeline} sourceId={selectedSourceId} />
         <div className="mt-4">
           <ReferenceAccordion references={source.references} />

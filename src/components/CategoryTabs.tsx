@@ -14,32 +14,43 @@ export default function CategoryTabs() {
   const { selectedCategory, setSelectedCategory } = useStore();
 
   return (
-    <div className="flex gap-2 flex-wrap">
+    <div className="flex gap-1 flex-wrap">
       <button
         onClick={() => setSelectedCategory(null)}
-        className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+        className="relative px-3.5 py-2 text-sm font-medium transition-colors"
         style={
           selectedCategory === null
-            ? { background: "var(--color-accent-muted)", color: "var(--color-accent)", border: "1px solid var(--color-accent)" }
-            : { background: "var(--color-surface)", color: "var(--color-text-tertiary)", border: "1px solid var(--color-border)" }
+            ? { color: "var(--color-accent)" }
+            : { color: "var(--color-text-tertiary)" }
         }
       >
         全部
+        {selectedCategory === null && (
+          <span
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full"
+            style={{ background: "var(--color-accent)" }}
+          />
+        )}
       </button>
       {categories.map((cat) => {
         const accent = CAT_ACCENTS[cat];
+        const isActive = selectedCategory === cat;
         return (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
-            style={
-              selectedCategory === cat
-                ? { background: `color-mix(in oklch, ${accent} 12%, transparent)`, color: accent, border: `1px solid ${accent}` }
-                : { background: "var(--color-surface)", color: "var(--color-text-tertiary)", border: "1px solid var(--color-border)" }
-            }
+            className="relative px-3.5 py-2 text-sm font-medium transition-colors"
+            style={{
+              color: isActive ? accent : "var(--color-text-tertiary)",
+            }}
           >
             {categoryLabels[cat] || cat}
+            {isActive && (
+              <span
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full"
+                style={{ background: accent }}
+              />
+            )}
           </button>
         );
       })}

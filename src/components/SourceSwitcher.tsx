@@ -8,16 +8,14 @@ export default function SourceSwitcher() {
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs shrink-0" style={{ color: "var(--color-text-tertiary)" }}>
-        参考来源      </span>
-      <div
-        className="flex rounded-lg p-0.5 gap-0.5"
-        style={{ background: "var(--color-surface-alt)", border: "1px solid var(--color-border)" }}
-      >
+        参考来源
+      </span>
+      <div className="flex rounded-lg p-0.5 gap-0.5" style={{ background: "var(--color-surface-alt)" }}>
         {selectedPipeline.sources.map((src) => (
           <button
             key={src.id}
             onClick={() => setSelectedSourceId(src.id)}
-            className="px-3 py-1.5 rounded-md text-xs font-medium transition-all"
+            className="relative px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
             style={
               selectedSourceId === src.id
                 ? { background: "var(--color-accent-muted)", color: "var(--color-accent)" }

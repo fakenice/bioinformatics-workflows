@@ -23,26 +23,26 @@ export default function PipelineCard({
   return (
     <button
       onClick={() => navigate(`/pipeline/${pipeline.id}`)}
-      className="group w-full text-left p-4 rounded-xl transition-all duration-200"
+      className="group w-full text-left p-5 rounded-2xl card-hover"
       style={{
         background: "var(--color-surface)",
-        border: "1px solid var(--color-border)",
+        boxShadow: "var(--shadow-sm)",
+        border: "1px solid transparent",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = accent;
-        (e.currentTarget as HTMLElement).style.boxShadow =
-          `0 2px 12px oklch(0 0 0 / 0.06), 0 0 0 1px ${accent}`;
+        const el = e.currentTarget as HTMLElement;
+        el.style.boxShadow = `var(--shadow-md), 0 0 0 1px ${accent}`;
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = "var(--color-border)";
-        (e.currentTarget as HTMLElement).style.boxShadow = "none";
+        const el = e.currentTarget as HTMLElement;
+        el.style.boxShadow = "var(--shadow-sm)";
       }}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-3.5">
         <div
-          className="p-2 rounded-lg shrink-0 transition-colors"
+          className="p-2.5 rounded-xl shrink-0"
           style={{
-            background: `color-mix(in oklch, ${accent} 10%, transparent)`,
+            background: `color-mix(in oklch, ${accent} 12%, transparent)`,
             color: accent,
           }}
         >
@@ -50,22 +50,22 @@ export default function PipelineCard({
         </div>
         <div className="flex-1 min-w-0">
           <h3
-            className="font-semibold text-sm transition-colors"
+            className="font-semibold text-[15px] leading-snug"
             style={{ color: "var(--color-text-primary)" }}
           >
             {pipeline.nameZH}
           </h3>
           <p
-            className="text-xs mt-1 line-clamp-2"
+            className="text-[13px] mt-1.5 line-clamp-2 leading-relaxed"
             style={{ color: "var(--color-text-secondary)" }}
           >
             {pipeline.overview}
           </p>
-          <div className="flex gap-1.5 mt-3 flex-wrap">
+          <div className="flex gap-1.5 mt-3.5 flex-wrap items-center">
             <span
-              className="text-xs px-2 py-0.5 rounded-full"
+              className="text-[11px] px-2 py-0.5 rounded-md font-medium"
               style={{
-                background: `color-mix(in oklch, ${accent} 10%, transparent)`,
+                background: `color-mix(in oklch, ${accent} 14%, transparent)`,
                 color: accent,
               }}
             >
@@ -74,7 +74,7 @@ export default function PipelineCard({
             {pipeline.tags.slice(0, 2).map((tag) => (
               <span
                 key={tag}
-                className="text-xs px-2 py-0.5 rounded-full"
+                className="text-[11px] px-2 py-0.5 rounded-md"
                 style={{
                   background: "var(--color-surface-alt)",
                   color: "var(--color-text-tertiary)",
@@ -84,15 +84,15 @@ export default function PipelineCard({
               </span>
             ))}
             {pipeline.tags.length > 2 && (
-              <span className="text-xs px-2 py-0.5" style={{ color: "var(--color-text-tertiary)" }}>
+              <span className="text-[11px]" style={{ color: "var(--color-text-tertiary)" }}>
                 +{pipeline.tags.length - 2}
               </span>
             )}
           </div>
         </div>
         <div
-          className="self-center shrink-0 opacity-0 group-hover:opacity-100 transition-all -translate-x-1 group-hover:translate-x-0"
-          style={{ color: "var(--color-accent)" }}
+          className="self-center shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-x-1 group-hover:translate-x-0"
+          style={{ color: accent }}
         >
           <ArrowRight className="w-4 h-4" />
         </div>
