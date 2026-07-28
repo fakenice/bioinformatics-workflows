@@ -1,5 +1,5 @@
 
-# bioinformatics-workflows &middot; 生物信息学工作流 Skill
+# bioinformatics-workflows &middot; A workflow intelligence Skill
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
