@@ -1,13 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 1b7b0544872f18baedbb33526952b8c3_fa8ea1be8a8511f1a093525400287e28
-    ReservedCode1: 67b5NCLJUrsuZxnYq0u+Ag8rkX7yL2O6fqPdjIm5N3VUlmnbiG0Lz8KqNliNayYXquvkpOf/z7aP47V9+0klh4yh/Vx9wdpLWyWHp1KzzGHOYq6SUMVEl0cbfGoGNt4lxwlMNoijtN8GuJ7mYox0cLnt2StqJBHkgvLC42jGMg31rgMC9kspO2w+o+U=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 1b7b0544872f18baedbb33526952b8c3_fa8ea1be8a8511f1a093525400287e28
-    ReservedCode2: 67b5NCLJUrsuZxnYq0u+Ag8rkX7yL2O6fqPdjIm5N3VUlmnbiG0Lz8KqNliNayYXquvkpOf/z7aP47V9+0klh4yh/Vx9wdpLWyWHp1KzzGHOYq6SUMVEl0cbfGoGNt4lxwlMNoijtN8GuJ7mYox0cLnt2StqJBHkgvLC42jGMg31rgMC9kspO2w+o+U=
----
 
 # bioinformatics-workflows &middot; 生物信息学工作流 Skill
 
