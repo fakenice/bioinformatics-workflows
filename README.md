@@ -14,7 +14,39 @@ This repository also hosts **FlowSeq** &mdash; both the online documentation fro
 
 ---
 
-## Skill Core &middot; 核心
+## Skill Capabilities &middot; 能力概览
+
+### Knowledge Base Self-Update &middot; 知识库自更新
+
+The Skill has an automatic knowledge accumulation mechanism (Step 5 in `SKILL.md`) that writes newly discovered pipeline information back into the repository:
+
+1. **New workflow discovery** &mdash; when a novel analysis pipeline is found via web search, the pipeline details (steps, tools, parameters, references) are written into `references/` files and a corresponding `src/data/pipelines/*.json` file is generated, then registered in `index.ts`.
+2. **Existing workflow enrichment** &mdash; even for already-covered pipelines, newly discovered supplementary information (sub-workflows, QC thresholds, parameter details, code templates, edge cases) is written back.
+
+**Core principle**: As long as valuable information not yet in the `references/` files is found, it should be reflected — regardless of whether the pipeline is already in the quick-reference table.
+
+Skill 具备自动知识积累机制（`SKILL.md` 中的 Step 5），可将新发现的管线信息自动回写仓库：
+
+1. **新流程发现** &mdash; 通过网络搜索发现新分析管线时，流程详情（步骤、工具、参数、参考文献）会被写入 `references/` 文件，同时生成对应的 `src/data/pipelines/*.json` 并注册到 `index.ts`。
+2. **已有流程补充** &mdash; 即使在快速参考表中已存在，新发现的补充信息（子流程、QC 阈值、参数细节、代码模板、边界情况）也会被回写。
+
+**核心原则**：只要检索到了 `references/` 文件中尚未记录的有价值信息，就应该回写——无论该流程是否已在快速参考表中。
+
+### Pipeline Build System &middot; 管线构建系统
+
+The `scripts/build-pipelines.ts` script automatically generates pipeline JSON files from structured templates defined in `SKILL.md` knowledge. On each build:
+
+- **5 study-design pipelines** (family-trio-wgs, gwas, mendelian-randomization, prs, rare-variant) are auto-generated from template definitions in the build script, producing production-ready JSON with full step details, tool parameters, and references.
+- **9 standard omics pipelines** (wgs-germline, wgs-somatic, wes, rna-seq, scrna-seq, chip-seq, wgbs, metagenomics, 16s) are maintained manually as curated JSON files.
+- All pipelines are unified into `index.ts` and `versions.json` for the FlowSeq frontend.
+
+`scripts/build-pipelines.ts` 脚本在每次构建时自动从知识库模板生成管线 JSON 文件：
+
+- **5 条研究设计管线**（家系 WGS、GWAS、孟德尔随机化、PRS、罕见变异）由构建脚本中的模板定义自动生成，产出具完整步骤、工具参数和参考文献的生产级 JSON。
+- **9 条标准组学管线**（WGS 种系/体细胞、WES、RNA-seq、scRNA-seq、ChIP-seq、WGBS、宏基因组、16S）以精选 JSON 文件手工维护。
+- 所有管线统一汇入 `index.ts` 和 `versions.json` 供 FlowSeq 前端使用。
+
+---
 
 ### Core Files &middot; 核心文件
 
@@ -98,15 +130,23 @@ Browse all Skill repository documentation online (SKILL.md + 4 references), and 
 
 ### Local Usage &middot; 本地使用
 
-Double-click `start.bat` to launch FlowSeq locally with a single click.
+**Dev mode (recommended):**
 
-双击 `start.bat` 一键启动 FlowSeq。
+```bash
+npm run dev -- --host --open
+```
 
-It auto-detects first-time setup (installs dependencies & builds), then serves the pre-built production version at http://localhost:5173/bioinformatics-workflows/
+Starts the Vite dev server with hot reload. Edits to SKILL.md, references, or pipeline JSON take effect instantly — just refresh the browser. Double-click `start.bat` for one-click launch, or tell your AI assistant to "open the frontend".
 
-首次运行自动安装依赖并构建，之后直接以生产版本启动，页面加载更快。
+**开发模式（推荐）：**
 
-**Manual alternative:**
+```bash
+npm run dev -- --host --open
+```
+
+启动 Vite 开发服务器并支持热更新。修改 SKILL.md、references 或管线 JSON 后刷新浏览器即时生效。双击 `start.bat` 一键启动，或直接告诉 AI 助手"打开前端"。
+
+**Production build (for deployment):**
 ```bash
 npm install
 npm run build
@@ -162,6 +202,7 @@ Load this repository as a Skill for your AI coding assistant to automatically re
 2. **Standardized workflow generation** &mdash; produces analysis scripts following GATK / nf-core and other authoritative sources.
 3. **Parameter best practices** &mdash; sensible defaults ready to use, minimizing trial-and-error.
 4. **Quality validation checklists** &mdash; output inspection rules for every step.
+5. **Self-updating knowledge base** &mdash; newly discovered pipeline information and best practices are automatically written back into `references/` files and JSON pipeline definitions, keeping the Skill continuously up-to-date.
 
 将本仓库作为 AI 编码助手的 Skill 加载，即可在生信分析任务中自动获得：
 
@@ -171,6 +212,7 @@ Load this repository as a Skill for your AI coding assistant to automatically re
 2. **标准化流程生成** &mdash; 按 GATK / nf-core 等权威来源生成分析脚本。
 3. **参数最佳实践** &mdash; 默认参数直接可用，减少试错。
 4. **质量校验清单** &mdash; 每个步骤的输出检查规则。
+5. **知识库自更新** &mdash; 新发现的管线信息与最佳实践自动回写 `references/` 文件和 JSON 管线定义，Skill 持续保鲜。
 
 ### As a Reference Browser &middot; 作为参考浏览
 

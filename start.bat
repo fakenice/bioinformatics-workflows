@@ -1,14 +1,12 @@
 @echo off
 title FlowSeq
-cd /d "E:\skills\bioinformatics-workflows"
+cd /d "%~dp0"
 
-if not exist dist\ (
-    echo First run: building...
+if not exist node_modules\ (
+    echo First run: installing dependencies...
     call npm install
-    call npm run build
     echo.
 )
 
-echo Starting FlowSeq...
-start http://localhost:5173/bioinformatics-workflows/
-call npx vite preview --port 5173
+echo Starting FlowSeq (dev mode)...
+call npm run dev -- --host --open
