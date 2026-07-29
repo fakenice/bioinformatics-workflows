@@ -359,8 +359,12 @@ web_search: "<核心工具名> parameters best practices <年份>"
 
 用户问"Hi-C 互作组学标准流程"（未覆盖类型）且 Step 5 知识积累执行后：
 - Step 2b 搜索完成 → 输出 FlowSeq JSON 给用户
+- **必须生成 JSON 管线文件**：在 `src/data/pipelines/` 下生成 `{slug}.json`，按 PipelineDefinition schema 编写
+- **必须注册管线**：在 `src/data/pipelines/index.ts` 添加 import 并将管线加入 pipelines 数组
 - 同时自动回写：在组学快速参考表追加 `| Hi-C 互作组学 | epigenetics | nf-core/hic | Aiden Lab juicer | juicer, cooler, HiC-Pro |`
 - 在 Step 2a 表观遗传分类下追加 `**Hi-C 互作组学：**` + 搜索关键词
 - 在 study_designs.md 末尾追加 `## Hi-C 互作组学分析` 完整流程段落
 - 标注 `[由 Step 5 知识积累自动添加, 日期: 2026-07-28]`
 - 下次用户问 Hi-C 时直接走 Step 2a 预设路径，无需重新搜索
+
+**重要**：JSON 管线文件是前端展示的唯一数据源，study_designs.md 中的 Markdown 段落仅供 AI Skill 检索参考，不会出现在 FlowSeq 前端界面中。Step 5 知识积累时必须同时产出 JSON 文件和 Markdown 段落。

@@ -13,6 +13,7 @@ import chipseq from "./chip-seq.json";
 import wgbs from "./wgbs.json";
 import metagenomics from "./metagenomics.json";
 import pipe_16s from "./16s.json";
+import svAnnotation from "./sv-annotation.json";
 
 export const pipelines: PipelineDefinition[] = [
   familytriowgs,
@@ -20,6 +21,7 @@ export const pipelines: PipelineDefinition[] = [
   mendelianrandomization,
   prs,
   rarevariant,
+  svAnnotation,
   wgsgermline,
   wgssomatic,
   wes,
