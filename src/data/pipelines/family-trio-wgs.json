@@ -6,12 +6,13 @@
   "tags": [
     "家系分析",
     "Trio",
+    "nf-core",
     "GATK",
     "de novo",
     "遗传病"
   ],
-  "overview": "适用于父母-子代 Trio 家系的全基因组种系变异联合检测。基于 GATK Best Practices (v4.5)，覆盖 FASTQ→VCF 全链路，包含联合分型、de novo 检出、遗传模式筛选。",
-  "overviewEn": "Joint germline variant detection for parent-child trio families using GATK Best Practices (v4.5). Covers the full FASTQ-to-VCF pipeline including joint genotyping, de novo detection, and inheritance pattern filtering.",
+  "overview": "适用于父母-子代 Trio 家系的全基因组种系变异联合检测。基于 GATK Best Practices (v4.5) 与 nf-core/sarek (v3.9)，覆盖 FASTQ→VCF 全链路，包含联合分型、de novo 检出、遗传模式筛选。",
+  "overviewEn": "Joint germline variant detection for parent-child trio families using GATK Best Practices (v4.5) and nf-core/sarek (v3.9). Covers the full FASTQ-to-VCF pipeline including joint genotyping, de novo detection, and inheritance pattern filtering.",
   "icon": "dna",
   "version": "1.0.0",
   "sources": [
@@ -286,6 +287,182 @@
           "title": "slivar: rapid population-scale trio analysis (Pedersen et al.)",
           "url": "https://github.com/brentp/slivar",
           "type": "community"
+        }
+      ]
+    },
+    {
+      "id": "nfcore",
+      "name": "nf-core/sarek",
+      "nameEn": "nf-core/sarek",
+      "type": "community",
+      "url": "https://nf-co.re/sarek/3.9",
+      "steps": [
+        {
+          "id": "step-1",
+          "name": "质控 + 修剪",
+          "nameEn": "QC + Trimming",
+          "description": "FastQC + fastp 一体化 QC",
+          "descriptionEn": "Integrated QC with FastQC + fastp",
+          "tools": [
+            {
+              "name": "FastQC",
+              "version": "0.12.1",
+              "params": "",
+              "docker": "nfcore/sarek:3.9",
+              "notes": "fastp 一步完成质控、接头去除、质量裁剪，效率高于 Trim Galore。",
+              "notesEn": "fastp performs QC, adapter removal, and quality trimming in one step, more efficient than Trim Galore."
+            },
+            {
+              "name": "fastp",
+              "version": "0.23.4",
+              "params": "--qualified_quality_phred 20",
+              "docker": "nfcore/sarek:3.9"
+            }
+          ],
+          "notes": "fastp 一步完成质控、接头去除、质量裁剪，效率高于 Trim Galore。",
+          "notesEn": "fastp performs QC, adapter removal, and quality trimming in one step, more efficient than Trim Galore.",
+          "position": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": "step-2",
+          "name": "比对 + 去重",
+          "nameEn": "Alignment + Dedup",
+          "description": "BWA-MEM2 / DragMap 比对并 MarkDuplicates",
+          "descriptionEn": "Align with BWA-MEM2 / DragMap and mark duplicates",
+          "tools": [
+            {
+              "name": "BWA-MEM2 / DragMap / Sentieon",
+              "version": "—",
+              "params": "",
+              "docker": "nfcore/sarek:3.9",
+              "notes": "三选一。DragMap 速度最快（DRAGEN 算法），Sentieon 商用精度最高。",
+              "notesEn": "Choose one. DragMap fastest (DRAGEN algorithm), Sentieon highest commercial-grade accuracy."
+            },
+            {
+              "name": "GATK MarkDuplicates",
+              "version": "4.5",
+              "params": "",
+              "docker": "nfcore/sarek:3.9"
+            }
+          ],
+          "notes": "三选一。DragMap 速度最快（DRAGEN 算法），Sentieon 商用精度最高。",
+          "notesEn": "Choose one. DragMap fastest (DRAGEN algorithm), Sentieon highest commercial-grade accuracy.",
+          "position": {
+            "x": 0,
+            "y": 120
+          }
+        },
+        {
+          "id": "step-3",
+          "name": "BQSR (可选)",
+          "nameEn": "BQSR (Optional)",
+          "description": "碱基质量重校准，可通过 --no_bqsr 跳过",
+          "descriptionEn": "Base quality score recalibration, skippable via --no_bqsr",
+          "tools": [
+            {
+              "name": "GATK BaseRecalibrator + ApplyBQSR",
+              "version": "4.5",
+              "params": "",
+              "docker": "nfcore/sarek:3.9",
+              "notes": "现代测序平台此步收益递减，但临床级分析仍推荐保留。",
+              "notesEn": "Diminishing returns on modern sequencers, but still recommended for clinical-grade analysis."
+            }
+          ],
+          "notes": "现代测序平台此步收益递减，但临床级分析仍推荐保留。",
+          "notesEn": "Diminishing returns on modern sequencers, but still recommended for clinical-grade analysis.",
+          "position": {
+            "x": 0,
+            "y": 240
+          }
+        },
+        {
+          "id": "step-4",
+          "name": "变异检测",
+          "nameEn": "Variant Calling",
+          "description": "HaplotypeCaller / DeepVariant / Strelka2 多工具可选",
+          "descriptionEn": "Multi-tool variant calling: HaplotypeCaller / DeepVariant / Strelka2",
+          "tools": [
+            {
+              "name": "GATK HaplotypeCaller",
+              "version": "4.5",
+              "params": "",
+              "docker": "nfcore/sarek:3.9",
+              "notes": "DeepVariant 基于 CNN，对 Indel 灵敏度最高。可多工具并行取交集提升准确性。",
+              "notesEn": "DeepVariant uses CNN, highest Indel sensitivity. Multi-tool intersection improves accuracy."
+            },
+            {
+              "name": "DeepVariant",
+              "version": "1.6",
+              "params": "",
+              "docker": "nfcore/sarek:3.9"
+            },
+            {
+              "name": "Strelka2",
+              "version": "2.9",
+              "params": "",
+              "docker": "nfcore/sarek:3.9"
+            }
+          ],
+          "notes": "DeepVariant 基于 CNN，对 Indel 灵敏度最高。可多工具并行取交集提升准确性。",
+          "notesEn": "DeepVariant uses CNN, highest Indel sensitivity. Multi-tool intersection improves accuracy.",
+          "position": {
+            "x": 0,
+            "y": 360
+          }
+        },
+        {
+          "id": "step-5",
+          "name": "注释 + MultiQC 报告",
+          "nameEn": "Annotation + MultiQC Report",
+          "description": "snpEff/VEP 注释 + 全流程 QC 汇总",
+          "descriptionEn": "snpEff/VEP annotation + multi-step QC summary",
+          "tools": [
+            {
+              "name": "snpEff / VEP",
+              "version": "5.1 / 112",
+              "params": "",
+              "docker": "nfcore/sarek:3.9",
+              "notes": "snpEff 比 VEP 轻量。自动产出 MultiQC HTML 报告，含覆盖度、GC bias、insert size 等。",
+              "notesEn": "snpEff is lighter than VEP. Auto-generates MultiQC HTML report with coverage, GC bias, insert size, etc."
+            },
+            {
+              "name": "MultiQC",
+              "version": "1.21",
+              "params": "",
+              "docker": "nfcore/sarek:3.9"
+            }
+          ],
+          "notes": "snpEff 比 VEP 轻量。自动产出 MultiQC HTML 报告，含覆盖度、GC bias、insert size 等。",
+          "notesEn": "snpEff is lighter than VEP. Auto-generates MultiQC HTML report with coverage, GC bias, insert size, etc.",
+          "position": {
+            "x": 0,
+            "y": 480
+          }
+        }
+      ],
+      "references": [
+        {
+          "title": "nf-core/sarek v3.9 Documentation",
+          "url": "https://nf-co.re/sarek/latest",
+          "type": "official"
+        },
+        {
+          "title": "Hanssen et al. (2024) NAR Genomics and Bioinformatics 6(2):lqae031",
+          "url": "https://doi.org/10.1093/nargab/lqae031",
+          "type": "paper"
+        },
+        {
+          "title": "nf-core: community curated bioinformatics pipelines (Ewels et al., 2020)",
+          "url": "https://doi.org/10.1038/s41587-020-0439-x",
+          "type": "paper"
+        },
+        {
+          "title": "DeepVariant: A Universal SNP and Indel Variant Caller (Poplin et al., 2018)",
+          "url": "https://doi.org/10.1038/nbt.4235",
+          "type": "paper"
         }
       ]
     }
