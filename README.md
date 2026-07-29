@@ -96,14 +96,22 @@ Browse all Skill repository documentation online (SKILL.md + 4 references), and 
 | Routing | React Router 7 | 路由 |
 | Deployment | GitHub Pages + Actions | 部署 |
 
-### Local Development &middot; 本地运行
+### Local Usage &middot; 本地使用
 
+Double-click `start.bat` to launch FlowSeq locally with a single click.
+
+双击 `start.bat` 一键启动 FlowSeq。
+
+It auto-detects first-time setup (installs dependencies & builds), then serves the pre-built production version at http://localhost:5173/bioinformatics-workflows/
+
+首次运行自动安装依赖并构建，之后直接以生产版本启动，页面加载更快。
+
+**Manual alternative:**
 ```bash
 npm install
-npm run dev
+npm run build
+npm run preview
 ```
-
-Visit http://localhost:5173/bioinformatics-workflows/
 
 ### Project Structure &middot; 项目结构
 
