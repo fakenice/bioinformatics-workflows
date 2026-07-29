@@ -502,3 +502,261 @@ Wrong GVCF mode causes missing variants or bloated files
   
   # Only use BP_RESOLUTION if you need every-position reference calls
   # (e.g., specific QC applications)
+
+
+## VQSR Apply: Chain vs Parallel Strategy
+
+### **Id**
+vqsr-chain-vs-parallel
+### **Severity**
+high
+### **Summary**
+Using parallel ApplyVQSR (SNP and INDEL independently from raw VCF) instead of chain (SNP first, then INDEL on filtered VCF) produces lower quality INDEL calls
+### **Symptoms**
+  - Higher false positive rate in INDEL calls
+  - INDEL tranches model trained on unfiltered SNP noise
+  - Inconsistent variant quality between runs using different strategies
+  - Downstream analysis gets noisier INDEL set
+### **Why**
+GATK VQSR has two application strategies:
+- Chain (recommended): Apply SNP VQSR first, then apply INDEL VQSR on the SNP-filtered VCF
+- Parallel (non-recommended): Apply SNP and INDEL VQSR independently from the same raw VCF
+
+The chain approach is recommended because INDEL model training and filtering benefits
+from SNP quality already being optimized. Low-quality SNPs can interfere with INDEL
+variant quality assessment in the raw VCF.
+
+### **Gotcha**
+``bash
+# WRONG: Parallel - both read from raw VCF independently
+gatk ApplyVQSR -V raw.vcf.gz -O snps_pass.vcf.gz -mode SNP --truth-sensitivity-filter-level 99.5 ...
+gatk ApplyVQSR -V raw.vcf.gz -O indels_pass.vcf.gz -mode INDEL --truth-sensitivity-filter-level 99.0 ...
+# INDEL model sees unfiltered SNP noise
+
+# CORRECT: Chain - INDEL reads from SNP-filtered VCF
+gatk ApplyVQSR -V raw.vcf.gz -O tmp_snp.vcf.gz -mode SNP --truth-sensitivity-filter-level 99.5 ...
+gatk ApplyVQSR -V tmp_snp.vcf.gz -O final.vcf.gz -mode INDEL --truth-sensitivity-filter-level 99.0 ...
+``
+
+### **Solution**
+``bash
+# Always use chain strategy (GATK official recommendation)
+# Step 1: Apply SNP model to raw VCF
+gatk ApplyVQSR \
+    -V input_norm.vcf.gz \
+    -O tmp_snp_recal.vcf.gz \
+    --recal-file global_snps.recal \
+    --tranches-file global_snps.tranches \
+    -mode SNP \
+    --truth-sensitivity-filter-level 99.5
+
+# Step 2: Apply INDEL model to SNP-filtered VCF
+gatk ApplyVQSR \
+    -V tmp_snp_recal.vcf.gz \
+    -O final_PASS.vcf.gz \
+    --recal-file global_indels.recal \
+    --tranches-file global_indels.tranches \
+    -mode INDEL \
+    --truth-sensitivity-filter-level 99.0
+
+# If downstream needs separated SNP/INDEL files:
+# Split AFTER chain ApplyVQSR, not during
+bcftools view -v snps -f PASS final_PASS.vcf.gz -Oz -o pure_snps.vcf.gz
+bcftools view -v indels -f PASS final_PASS.vcf.gz -Oz -o pure_indels.vcf.gz
+``
+
+[由 Step 5 知识积累自动添加, 日期: 2026-07-29]
+
+
+## BQSR With Incomplete Known Sites
+
+### **Id**
+bqsr-incomplete-known-sites
+### **Severity**
+medium
+### **Summary**
+BaseRecalibrator only uses dbSNP as known sites, missing Mills indels and other resources, causing suboptimal base quality recalibration
+### **Symptoms**
+  - Over-correction of bases at real indel sites (treated as errors)
+  - Slightly lower variant quality at indel flanking regions
+  - Recalibration table shows higher error rate near indels
+### **Why**
+BQSR models systematic errors in base quality scores.
+It needs known variant sites to distinguish real variants from sequencing errors.
+If only dbSNP is provided, indel regions are not masked, and real indel
+flanking bases are incorrectly treated as sequencing errors.
+
+GATK recommends providing ALL available known sites databases:
+- dbSNP (SNP sites)
+- Mills indels (known indel sites)
+- Known indels (additional indel sites)
+
+### **Gotcha**
+``bash
+# Suboptimal: only dbSNP
+gatk BaseRecalibrator \
+    -I sample.bam \
+    -R ref.fa \
+    --known-sites dbsnp_138.vcf.gz
+# Real indel bases treated as errors -> over-correction
+
+# Correct: all known sites
+gatk BaseRecalibrator \
+    -I sample.bam \
+    -R ref.fa \
+    --known-sites dbsnp_138.vcf.gz \
+    --known-sites Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \
+    --known-sites Homo_sapiens_assembly38.known_indels.vcf.gz
+``
+
+### **Solution**
+``bash
+# Always provide all available known sites matching your reference build
+gatk BaseRecalibrator \
+    -R Homo_sapiens_assembly38.fasta \
+    -I sample.markdup.bam \
+    --known-sites Homo_sapiens_assembly38.dbsnp138.vcf.gz \
+    --known-sites Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \
+    --known-sites Homo_sapiens_assembly38.known_indels.vcf.gz \
+    -O sample.recal.table
+
+# Verify known sites match reference build (GRCh38/hg38)
+# Do NOT use b37 known sites on GRCh38 reference
+``
+
+[由 Step 5 知识积累自动添加, 日期: 2026-07-29]
+
+## Manta SV: Not Filtering PASS Variants
+
+### **Id**
+manta-missing-pass-filter
+### **Severity**
+medium
+### **Summary**
+Using raw Manta diploidSV.vcf.gz without filtering PASS variants introduces low-quality SV calls
+### **Symptoms**
+  - High false positive rate in downstream SV analysis
+  - Low-quality SV candidates with MinQUALLow or LowQual filters
+  - Inflated SV count in annotation reports
+### **Why**
+Manta outputs all SV candidates in candidateSV.vcf.gz, and scored variants in diploidSV.vcf.gz.
+Not all variants in diploidSV.vcf.gz pass quality filters. Variants without PASS filter
+have insufficient evidence or low quality scores.
+
+### **Gotcha**
+```bash
+# WRONG: using raw output directly
+cp results/variants/diploidSV.vcf.gz final.vcf.gz
+# Includes LowQual, MinQUALLow filtered variants
+
+# CORRECT: filter PASS only
+bcftools view -f PASS diploidSV.vcf.gz -O z -o filteredSV.vcf.gz
+tabix -p vcf filteredSV.vcf.gz
+```
+
+### **Solution**
+```bash
+# Always filter PASS variants from Manta output
+bcftools view -f PASS -O z -o sample.filteredSV.vcf.gz sample.manta.diploidSV.vcf.gz
+tabix -p vcf sample.filteredSV.vcf.gz
+
+# Verify: compare raw vs filtered counts
+raw_count=$(bcftools view -H diploidSV.vcf.gz | wc -l)
+filtered_count=$(bcftools view -H filteredSV.vcf.gz | wc -l)
+echo "Raw: $raw_count | PASS: $filtered_count"
+```
+
+[由 Step 5 知识积累自动添加, 日期: 2026-07-29]
+
+
+## GATK gCNV: Inconsistent Counts File Row Count
+
+### **Id**
+gcnv-inconsistent-counts
+### **Severity**
+high
+### **Summary**
+Different samples have different row counts in counts.tsv files, causing GermlineCNVCaller to fail
+### **Symptoms**
+  - GermlineCNVCaller crashes with interval mismatch error
+  - Some samples have fewer/more rows than expected
+  - FilterIntervals produces inconsistent interval lists
+### **Why**
+CollectReadCounts uses interval lists to count reads per bin.
+If samples use different interval files, or if the reference has different contigs,
+the output TSV files will have different row counts.
+All samples in a cohort MUST use the same RAW_INTERVALS and NOISE_BED.
+
+### **Gotcha**
+```bash
+# WRONG: different interval files for different batches
+# Batch 1: --interval-list wgs_1000bp_v1.interval_list
+# Batch 2: --interval-list wgs_1000bp_v2.interval_list
+# -> Different row counts, GermlineCNVCaller fails
+
+# CORRECT: same interval file for ALL samples
+INTERVALS="Homo_sapiens_assembly38.wgs.1000bp.interval_list"
+gatk CollectReadCounts -L "$INTERVALS" --XL "$NOISE_BED" ...
+```
+
+### **Solution**
+```bash
+# Verify all counts files have identical row count BEFORE running gCNV
+EXPECTED_ROW=2954698  # WGS 1000bp, GRCh38, main chromosomes
+for f in counts_dir/*.counts.tsv; do
+    rows=$(wc -l < "$f")
+    if [ "$rows" -ne "$EXPECTED_ROW" ]; then
+        echo "ERROR: $f has $rows rows (expected $EXPECTED_ROW)" >&2
+        exit 1
+    fi
+done
+echo "All counts files consistent"
+
+# Always use the same RAW_INTERVALS and NOISE_BED for all samples
+# Re-run CollectReadCounts for inconsistent samples with correct intervals
+```
+
+[由 Step 5 知识积累自动添加, 日期: 2026-07-29]
+
+
+## GATK gCNV: Main Chromosome Filtering Required
+
+### **Id**
+gcnv-scaffold-contamination
+### **Severity**
+medium
+### **Summary**
+Including unplaced scaffolds and alt contigs causes gCNV model instability and excessive runtime
+### **Symptoms**
+  - GermlineCNVCaller takes excessively long to converge
+  - PostprocessGermlineCNVCalls fails with contig not in dictionary error
+  - Many low-quality CNV calls on scaffold regions
+### **Why**
+GRCh38 contains many unplaced scaffolds and alt contigs.
+These regions have abnormal read depth patterns that destabilize the gCNV model.
+Filtering to main chromosomes (chr1-22, X, Y) before modeling is recommended.
+
+### **Gotcha**
+```bash
+# WRONG: using all intervals including scaffolds
+gatk GermlineCNVCaller -L "$FILTERED_INTERVALS" ...
+# Includes chrUn_*, chr*_random, chr*_alt -> model instability
+
+# CORRECT: filter to main chromosomes only
+grep '^@' "$FILTERED_INTERVALS" > "$MAIN_FILTERED_INTERVALS"
+awk '!/^@/ && $1 ~ /^chr([1-9]|1[0-9]|2[0-2]|[XY])$/' "$FILTERED_INTERVALS" >> "$MAIN_FILTERED_INTERVALS"
+gatk GermlineCNVCaller -L "$MAIN_FILTERED_INTERVALS" ...
+```
+
+### **Solution**
+```bash
+# After FilterIntervals, extract only main chromosomes
+MAIN_INTERVALS="${GCNV_RESOURCES}/wgs_1000bp.main_chrs.gc_filtered.interval_list"
+grep '^@' "$FILTERED_INTERVALS" > "$MAIN_INTERVALS"
+awk '!/^@/ && $1 ~ /^chr([1-9]|1[0-9]|2[0-2]|[XY])$/' "$FILTERED_INTERVALS" >> "$MAIN_INTERVALS"
+
+# Use MAIN_INTERVALS for all downstream gCNV steps
+# Also verify reference .dict matches main chromosome names
+```
+
+[由 Step 5 知识积累自动添加, 日期: 2026-07-29]

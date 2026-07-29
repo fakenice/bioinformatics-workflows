@@ -590,6 +590,77 @@ results$q <- p.adjust(results$p, method = "BH")  # FDR
 
 ---
 
+### GenotypeRefinement 在完整家系 WGS 流程中的精确位置
+
+[由 Step 5 知识积累自动添加, 日期: 2026-07-29]
+
+GenotypeRefinement 应插入在 **VQSR 过滤完成之后、队列 QC 之前**，是家系数据区别于普通队列分析的关键专属步骤。
+
+`完整家系 WGS 流程:`
+  FASTQ -> BWA -> MarkDuplicates -> BQSR -> HaplotypeCaller(-ERC GVCF)
+  -> GenomicsDBImport -> GenotypeGVCFs
+  -> bcftools norm (左对齐+拆分多等位)
+  -> VariantRecalibrator (VQSR 训练)
+  -> ApplyVQSR (链式: SNP 99.5% -> INDEL 99.0%)
+  -> [此处插入 GenotypeRefinement]  <- 家系专属
+  -> 队列 QC (基因型/位点/样本/家系孟德尔)
+  -> 下游分析 (de novo / 共分离 / 注释)
+
+**GenotypeRefinement 三步详细说明：**
+
+| 步骤 | 工具 | 作用 | 输入 | 输出 |
+|------|------|------|------|------|
+| 1. 基因型后验优化 | CalculateGenotypePosteriors | 结合家系 pedigree + 人群 AF（gnomAD）优化低质量基因型 | VQSR 过滤后 VCF + .ped + gnomAD | 加了 PP/GP 字段的 VCF |
+| 2. 传递相位 | PhaseByTransmission | 利用 pedigree 推断父母->子传递的等位基因，修正相位 | 上一步输出 + .ped | 加了 PQ 字段的 phased VCF |
+| 3. de novo 标注 | VariantAnnotator + VariantFiltration | 标注 de novo 候选（子杂合+父母均参考型） | phased VCF + gnomAD | de novo 候选 VCF |
+
+**关键注意事项：**
+- `CalculateGenotypePosteriors` 的 `--supporting-callsets` 推荐使用 gnomAD（需与参考基因组版本匹配）
+- `.ped` 文件格式：FamilyID IndividualID FatherID MotherID Sex Phenotype（0=未知）
+- 该步骤能显著提高低覆盖度区域（<20x）的基因型准确率
+- 如果队列中家系成员不完整（单亲），PhaseByTransmission 仍可工作但效力降低
+
+### VQSR 链式应用 vs 并行应用
+
+[由 Step 5 知识积累自动添加, 日期: 2026-07-29]
+
+GATK ApplyVQSR 有两种应用策略，对家系 WGS 队列有重要影响：
+
+| 策略 | 方法 | SNP 模型输入 | INDEL 模型输入 | GATK 推荐 | 适用场景 |
+|------|------|------------|--------------|----------|---------|
+| 链式（顺序） | 先 SNP 过滤，再用过滤后 VCF 过滤 INDEL | 原始 VCF | SNP 过滤后 VCF | YES 官方推荐 | 标准分析 |
+| 并行（独立） | SNP 和 INDEL 各自从原始 VCF 独立过滤 | 原始 VCF | 原始 VCF | 非推荐 | 需要分离输出时 |
+
+**链式应用（推荐）代码模式：**
+```bash
+# Step 1: 先对原始 VCF 应用 SNP VQSR
+gatk ApplyVQSR \
+    -V input_norm.vcf.gz \
+    -O tmp_snp_recal.vcf.gz \
+    --recal-file global_snps.recal \
+    --tranches-file global_snps.tranches \
+    -mode SNP \
+    --truth-sensitivity-filter-level 99.5
+
+# Step 2: 对 SNP 过滤后的 VCF 继续应用 INDEL VQSR
+gatk ApplyVQSR \
+    -V tmp_snp_recal.vcf.gz \
+    -O final_PASS.vcf.gz \
+    --recal-file global_indels.recal \
+    --tranches-file global_indels.tranches \
+    -mode INDEL \
+    --truth-sensitivity-filter-level 99.0
+```
+
+**为什么推荐链式：** INDEL 模型的训练和过滤基于 SNP 质量已优化的 VCF，避免低质量 SNP 干扰 INDEL 判定。GATK 官方文档明确推荐链式应用。
+
+**如果下游需要分离的 SNP/INDEL 文件：** 在链式 ApplyVQSR 完成后，用 bcftools 拆分即可，无需用并行策略：
+```bash
+bcftools view -v snps -f PASS final_PASS.vcf.gz -Oz -o pure_snps.vcf.gz
+bcftools view -v indels -f PASS final_PASS.vcf.gz -Oz -o pure_indels.vcf.gz
+```
+
+---
 ## 研究设计流程图坐标参考
 
 家系分析 (Trio) 步骤坐标（position.y 递增 120）：
@@ -599,9 +670,10 @@ results$q <- p.adjust(results$p, method = "BH")  # FDR
 | 变异检测 | 0 |
 | 联合基因分型 | 120 |
 | VQSR/硬过滤 | 240 |
-| 变异注释 | 360 |
-| De novo 识别 | 480 |
-| 验证排序 | 600 |
+| GenotypeRefinement | 360 |
+| 变异注释 | 480 |
+| De novo 识别 | 600 |
+| 验证排序 | 720 |
 
 GWAS 步骤坐标：
 
@@ -630,3 +702,119 @@ PRS 步骤坐标：
 | 质量控制 | 120 |
 | PRS 计算 | 240 |
 | 模型评估 | 360 |
+
+---
+
+## 结构变异检测 (Structural Variant Calling - Manta)
+
+[由 Step 5 知识积累自动添加, 日期: 2026-07-29]
+
+### 核心场景
+- 种系 SV 检测：缺失、插入、倒位、串联重复、染色体间易位
+- 家系规模的小群体联合分析（<=10 样本）
+- 兼顾体细胞 SV（Tumor/Normal 对）
+
+### Manta 官方流程
+
+Manta 由 Illumina 开发，是种系 SV 检测的主流工具之一 [](https://github.com/Illumina/manta)。最新版本 v1.6.0，仓库状态为 Public Archive（功能稳定，不再活跃开发）。
+
+Manta 将 SV 检测分为两步：(1) 扫描基因组发现 SV 关联区域，构建 breakend 关联图；(2) 分析图边发现、组装、评分和过滤 SV [](https://github.com/Illumina/manta/blob/master/docs/userGuide/README.md)。
+
+### 流程步骤
+
+| # | 步骤 | 工具 (版本) | 输入 -> 输出 | 备注 |
+|---|------|------------|------------|------|
+| 1 | 配置 | configManta.py (1.6.0) | BAM + REF -> workflow.py | 生成运行脚本 |
+| 2 | SV 检测 | run workflow.py (1.6.0) | workflow.py -> diploidSV.vcf.gz | 含 paired+split-read 证据 |
+| 3 | PASS 过滤 | bcftools view -f PASS (1.16+) | diploidSV.vcf.gz -> filteredSV.vcf.gz | 提取高置信变异 |
+| 4 | 索引 | tabix -p vcf (1.16+) | filteredSV.vcf.gz -> .tbi | 下游查询必备 |
+
+### Manta 输出文件说明
+
+| 文件 | 内容 | 适用场景 |
+|------|------|---------|
+| diploidSV.vcf.gz | 二倍体模型评分的 SV 和 indel | 种系分析（主要输出） |
+| candidateSV.vcf.gz | 未评分的 SV 候选（最低证据阈值） | 高灵敏度筛选 |
+| candidateSmallIndels.vcf.gz | <50bp 的小 indel 候选 | 传递给小变异检测器 |
+| somaticSV.vcf.gz | 体细胞模型评分的 SV | 仅 Tumor/Normal 分析 |
+
+### 可检测的 SV 类型
+
+- 缺失 (Deletions)
+- 插入 (Insertions) - 含完全组装和部分组装
+- 倒位 (Inversions)
+- 串联重复 (Tandem Duplications)
+- 染色体间易位 (Interchromosomal Translocations)
+
+### 已知局限
+- 无法检测分散重复 (Dispersed duplications)
+- 无法检测大多数串联重复的扩张/收缩
+- 小倒位检测能力有限（<200bp 衰减）
+- 完全组装的大插入受片段大小限制
+
+### 关键参数
+- 最小 SV 评分大小：默认 50bp（<50bp 传递给小变异检测器）
+- 最小 indel 报告大小：默认 8bp
+- 输入要求：坐标排序 + 索引的 BAM/CRAM，配对端测序
+- GRCh38 参考：建议排除短 contig 加速运行
+
+### 运行时间
+- NA12878 50x WGS：<20 分钟（20 核服务器）
+- Tumor/Normal 分析：<2 小时
+
+### 参考文献
+- Chen, X. et al. (2016) Manta: rapid detection of structural variants and indels for germline and cancer sequencing applications. Bioinformatics, 32, 1220-1222. doi:10.1093/bioinformatics/btv710
+
+---
+
+## 种系 CNV 检测 (GATK gCNV)
+
+[由 Step 5 知识积累自动添加, 日期: 2026-07-29]
+
+### 核心场景
+- 全基因组种系 CNV 检测（WGS 1000bp 窗口）
+- 队列联合建模（cohort 模式）
+- 基于 read depth 的拷贝数变异分析
+
+### GATK gCNV 官方流程
+
+GATK gCNV (GermlineCNVCaller) 是 Broad Institute 开发的种系 CNV 检测工具，使用贝叶斯模型从 read depth 推断拷贝数变异。
+
+### 流程步骤
+
+| # | 步骤 | 工具 | 输入 -> 输出 | 备注 |
+|---|------|------|------------|------|
+| 1 | CRAM 解码+过滤 | samtools view -F 2308 -q 20 | CRAM -> clean BAM | 去除低质量 reads |
+| 2 | Read 深度计数 | CollectReadCounts | BAM -> counts.tsv | 1000bp 窗口，TSV 格式 |
+| 3 | 区间 GC 注释 | AnnotateIntervals | interval_list -> annotated.tsv | GC 含量注释 |
+| 4 | 区间质控过滤 | FilterIntervals | annotated.tsv + counts -> filtered.interval_list | 过滤低质量和极端区间 |
+| 5 | 染色体倍性建模 | DetermineGermlineContigPloidy | counts + priors -> ploidy-calls | 推断每条染色体倍性 |
+| 6 | CNV 变异分析 | GermlineCNVCaller (COHORT) | counts + ploidy -> cohort-calls/model | 贝叶斯模型，可分片并行 |
+| 7 | 后处理聚合 | PostprocessGermlineCNVCalls | model + calls -> segments.vcf + intervals.vcf + ratios.tsv | 跨分片聚合，输出单样本 VCF |
+| 8 | 质量硬过滤 | bcftools filter | segments.vcf -> filtered.vcf | QS>=30, NP>=3, CN!=2 |
+| 9 | 队列合并 | bcftools merge | filtered.vcf x N -> cohort.vcf | 合并多样本矩阵 |
+| 10 | 注释 | AnnotSV | cohort.vcf -> annotated.tsv | SV 功能注释 |
+
+### 关键参数
+
+| 参数 | 推荐值 | 说明 |
+|------|--------|------|
+| 窗口大小 | 1000bp (WGS) | PreprocessIntervals --bin-length |
+| 最低 mapping quality | 20 | CollectReadCounts --minimum-mapping-quality |
+| low-count 过滤 | 90% 样本 | FilterIntervals --low-count-filter-percentage-of-samples |
+| extreme-count 过滤 | 90% 样本 | FilterIntervals --extreme-count-filter-percentage-of-samples |
+| coherence length | 1000.0 | GermlineCNVCaller --cnv-coherence-length |
+| 分片大小 | 40000 区间/片 | IntervalListTools --SCATTER_CONTENT |
+| QS 阈值 | >= 30 | bcftools filter FMT/QS |
+| NP 阈值 | >= 3 | bcftools filter FMT/NP |
+
+### QC 验收
+- counts.tsv 行数应一致（全基因组 1000bp 约 295 万行）
+- 所有样本的 segments.vcf.gz 均需生成
+- 过滤后 CN!=2 的区间为候选 CNV
+- AnnotSV 注释后可按 ACMG 指南评估致病性
+
+### 分片策略
+- 使用 IntervalListTools 将主染色体（chr1-22, X, Y）区间分为约 69 个分片
+- 每个分片独立运行 GermlineCNVCaller
+- PostprocessGermlineCNVCalls 一次性传入所有分片模型进行跨分片聚合
