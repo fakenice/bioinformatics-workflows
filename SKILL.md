@@ -368,3 +368,5 @@ web_search: "<核心工具名> parameters best practices <年份>"
 - 下次用户问 Hi-C 时直接走 Step 2a 预设路径，无需重新搜索
 
 **重要**：JSON 管线文件是前端展示的唯一数据源，study_designs.md 中的 Markdown 段落仅供 AI Skill 检索参考，不会出现在 FlowSeq 前端界面中。Step 5 知识积累时必须同时产出 JSON 文件和 Markdown 段落。
+
+**语言规则**：Step 5 生成的 JSON 只填单语言字段，与用户输入语言一致（遵循上述 Language Detection 规则）。中文输入→ 只填 `nameZH`、`overview`、`description`、`notes` 等中文字段，`nameEn`、`overviewEn`、`descriptionEn`、`notesEn` 等英文字段留空；英文输入则相反。前端语言切换时，缺失的语言侧会显示「根据输入语言生成，未翻译」提示。不要手工补全双语。
