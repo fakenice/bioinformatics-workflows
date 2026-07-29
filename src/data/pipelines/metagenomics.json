@@ -40,7 +40,10 @@
           "position": {
             "x": 0,
             "y": 0
-          }
+          },
+          "nameEn": "QC + Host Removal",
+          "descriptionEn": "FastQC + KneadData",
+          "notesEn": "KneadData runs Trimmomatic for low-quality reads then Bowtie2 against host reference to remove host reads. Human stool sample host removal rate typically 80-99%."
         },
         {
           "id": "taxonomy",
@@ -58,7 +61,10 @@
           "position": {
             "x": 0,
             "y": 120
-          }
+          },
+          "nameEn": "Taxonomic Profiling",
+          "descriptionEn": "MetaPhlAn 4 species composition",
+          "notesEn": "MetaPhlAn uses ~1M marker gene database, provides species-level resolution. Output relative abundance table; use LEfSe for differential species analysis."
         },
         {
           "id": "function",
@@ -76,7 +82,10 @@
           "position": {
             "x": 0,
             "y": 240
-          }
+          },
+          "nameEn": "Functional Annotation",
+          "descriptionEn": "HUMAnN 3 pathway/gene family annotation",
+          "notesEn": "HUMAnN maps reads to UniRef90 gene families and MetaCyc pathways. Output pathway abundance table for multi-sample comparison."
         },
         {
           "id": "assembly",
@@ -100,7 +109,10 @@
           "position": {
             "x": 0,
             "y": 360
-          }
+          },
+          "nameEn": "Assembly + Binning (Optional)",
+          "descriptionEn": "MEGAHIT + MetaBAT2",
+          "notesEn": "Deep sequencing (>10G per sample) enables de novo assembly for metagenome-assembled genomes (MAGs). CheckM evaluates MAG completeness."
         },
         {
           "id": "stat",
@@ -118,7 +130,10 @@
           "position": {
             "x": 0,
             "y": 480
-          }
+          },
+          "nameEn": "Statistical Analysis & Visualization",
+          "descriptionEn": "Alpha/Beta diversity + differential analysis",
+          "notesEn": "phyloseq integrates taxonomy, function, and metadata. MaAsLin2 for multivariate association analysis. Visualization: PCoA, NMDS, stacked bar plots, heatmaps."
         }
       ],
       "references": [
@@ -137,7 +152,8 @@
           "url": "https://doi.org/10.7554/eLife.65088",
           "type": "paper"
         }
-      ]
+      ],
+      "nameEn": "bioBakery (MetaPhlAn + HUMAnN)"
     }
   ],
   "overviewEn": "Shotgun metagenomics analysis pipeline. Covers QC, host removal, taxonomic profiling (MetaPhlAn, Kraken2), functional profiling (HUMAnN), assembly, and binning. Suitable for microbiome community composition and function studies."

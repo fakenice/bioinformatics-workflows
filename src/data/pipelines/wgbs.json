@@ -40,7 +40,10 @@
           "position": {
             "x": 0,
             "y": 0
-          }
+          },
+          "nameEn": "QC + Trimming",
+          "descriptionEn": "FastQC + Trim Galore",
+          "notesEn": "WGBS adapter trimming requires --clip_R1 and --clip_R2 to remove end-bias from bisulfite conversion. RRBS requires --rrbs flag."
         },
         {
           "id": "align",
@@ -58,7 +61,10 @@
           "position": {
             "x": 0,
             "y": 120
-          }
+          },
+          "nameEn": "Bisulfite Alignment",
+          "descriptionEn": "Bismark (Bowtie2) three-letter alignment",
+          "notesEn": "Bismark converts both genome and reads C→T before alignment. PE alignment rate typically >70%. Alternatives: BWA-Meth or BS-Seeker2."
         },
         {
           "id": "dedup",
@@ -76,7 +82,10 @@
           "position": {
             "x": 0,
             "y": 240
-          }
+          },
+          "nameEn": "Deduplication",
+          "descriptionEn": "Remove PCR duplicates",
+          "notesEn": "WGBS high duplication rate (typically 10-20%) is normal due to limited CpG sites in the genome."
         },
         {
           "id": "extract",
@@ -94,7 +103,10 @@
           "position": {
             "x": 0,
             "y": 360
-          }
+          },
+          "nameEn": "Methylation Extraction",
+          "descriptionEn": "Extract methylation status per CpG",
+          "notesEn": "Produces coverage files and genome-wide cytosine report. At least 5x coverage per CpG required for analysis."
         },
         {
           "id": "dmr",
@@ -112,7 +124,10 @@
           "position": {
             "x": 0,
             "y": 480
-          }
+          },
+          "nameEn": "Differential Methylation Analysis",
+          "descriptionEn": "Identify differentially methylated regions (DMR)",
+          "notesEn": "DSS uses Bayesian hierarchical model, robust for biological replicates and low-coverage sites. DMR definition: |Δbeta| > 0.2 and adjusted p < 0.05."
         },
         {
           "id": "annotate",
@@ -130,7 +145,10 @@
           "position": {
             "x": 0,
             "y": 600
-          }
+          },
+          "nameEn": "Annotation + Visualization",
+          "descriptionEn": "DMR genomic annotation + visualization",
+          "notesEn": "Associate DMRs with CpG island, shore, shelf, promoter regions. Gviz for genome browser views."
         }
       ],
       "references": [
@@ -144,7 +162,8 @@
           "url": "https://doi.org/10.1093/nar/gkv558",
           "type": "paper"
         }
-      ]
+      ],
+      "nameEn": "Bismark Pipeline"
     }
   ],
   "overviewEn": "Whole-genome bisulfite sequencing (WGBS) methylation analysis pipeline. Covers QC, alignment (Bismark/BWA-meth), methylation calling, DMR detection, and annotation. Suitable for genome-wide DNA methylation profiling."
