@@ -83,7 +83,7 @@ export function pipelineToMarkdown(
   // References
   lines.push(`## ${isEn ? "References" : "参考文献"}`);
   lines.push("");
-  if (source.references.length === 0) {
+  if (!source.references || source.references.length === 0) {
     lines.push(isEn ? "No references available" : "暂无参考文献");
     lines.push("");
   } else {

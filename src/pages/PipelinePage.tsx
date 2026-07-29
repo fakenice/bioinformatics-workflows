@@ -157,7 +157,7 @@ export default function PipelinePage() {
       <main className="px-5 py-6">
         <PipelineMarkdown pipeline={selectedPipeline} sourceId={selectedSourceId} />
         <div className="mt-4">
-          <ReferenceAccordion references={source.references} />
+          <ReferenceAccordion references={source.references || []} />
         </div>
       </main>
 
