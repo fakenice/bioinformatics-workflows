@@ -1,0 +1,237 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "created": "2026-07-29",
+    "description": "Standardized test cases for evaluating FlowSeq Skill vs bare LLM. Each case maps to a real pipeline in the knowledge base.",
+    "total_pipelines": 14,
+    "total_cases": 20
+  },
+  "test_cases": [
+    {
+      "id": "TC-001",
+      "scenario": "我需要分析一个家系 trio 样本（先证者+父母）的 WGS 数据，检测 de novo 突变来诊断罕见遗传病。",
+      "expected_pipeline": "family-trio-wgs",
+      "expected_tools": ["GATK HaplotypeCaller", "GATK GenotypeGVCFs", "VEP", "DeNovoGear"],
+      "expected_versions": {"GATK": "4.4+", "VEP": "110+"},
+      "expected_docker": ["broadinstitute/gatk:4.4.0.0", "ensemblorg/ensembl-vep:110"],
+      "expected_qc": ["de novo rate ~1.0-1.5e-8/site/generation", "WGS coverage >= 30x"],
+      "difficulty": "easy",
+      "category": "dna"
+    },
+    {
+      "id": "TC-002",
+      "scenario": "我有 5000 例二型糖尿病病例和 5000 例健康对照的基因分型芯片数据，想做全基因组关联分析。样本量较大且病例对照不平衡。",
+      "expected_pipeline": "gwas",
+      "expected_tools": ["PLINK", "SAIGE", "REGENIE", "GCTA"],
+      "expected_versions": {"SAIGE": "1.3+", "REGENIE": "3.4+", "PLINK": "1.9/2.0"},
+      "expected_docker": [],
+      "expected_qc": ["Sample missingness < 3%", "MAF > 1%", "HWE P > 1e-6", "lambda_GC 0.95-1.05"],
+      "difficulty": "medium",
+      "category": "dna"
+    },
+    {
+      "id": "TC-003",
+      "scenario": "我想用公开的 GWAS 汇总统计数据做孟德尔随机化分析，研究 BMI 对冠心病的因果效应。需要用两样本 MR 方法。",
+      "expected_pipeline": "mendelian-randomization",
+      "expected_tools": ["TwoSampleMR", "MR-PRESSO"],
+      "expected_versions": {},
+      "expected_docker": [],
+      "expected_qc": ["F-statistic > 10", "Cochran's Q heterogeneity test", "MR-Egger intercept test"],
+      "difficulty": "medium",
+      "category": "dna"
+    },
+    {
+      "id": "TC-004",
+      "scenario": "我有一个欧洲人群 GWAS 的 base data，想在亚洲人群 target data 中构建多基因风险评分，评估其对乳腺癌的预测能力。",
+      "expected_pipeline": "prs",
+      "expected_tools": ["PLINK", "PRSice-2", "LDpred2", "PRS-CS"],
+      "expected_versions": {},
+      "expected_docker": [],
+      "expected_qc": ["Base+target population matched", "LD reference panel"],
+      "difficulty": "medium",
+      "category": "dna"
+    },
+    {
+      "id": "TC-005",
+      "scenario": "我有一批外显子测序数据，研究中包含多个罕见遗传病患者，想找到可能致病的罕见变异。需要做聚合检验，因为单个变异频率太低。",
+      "expected_pipeline": "rare-variant",
+      "expected_tools": ["VEP", "ANNOVAR", "SKAT", "SKAT-O"],
+      "expected_versions": {},
+      "expected_docker": [],
+      "expected_qc": ["Burden test", "SKAT for bidirectional effects", "SKAT-O as adaptive method"],
+      "difficulty": "hard",
+      "category": "dna"
+    },
+    {
+      "id": "TC-006",
+      "scenario": "我想对一批正常人群的 WGS 数据做种系变异检测，要求同时给出 GATK 最佳实践和 nf-core/sarek 两套方案的对比。",
+      "expected_pipeline": "wgs-germline",
+      "expected_tools": ["BWA-MEM2", "GATK HaplotypeCaller", "DeepVariant", "Strelka2", "DRAGMAP"],
+      "expected_versions": {"GATK": "4.4+"},
+      "expected_docker": ["broadinstitute/gatk:4.4.0.0"],
+      "expected_qc": ["VQSR filtering", ">= 30x coverage"],
+      "difficulty": "easy",
+      "category": "dna"
+    },
+    {
+      "id": "TC-007",
+      "scenario": "我有肿瘤-正常配对样本的 WGS 数据，想做体细胞突变检测，找出肿瘤特异性的 SNV 和 indel。",
+      "expected_pipeline": "wgs-somatic",
+      "expected_tools": ["BWA-MEM2", "Mutect2", "FilterMutectCalls", "VEP"],
+      "expected_versions": {},
+      "expected_docker": [],
+      "expected_qc": ["Tumor-normal paired mode", "Panel of Normals for filtering"],
+      "difficulty": "easy",
+      "category": "dna"
+    },
+    {
+      "id": "TC-008",
+      "scenario": "我有一批 WES 捕获测序数据，想做变异检测并用 ACMG 指南做致病性分级。注意 WES 只需要对捕获区间进行分析。",
+      "expected_pipeline": "wes",
+      "expected_tools": ["BWA-MEM2", "GATK HaplotypeCaller", "ANNOVAR"],
+      "expected_versions": {"GATK": "4.4+"},
+      "expected_docker": [],
+      "expected_qc": ["-L interval restriction", "WES coverage >= 100x", "ACMG classification"],
+      "difficulty": "medium",
+      "category": "dna"
+    },
+    {
+      "id": "TC-009",
+      "scenario": "我有 6 个样本（3 个药物处理组 + 3 个对照组）的 RNA-seq 数据，想看差异表达基因并做 GO/KEGG 富集分析。",
+      "expected_pipeline": "rna-seq",
+      "expected_tools": ["FastQC", "Trim Galore", "STAR", "Salmon", "DESeq2", "clusterProfiler"],
+      "expected_versions": {"FastQC": "0.12.1", "STAR": "2.7.11", "Salmon": "1.10", "DESeq2": "1.44", "clusterProfiler": "4.10"},
+      "expected_docker": ["nfcore/rnaseq:3.14", "bioconductor/bioconductor_docker"],
+      "expected_qc": [">= 3 replicates per condition", "log2FC > 1, padj < 0.05", "STAR two-pass mode"],
+      "difficulty": "medium",
+      "category": "rna"
+    },
+    {
+      "id": "TC-010",
+      "scenario": "我有 10x Genomics 单细胞 RNA-seq 数据，5000 个细胞，想做聚类分群、找 marker gene、做细胞类型注释，还想看发育轨迹。",
+      "expected_pipeline": "scrna-seq",
+      "expected_tools": ["Cell Ranger", "Seurat", "SingleR", "CellTypist", "Monocle3", "CellChat", "SCENIC"],
+      "expected_versions": {"Cell Ranger": "8.0", "Seurat": "5.1", "SingleR": "2.0", "CellTypist": "1.0"},
+      "expected_docker": [],
+      "expected_qc": ["nFeature_RNA > 200 & < 6000", "percent.mt < 20%", "SCTransform normalization"],
+      "difficulty": "medium",
+      "category": "rna"
+    },
+    {
+      "id": "TC-011",
+      "scenario": "我做了 ChIP-seq 实验，针对某个转录因子的结合位点，想看 peaks 并做 motif 分析。有 input control。",
+      "expected_pipeline": "chip-seq",
+      "expected_tools": ["Bowtie2", "MACS2", "MACS3", "deepTools", "HOMER", "MEME", "DiffBind", "DESeq2"],
+      "expected_versions": {},
+      "expected_docker": [],
+      "expected_qc": ["narrowPeak for TF ChIP", "broadPeak for histone marks", "FRiP score"],
+      "difficulty": "medium",
+      "category": "epigenetic"
+    },
+    {
+      "id": "TC-012",
+      "scenario": "我有全基因组亚硫酸盐测序（WGBS）数据，想看全基因组的 DNA 甲基化模式，做差异甲基化区域分析。",
+      "expected_pipeline": "wgbs",
+      "expected_tools": ["Bismark", "FastQC", "Trim Galore", "DSS", "methylKit", "annotatr"],
+      "expected_versions": {},
+      "expected_docker": [],
+      "expected_qc": ["Bisulfite conversion rate", "three-letter alignment mode"],
+      "difficulty": "medium",
+      "category": "epigenetic"
+    },
+    {
+      "id": "TC-013",
+      "scenario": "我有肠道微生物的宏基因组测序数据，想了解菌群组成、功能通路，以及菌群与宿主表型的关联。需要先去除宿主 DNA。",
+      "expected_pipeline": "metagenomics",
+      "expected_tools": ["KneadData", "MetaPhlAn4", "HUMAnN3", "MEGAHIT", "MetaBAT2", "MaAsLin2"],
+      "expected_versions": {},
+      "expected_docker": [],
+      "expected_qc": ["Host DNA removal", "Species-level profiling"],
+      "difficulty": "medium",
+      "category": "microbiome"
+    },
+    {
+      "id": "TC-014",
+      "scenario": "我有 16S rRNA V3-V4 区扩增子测序数据，想做菌群分析，包含 alpha/beta 多样性和差异物种分析。",
+      "expected_pipeline": "16s",
+      "expected_tools": ["QIIME2", "DADA2", "SILVA", "MAFFT", "FastTree", "ANCOM-BC", "LEfSe"],
+      "expected_versions": {},
+      "expected_docker": [],
+      "expected_qc": ["DADA2 denoising", "SILVA classifier", "alpha/beta diversity metrics"],
+      "difficulty": "easy",
+      "category": "microbiome"
+    },
+    {
+      "id": "TC-015",
+      "scenario": "一家生物技术公司开发了一款靶向 KRAS G12C 突变的小分子抑制剂，正在做临床前药效评估。我需要分析这个靶点的已知突变谱和相关的临床试验。",
+      "expected_pipeline": null,
+      "expected_tools": [],
+      "expected_versions": {},
+      "expected_docker": [],
+      "expected_qc": [],
+      "difficulty": "hard",
+      "category": "cross_domain",
+      "note": "Cross-domain: drug target research. Tests whether the system correctly identifies this as out-of-scope for pipeline selection but within bioinformatics domain knowledge."
+    },
+    {
+      "id": "TC-016",
+      "scenario": "我需要同时做 GWAS 和转录组 eQTL 分析，想把基因型和表达数据整合起来做 colocalization 分析。",
+      "expected_pipeline": "gwas",
+      "expected_tools": ["PLINK", "SAIGE"],
+      "expected_versions": {},
+      "expected_docker": [],
+      "expected_qc": [],
+      "difficulty": "hard",
+      "category": "cross_domain",
+      "note": "Cross-domain: user mentions both GWAS and RNA-seq, testing if system recommends GWAS as primary + RNA-seq as secondary."
+    },
+    {
+      "id": "TC-017",
+      "scenario": "CTCF ChIP-seq peaks calling complete. Now need differential binding between wildtype and knockout.",
+      "expected_pipeline": "chip-seq",
+      "expected_tools": ["DiffBind", "DESeq2"],
+      "expected_versions": {},
+      "expected_docker": [],
+      "expected_qc": [],
+      "difficulty": "medium",
+      "category": "epigenetic",
+      "note": "Tests if system identifies this as ChIP-seq advanced step, not a separate pipeline."
+    },
+    {
+      "id": "TC-018",
+      "scenario": "单细胞数据已经做完 Seurat 聚类，现在想看不同 cluster 之间的配体-受体互作关系。",
+      "expected_pipeline": "scrna-seq",
+      "expected_tools": ["CellChat", "NicheNet"],
+      "expected_versions": {},
+      "expected_docker": [],
+      "expected_qc": [],
+      "difficulty": "medium",
+      "category": "rna",
+      "note": "Tests recognition of a sub-step within an existing pipeline."
+    },
+    {
+      "id": "TC-019",
+      "scenario": "我有一个 2000 人的全基因组测序队列，想做群体遗传学分析，包括 PCA、Fst、选择信号扫描。",
+      "expected_pipeline": "wgs-germline",
+      "expected_tools": ["BWA-MEM2", "GATK HaplotypeCaller", "PLINK"],
+      "expected_versions": {},
+      "expected_docker": [],
+      "expected_qc": [],
+      "difficulty": "hard",
+      "category": "dna",
+      "note": "Population genetics is closest to wgs-germline. Tests edge case where user's primary goal is downstream analysis not covered by any single pipeline."
+    },
+    {
+      "id": "TC-020",
+      "scenario": "我用 PLINK 做完 GWAS QC 后发现 lambda_GC 是 1.15，Manhattan plot 有很多假阳性信号。这是什么问题？",
+      "expected_pipeline": "gwas",
+      "expected_tools": ["PLINK", "GCTA"],
+      "expected_versions": {},
+      "expected_docker": [],
+      "expected_qc": ["lambda_GC 0.95-1.05", "population stratification correction"],
+      "difficulty": "medium",
+      "category": "dna",
+      "note": "Tests sharp_edges knowledge: population stratification causing inflation. Should reference sharp_edges.md."
+    }
+  ]
+}

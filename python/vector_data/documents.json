@@ -1,0 +1,925 @@
+[
+  {
+    "chunk_id": "patterns_0",
+    "content": "## Patterns\n\n### **Nextflow Dsl2**\n  #### **Name**\nNextflow DSL2 Pipeline Structure\n  #### **Description**\nModern Nextflow pipeline with modules\n  #### **When**\nBuilding production genomics pipeline\n  #### **Pattern**\n    // Project structure:\n    // my-pipeline/\n    // ├── main.nf\n    // ├── nextflow.config\n    // ├── modules/\n    // │   ├── fastqc.nf\n    // │   ├── trimming.nf\n    // │   └── alignment.nf\n    // ├── subworkflows/\n    // │   └── preprocessing.nf\n    // └── conf/\n    //     ├── base.config\n    //     └── test.config\n    \n    // main.nf\n    #!/usr/bin/env nextflow\n    nextflow.enable.dsl = 2\n    \n    // Import modules\n    include { FASTQC } from './modules/fastqc'\n    include { TRIM_GALORE } from './modules/trimming'\n    include { BWA_MEM } from './modules/alignment'\n    include { MULTIQC } from './modules/multiqc'\n    \n    // Import subworkflows\n    include { PREPROCESSING } from './subworkflows/preprocessing'\n    \n    // Main workflow\n    workflow {\n        // Create input channel from sample sheet\n        Channel\n            .fromPath(params.input)\n            .splitCsv(header: true)\n            .map { row ->\n                def meta = [id: row.sample, single_end: row.single_end.toBoolean()]\n                def reads = row.single_end.toBoolean() ?\n                    [file(row.fastq_1)] :\n                    [file(row.fastq_1), file(row.fastq_2)]\n                [meta, reads]\n            }\n            .set { reads_ch }\n    \n        // Run preprocessing subworkflow\n        PREPROCESSING(reads_ch)\n    \n        // Alignment\n        BWA_MEM(\n            PREPROCESSING.out.trimmed_reads,\n            params.genome_index\n        )\n    \n        // Aggregate QC reports\n        MULTIQC(\n            FASTQC.out.zip.collect(),\n            TRIM_GALORE.out.log.collect()\n        )\n    }\n    \n    // modules/fastqc.nf\n    process FASTQC {\n        tag \"$meta.id\"\n        label 'process_low'\n    \n        container 'biocontainers/fastqc:0.11.9'\n    \n        input:\n        tuple val(meta), path(reads)\n    \n        output:\n        tuple val(meta), path(\"*.html\"), emit: html\n        tuple val(meta), path(\"*.zip\"),  emit: zip\n        path \"versions.yml\",             emit: versions\n    \n        script:\n        \"\"\"\n        fastqc --threads $task.cpus $reads\n    \n        cat <<-END_VERSIONS > versions.yml\n        \"${task.process}\":\n            fastqc: \\$(fastqc --version | sed 's/FastQC v//')\n        END_VERSIONS\n        \"\"\"\n    }\n    \n  #### **Why**\nDSL2 enables modular, reusable, testable pipeline components\n### **Nf-Core Module Pattern**\n  #### **Name**\nnf-core Module Integration\n  #### **Description**\nReuse standardized nf-core modules in custom pipelines\n  #### **When**\nBuilding pipeline that needs common bioinformatics tools\n  #### **Pattern**\n    // Install nf-core modules into your pipeline\n    // nf-core modules create bwa/mem\n    // nf-core modules install bwa/mem\n    \n    // Directory structure after install:\n    // modules/nf-core/bwa/mem/main.nf\n    // modules/nf-core/bwa/mem/meta.yml\n    \n    // main.nf - import nf-core modules\n    nextflow.enable.dsl = 2\n    \n    include { BWA_MEM } from './modules/nf-core/bwa/mem'\n    include { SAMTOOLS_SORT   } from './modules/nf-core/samtools/sort'\n    include { GATK_HAPLOTYPECALLER } from './modules/nf-core/gatk4/haplotypecaller'\n    \n    workflow {\n        reads_ch = Channel.fromFilePairs(params.reads, checkIfExists: true)\n        \n        // BWA-MEM alignment\n        BWA_MEM(reads_ch, params.fasta)\n        SAMTOOLS_SORT(BWA_MEM.out.bam, params.fasta)\n        \n        // Variant calling\n        GATK_HAPLOTYPECALLER(\n            SAMTOOLS_SORT.out.bam,\n            params.fasta,\n            params.fasta_fai,\n            params.dbsnp\n        )\n    }\n    \n    // meta.yml example (nf-core standard)\n    // name: bwa_mem\n    // description: Align reads to a reference genome\n    // keywords: [bwa, alignment, mem]\n    // tools:\n    //   - bwa: \">=0.7.17\"\n    // input:\n    //   - meta: map\n    //   - reads: file\n    //   - index: file\n    // output:\n    //   - bam: file\n    //   - versions: file\n    \n  #### **Why**\nnf-core modules are community-tested, standardized, and version-tracked\n### **Snakemake Pipeline**\n  #### **Name**\nSnakemake Pipeline Structure\n  #### **Description**\nPython-based workflow management\n  #### **When**\nTeam prefers Python or needs Conda integration\n  #### **Pattern**\n    # Snakefile\n    configfile: \"config/config.yaml\"\n    \n    # Load sample sheet\n    import pandas as pd\n    samples = pd.read_csv(config[\"samples\"]).set_index(\"sample\", drop=False)\n    \n    # Define final outputs\n    rule all:\n        input:\n            expand(\"results/aligned/{sample}.bam\", sample=samples.index),\n            \"results/multiqc/multiqc_report.html\"\n    \n    # Include rules from separate files\n    include: \"rules/qc.smk\"\n    include: \"rules/alignment.smk\"\n    include: \"rules/calling.smk\"\n    \n    # rules/qc.smk\n    rule fastqc:\n        input:\n            \"data/{sample}_{read}.fastq.gz\"\n        output:\n            html=\"results/qc/fastqc/{sample}_{read}_fastqc.html\",\n            zip=\"results/qc/fastqc/{sample}_{read}_fastqc.zip\"\n        log:\n            \"logs/fastqc/{sample}_{read}.log\"\n        threads: 4\n        conda:\n            \"../envs/fastqc.yaml\"\n        shell:\n            \"fastqc -t {threads} {input} -o results/qc/fastqc 2> {log}\"\n    \n    rule trim_galore:\n        input:\n            r1=\"data/{sample}_1.fastq.gz\",\n            r2=\"data/{sample}_2.fastq.gz\"\n        output:\n            r1=\"results/trimmed/{sample}_1_val_1.fq.gz\",\n            r2=\"results/trimmed/{sample}_2_val_2.fq.gz\"\n        log:\n            \"logs/trim_galore/{sample}.log\"\n        threads: 4\n        conda:\n            \"../envs/trim_galore.yaml\"\n        shell:\n            \"\"\"\n            trim_galore --paired --cores {threads} \\\n                -o results/trimmed {input.r1} {input.r2} 2> {log}\n            \"\"\"\n    \n    # rules/alignment.smk\n    rule bwa_mem:\n        input:\n            reads=[\"results/trimmed/{sample}_1_val_1.fq.gz\",\n                   \"results/trimmed/{sample}_2_val_2.fq.gz\"],\n            idx=config[\"reference\"][\"index\"]\n        output:\n            \"results/aligned/{sample}.bam\"\n        log:\n            \"logs/bwa_mem/{sample}.log\"\n        threads: 8\n        params:\n            rg=r\"@RG\\tID:{sample}\\tSM:{sample}\\tPL:ILLUMINA\"\n        conda:\n            \"../envs/alignment.yaml\"\n        shell:\n            \"\"\"\n            bwa mem -t {threads} -R '{params.rg}' {input.idx} {input.reads} \\\n            | samtools sort -@ {threads} -o {output} - 2> {log}\n            samtools index {output}\n            \"\"\"\n    \n    # envs/fastqc.yaml\n    # channels:\n    #   - bioconda\n    #   - conda-forge\n    # dependencies:\n    #   - fastqc=0.11.9\n    \n  #### **Why**\nSnakemake integrates well with Python and Conda environments\n### **Wdl Pipeline**\n  #### **Name**\nWDL (Workflow Description Language)\n  #### **Description**\nBroad Institute standard for Terra/Cromwell\n  #### **When**\nRunning on Terra, AnVIL, or GATK workflows\n  #### **Pattern**\n    version 1.0\n    \n    # workflow.wdl\n    workflow VariantCalling {\n        input {\n            File input_bam\n            File input_bam_index\n            File ref_fasta\n            File ref_fasta_index\n            File ref_dict\n            String sample_name\n        }\n    \n        call HaplotypeCaller {\n            input:\n                input_bam = input_bam,\n                input_bam_index = input_bam_index,\n                ref_fasta = ref_fasta,\n                ref_fasta_index = ref_fasta_index,\n                ref_dict = ref_dict,\n                sample_name = sample_name\n        }\n    \n        call FilterVariants {\n            input:\n                input_vcf = HaplotypeCaller.output_vcf,\n                ref_fasta = ref_fasta,\n                sample_name = sample_name\n        }\n    \n        output {\n            File final_vcf = FilterVariants.filtered_vcf\n        }\n    }\n    \n    task HaplotypeCaller {\n        input {\n            File input_bam\n            File input_bam_index\n            File ref_fasta\n            File ref_fasta_index\n            File ref_dict\n            String sample_name\n        }\n    \n        command {\n            gatk HaplotypeCaller \\\n                -R ~{ref_fasta} \\\n                -I ~{input_bam} \\\n                -O ~{sample_name}.raw.vcf.gz \\\n                --emit-ref-confidence GVCF\n        }\n    \n        output {\n            File output_vcf = \"~{sample_name}.raw.vcf.gz\"\n        }\n    \n        runtime {\n            docker: \"broadinstitute/gatk:4.4.0.0\"\n            memory: \"8 GB\"\n            cpu: 4\n            disks: \"local-disk 100 HDD\"\n        }\n    }\n    \n    task FilterVariants {\n        input {\n            File input_vcf\n            File ref_fasta\n            String sample_name\n        }\n    \n        command {\n            gatk VariantFiltration \\\n                -R ~{ref_fasta} \\\n                -V ~{input_vcf} \\\n                -O ~{sample_name}.filtered.vcf.gz \\\n                --filter-expression \"QD < 2.0\" \\\n                --filter-name \"QD2\"\n        }\n    \n        output {\n            File filtered_vcf = \"~{sample_name}.filtered.vcf.gz\"\n        }\n    \n        runtime {\n            docker: \"broadinstitute/gatk:4.4.0.0\"\n            memory: \"4 GB\"\n            cpu: 2\n        }\n    }\n    \n  #### **Why**\nWDL is required for Terra, AnVIL, and Broad pipelines\n### **Container Strategy**\n  #### **Name**\nContainer Strategy for Reproducibility\n  #### **Description**\nManage tool versions with containers\n  #### **Pattern**\n    # Strategy 1: Use BioContainers (recommended for single tools)\n    # https://biocontainers.pro\n    \n    # nextflow.config\n    process {\n        withName: 'FASTQC' {\n            container = 'biocontainers/fastqc:0.11.9--hdfd78af_1'\n        }\n        withName: 'BWA_MEM' {\n            container = 'biocontainers/bwa:0.7.17--h5bf99c6_8'\n        }\n        withName: 'SAMTOOLS' {\n            container = 'biocontainers/samtools:1.17--hd87286a_1'\n        }\n    }\n    \n    # Strategy 2: Build custom multi-tool container\n    # Dockerfile\n    FROM mambaorg/micromamba:1.4.9\n    \n    COPY --chown=$MAMBA_USER:$MAMBA_USER env.yaml /tmp/env.yaml\n    RUN micromamba install -y -n base -f /tmp/env.yaml && \\\n        micromamba clean --all --yes\n    \n    # Strategy 3: Conda environments (fallback when containers not available)\n    # envs/alignment.yaml\n    name: alignment\n    channels:\n      - bioconda\n      - conda-forge\n      - defaults\n    dependencies:\n      - bwa=0.7.17\n      - samtools=1.17\n      - picard=3.0.0\n    \n    # Lock environment for reproducibility\n    # conda-lock -f env.yaml -p linux-64\n    \n    # nextflow.config with conda\n    profiles {\n        conda {\n            conda.enabled = true\n            process.conda = \"${projectDir}/envs/pipeline.yaml\"\n        }\n    }\n    \n  #### **Why**\nContainers ensure identical software versions across systems\n### **Singularity Strategy**\n  #### **Name**\nSingularity/HPC Container Strategy\n  #### **Description**\nUse Singularity/Apptainer for HPC environments without Docker\n  #### **When**\nRunning on shared HPC clusters where Docker is not allowed\n  #### **Pattern**\n    # Build Singularity images from Docker Hub\n    # singularity pull fastqc.sif docker://biocontainers/fastqc:0.11.9\n    \n    # Or from BioContainers\n    # singularity pull bwa.sif docker://quay.io/biocontainers/bwa:0.7.17--h5bf99c6_8\n    \n    # nextflow.config - Singularity profile\n    profiles {\n        singularity {\n            singularity.enabled = true\n            singularity.autoMounts = true\n    \n            // Use a directory of pre-built images\n            singularity.cacheDir = \"${projectDir}/singularity_cache\"\n    \n            process {\n                withName: 'FASTQC' {\n                    container = 'fastqc:0.11.9'\n                }\n                withName: 'BWA_MEM' {\n                    container = 'bwa:0.7.17'\n                }\n            }\n        }\n    }\n    \n    // Bind mounts for shared filesystems (common on HPC)\n    // nextflow.config\n    singularity {\n        runOptions = '-B /scratch:/scratch -B /data:/data'\n    }\n    \n    # Convert nf-core pipeline modules to use Singularity\n    # nextflow run nf-core/rnaseq -profile singularity --input samplesheet.csv\n    \n  #### **Why**\nHPC clusters typically only allow Singularity/Apptainer, not Docker\n### **Scaling Hpc**\n  #### **Name**\nScaling to HPC and Cloud\n  #### **Description**\nRun pipelines on clusters and cloud\n  #### **Pattern**\n    // Nextflow executor configs\n    // conf/slurm.config\n    process {\n        executor = 'slurm'\n        queue = 'normal'\n        clusterOptions = '--account=mylab'\n    \n        withLabel: 'process_low' {\n            cpus = 2\n            memory = '4 GB'\n            time = '1h'\n        }\n        withLabel: 'process_medium' {\n            cpus = 8\n            memory = '32 GB'\n            time = '8h'\n        }\n        withLabel: 'process_high' {\n            cpus = 16\n            memory = '64 GB'\n            time = '24h'\n        }\n    }\n    \n    // conf/aws_batch.config\n    process {\n        executor = 'awsbatch'\n        queue = 'nextflow-queue'\n    }\n    \n    aws {\n        region = 'us-east-1'\n        batch {\n            cliPath = '/home/ec2-user/miniconda/bin/aws'\n        }\n    }\n    \n    // conf/google.config\n    process {\n        executor = 'google-lifesciences'\n    }\n    \n    google {\n        project = 'my-project'\n        zone = 'us-central1-f'\n    }\n    \n    // Snakemake cluster execution\n    # snakemake --cluster \"sbatch -A mylab -t {resources.time} \\\n    #   -c {threads} --mem={resources.mem_mb}\" \\\n    #   --jobs 100 --use-conda\n    \n    # Snakemake profiles (recommended)\n    # ~/.config/snakemake/slurm/config.yaml\n    executor: slurm\n    jobs: 100\n    default-resources:\n      - mem_mb=4000\n      - time=60\n      - cpus=1\n    \n  #### **Why**\nProduction genomics requires HPC or cloud for scalability\n### **Cloud Native Workflow**\n  #### **Name**\nCloud-Native Genomics with Nextflow + Wave\n  #### **Description**\nUse Nextflow Wave and Fusion for cloud-native container provisioning\n  #### **When**\nRunning at scale on AWS Batch / Google Life Sciences / Azure\n  #### **Pattern**\n    // nextflow.config - Cloud-native with Wave + Fusion\n    wave {\n        enabled = true\n        // Auto-build containers from conda environments\n        conda {\n            enabled = true\n            cacheDir = 'wave-cache'\n        }\n    }\n    \n    fusion {\n        enabled = true\n        // Enables Fusion file system for direct cloud object storage access\n        // No need to stage files to local disk\n    }\n    \n    // Wave allows dynamic container creation\n    // No pre-built images needed - builds on demand\n    process {\n        withName: 'CUSTOM_TOOL' {\n            // Wave auto-generates container from conda recipe\n            container = 'wave/conda:custom-tool'\n        }\n    }\n    \n    // AWS Batch with Wave/Fusion\n    // nextflow.config\n    profiles {\n        aws_batch {\n            process {\n                executor = 'awsbatch'\n                queue = 'genomics-queue'\n            }\n    \n            wave.enabled = true\n            fusion.enabled = true\n    \n            aws {\n                region = 'us-east-1'\n                batch {\n                    cliPath = '/opt/aws-cli/bin/aws'\n                }\n                s3 {\n                    // Direct S3 access via Fusion\n                    storageMode = 'FUSION'\n                }\n            }\n        }\n    }\n    \n  #### **Why**\nWave/Fusion eliminates manual container management and enables direct cloud storage access\n### **Testing Pipelines**\n  #### **Name**\nTesting Bioinformatics Pipelines\n  #### **Description**\nTest-driven pipeline development\n  #### **Pattern**\n    // Nextflow testing with nf-test\n    // tests/main.nf.test\n    nextflow_pipeline {\n        name \"Test full pipeline\"\n        script \"../main.nf\"\n        profile \"test,docker\"\n    \n        test(\"Should run with test data\") {\n            when {\n                params {\n                    input = \"tests/data/samplesheet.csv\"\n                    outdir = \"results\"\n                }\n            }\n    \n            then {\n                assert workflow.success\n                assert path(\"results/multiqc/multiqc_report.html\").exists()\n                assert path(\"results/aligned/sample1.bam\").exists()\n            }\n        }\n    }\n    \n    // Snakemake testing with pytest\n    # tests/test_pipeline.py\n    import subprocess\n    import pytest\n    from pathlib import Path\n    \n    @pytest.fixture\n    def test_data_dir():\n        return Path(__file__).parent / \"data\"\n    \n    def test_dry_run(test_data_dir):\n        \"\"\"Test that pipeline parses correctly.\"\"\"\n        result = subprocess.run(\n            [\"snakemake\", \"-n\", \"--configfile\", \"config/test.yaml\"],\n            capture_output=True, text=True\n        )\n        assert result.returncode == 0, result.stderr\n    \n    def test_full_pipeline(test_data_dir, tmp_path):\n        \"\"\"Run pipeline with test data.\"\"\"\n        result = subprocess.run(\n            [\n                \"snakemake\",\n                \"--configfile\", \"config/test.yaml\",\n                \"--directory\", str(tmp_path),\n                \"--cores\", \"4\",\n                \"--use-conda\"\n            ],\n            capture_output=True, text=True\n        )\n        assert result.returncode == 0, result.stderr\n        assert (tmp_path / \"results\" / \"multiqc_report.html\").exists()\n    \n    # CI/CD with GitHub Actions\n    # .github/workflows/test.yml\n    name: Pipeline Tests\n    on: [push, pull_request]\n    jobs:\n      test:\n        runs-on: ubuntu-latest\n        steps:\n          - uses: actions/checkout@v4\n          - uses: mamba-org/setup-micromamba@v1\n          - name: Run tests\n            run: |\n              micromamba install -y snakemake pytest\n              pytest tests/\n    \n  #### **Why**\nTested pipelines are reliable and maintainable",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\patterns.md",
+    "section_title": "Patterns",
+    "line_start": 3,
+    "line_end": 654,
+    "pipeline_ids": [
+      "wgs-germline"
+    ],
+    "tags": [
+      "qc",
+      "code",
+      "tool",
+      "docker",
+      "hpc",
+      "reproducibility"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "patterns_1",
+    "content": "## Anti-Patterns\n\n### **Monolithic Workflow**\n  #### **Name**\nMonolithic Workflow File\n  #### **Problem**\nAll rules/processes in one file\n  #### **Solution**\nSplit into modules/includes by function\n### **No Version Tracking**\n  #### **Name**\nNo Software Version Tracking\n  #### **Problem**\nCan't reproduce results with different tool versions\n  #### **Solution**\nPin versions in containers or conda environments\n### **Hardcoded Resources**\n  #### **Name**\nHardcoded Resource Specifications\n  #### **Problem**\nPipeline only works on one cluster\n  #### **Solution**\nUse labels/profiles for resource allocation\n### **Manual Container Management**\n  #### **Name**\nManual Container Image Management\n  #### **Problem**\nMaintaining custom Dockerfiles for every tool combination is error-prone\n  #### **Solution**\nUse nf-core modules or Nextflow Wave for automatic container provisioning",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\patterns.md",
+    "section_title": "Anti-Patterns",
+    "line_start": 655,
+    "line_end": 685,
+    "pipeline_ids": [],
+    "tags": [
+      "trap",
+      "code",
+      "docker",
+      "hpc",
+      "reproducibility"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "sharp_edges_0",
+    "content": "## Pipeline Not Resumable After Failure\n\n### **Id**\nnon-resumable-pipeline\n### **Severity**\ncritical\n### **Summary**\nRestart from beginning after crash wastes hours/days of compute\n### **Symptoms**\n  - Cluster job times out, entire pipeline restarts\n  - One sample fails, all samples re-run\n  - Intermediate files deleted before completion\n### **Why**\n  Genomics pipelines can run for days. Without checkpointing/caching:\n  - A network blip at hour 47 means starting over\n  - Cluster preemption restarts everything\n  - Debugging requires full re-runs\n  \n  Most workflow managers have resume capability, but it must be configured.\n  \n### **Gotcha**\n  # Snakemake: Deletes temp files by default\n  temp(\"results/aligned/{sample}.unsorted.bam\")\n  # If job fails after this, can't resume without re-running\n  \n  # Nextflow: cache disabled\n  process.cache = false\n  # Every run starts from scratch\n  \n### **Solution**\n  # Nextflow: Enable resume (default)\n  nextflow run main.nf -resume\n  \n  # Snakemake: Use --keep-incomplete\n  snakemake --keep-incomplete ...\n  \n  # Keep intermediate files until pipeline completes\n  # Don't mark as temp() until you're sure\n  \n  # Use work directory on fast storage\n  workDir = '/scratch/nextflow_work'",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "Pipeline Not Resumable After Failure",
+    "line_start": 3,
+    "line_end": 45,
+    "pipeline_ids": [
+      "rna-seq"
+    ],
+    "tags": [
+      "trap",
+      "code",
+      "tool",
+      "hpc"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "sharp_edges_1",
+    "content": "## Non-Deterministic File Processing Order\n\n### **Id**\nunstable-sort-order\n### **Severity**\nhigh\n### **Summary**\nGlob patterns produce different order on different runs\n### **Symptoms**\n  - Same inputs, different checksum on outputs\n  - Merged VCFs have samples in random order\n  - Hard to compare runs\n### **Why**\n  file() and glob patterns don't guarantee order.\n  Different filesystems return files in different orders.\n  This causes non-reproducible outputs even with same inputs.\n  \n### **Gotcha**\n  # Nextflow - order not guaranteed\n  Channel.fromFilePairs(\"*.{1,2}.fq.gz\")\n  \n  # Snakemake - expand() order varies\n  expand(\"data/{sample}.bam\", sample=samples)\n  \n### **Solution**\n  // Nextflow: Sort the channel\n  Channel\n      .fromFilePairs(\"*.{1,2}.fq.gz\")\n      .toSortedList { it[0] }  // Sort by sample name\n      .flatMap()\n      .set { sorted_reads }\n  \n  # Snakemake: Sort in rule\n  sorted_samples = sorted(samples)\n  expand(\"data/{sample}.bam\", sample=sorted_samples)\n  \n  # Always sort before merging\n  bcftools merge $(ls *.vcf.gz | sort) > merged.vcf.gz",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "Non-Deterministic File Processing Order",
+    "line_start": 46,
+    "line_end": 85,
+    "pipeline_ids": [],
+    "tags": [
+      "trap",
+      "code",
+      "reproducibility"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "sharp_edges_2",
+    "content": "## Symlinks Not Followed in Containers\n\n### **Id**\nsymlink-container-failure\n### **Severity**\nhigh\n### **Summary**\nFiles exist but container process can't read them\n### **Symptoms**\n  - File not found errors in container\n  - Works outside container, fails inside\n  - Absolute path works, relative doesn't\n### **Why**\n  Containers mount specific directories.\n  Symlinks pointing outside mounted directories are broken.\n  This is especially common with shared storage and staged inputs.\n  \n### **Gotcha**\n  # Host filesystem:\n  /data/project/sample.bam -> /shared/raw_data/sample.bam\n  \n  # Container only mounts /data/project\n  # Symlink target /shared/raw_data is not available\n  \n### **Solution**\n  // Nextflow: Use stageInMode 'copy' for problem files\n  process ALIGN {\n      stageInMode 'copy'  // or 'link' with full path mounts\n      ...\n  }\n  \n  // Mount all required directories\n  docker.runOptions = '-v /data:/data -v /shared:/shared'\n  singularity.runOptions = '-B /data:/data -B /shared:/shared'\n  \n  # Snakemake: Use shadow rules\n  rule align:\n      shadow: \"minimal\"  # Copies inputs to temp dir\n      ...",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "Symlinks Not Followed in Containers",
+    "line_start": 86,
+    "line_end": 126,
+    "pipeline_ids": [],
+    "tags": [
+      "trap",
+      "code",
+      "docker"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "sharp_edges_3",
+    "content": "## Memory Requests Don't Match Actual Usage\n\n### **Id**\nmemory-estimation-wrong\n### **Severity**\nhigh\n### **Summary**\nJobs OOM killed or waste cluster resources\n### **Symptoms**\n  - Jobs killed with OOM (out of memory)\n  - Jobs pending because requesting too much memory\n  - Cluster efficiency < 50%\n### **Why**\n  Genomics tools have variable memory usage:\n  - BWA: ~5GB per thread for human genome\n  - STAR: 30-40GB for genome loading\n  - GATK: Varies wildly by step\n  \n  Static memory requests don't account for sample size variation.\n  \n### **Gotcha**\n  # Requesting flat 8GB for all samples\n  process {\n      memory = '8 GB'\n  }\n  # Small sample: wastes 6GB\n  # Large sample: OOM killed\n  \n### **Solution**\n  // Nextflow: Dynamic memory based on input\n  process ALIGN {\n      memory { 6.GB * task.cpus }\n  \n      // Or with retry\n      memory { 8.GB * task.attempt }\n      errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }\n      maxRetries 3\n  }\n  \n  # Snakemake: Use resources based on input\n  rule align:\n      resources:\n          mem_mb=lambda wildcards, input: max(8000, input.size_mb * 10)\n      ...\n  \n  # Profile tools to understand memory patterns\n  # Use /usr/bin/time -v to get max RSS",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "Memory Requests Don't Match Actual Usage",
+    "line_start": 127,
+    "line_end": 175,
+    "pipeline_ids": [
+      "wgs-germline",
+      "rna-seq"
+    ],
+    "tags": [
+      "trap",
+      "code",
+      "tool",
+      "hpc"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "sharp_edges_4",
+    "content": "## Ignoring Non-Zero Exit Codes\n\n### **Id**\nmissing-exit-codes\n### **Severity**\nhigh\n### **Summary**\nPipeline continues after tool failure, producing garbage\n### **Symptoms**\n  - Empty output files\n  - Truncated BAMs/VCFs\n  - Downstream tools fail with cryptic errors\n### **Why**\n  Some tools return non-zero exit codes for warnings.\n  Others return 0 even on failure.\n  Shell pipelines mask exit codes by default.\n  \n### **Gotcha**\n  # Shell pipeline hides BWA failure\n  bwa mem ref.fa reads.fq | samtools sort -o out.bam\n  # Exit code is from samtools, not bwa\n  \n  # Tool returns 0 but wrote nothing\n  some_tool input.fa > output.fa  # Empty file, exit 0\n  \n### **Solution**\n  # Use pipefail in shell\n  set -euo pipefail\n  bwa mem ref.fa reads.fq | samtools sort -o out.bam\n  \n  # Nextflow: Always set in shell\n  process ALIGN {\n      shell:\n      '''\n      set -euo pipefail\n      bwa mem !{ref} !{reads} | samtools sort -o !{output}\n      '''\n  }\n  \n  # Validate outputs\n  if [[ ! -s output.fa ]]; then\n      echo \"Error: output file is empty\" >&2\n      exit 1\n  fi\n  \n  # Check expected output patterns\n  samtools quickcheck aligned.bam || exit 1",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "Ignoring Non-Zero Exit Codes",
+    "line_start": 176,
+    "line_end": 224,
+    "pipeline_ids": [],
+    "tags": [
+      "trap",
+      "code",
+      "tool"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "sharp_edges_5",
+    "content": "## Multiple Jobs Writing to Same Output\n\n### **Id**\nrace-condition-outputs\n### **Severity**\ncritical\n### **Summary**\nParallel jobs overwrite each other's results\n### **Symptoms**\n  - Random missing samples in merged output\n  - Different results each run\n  - File corruption errors\n### **Why**\n  When parallelizing, multiple jobs may try to write to the same file.\n  This causes race conditions and data loss.\n  \n### **Gotcha**\n  # Multiple parallel jobs appending to same file\n  parallel 'process {} >> combined_results.txt' ::: samples/*\n  # Order is random, may have interleaved lines\n  \n  # GATK GenomicsDBImport with multiple writers\n  gatk GenomicsDBImport ... --batch-size 50\n  # Can fail with too many concurrent writers\n  \n### **Solution**\n  # Write to separate files, merge at end\n  parallel 'process {} > results/{/.}.txt' ::: samples/*\n  cat results/*.txt > combined_results.txt\n  \n  # Use atomic writes\n  process {} > temp_$$.txt && mv temp_$$.txt final.txt\n  \n  # Let workflow manager handle parallelism\n  # Don't manually parallelize within rules/processes",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "Multiple Jobs Writing to Same Output",
+    "line_start": 225,
+    "line_end": 261,
+    "pipeline_ids": [],
+    "tags": [
+      "trap",
+      "tool",
+      "hpc"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "sharp_edges_6",
+    "content": "## Using 'latest' Container Tags\n\n### **Id**\nversion-drift-containers\n### **Severity**\nhigh\n### **Summary**\nPipeline behavior changes without code changes\n### **Symptoms**\n  - Pipeline worked yesterday, fails today\n  - Different results on different machines\n  - Can't reproduce old analysis\n### **Why**\n  'latest' tags get updated. Your pipeline pulls a new version\n  with different behavior, bugs, or broken dependencies.\n  \n### **Gotcha**\n  container = 'biocontainers/bwa:latest'\n  # Today: bwa 0.7.17\n  # Next week: bwa 0.7.18 with different defaults\n  \n### **Solution**\n  # Always use specific version tags\n  container = 'biocontainers/bwa:0.7.17--h5bf99c6_8'\n  \n  # Use SHA256 digest for maximum reproducibility\n  container = 'biocontainers/bwa@sha256:abc123...'\n  \n  # Lock all tool versions in environment\n  # Export conda-lock or requirements.txt",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "Using 'latest' Container Tags",
+    "line_start": 262,
+    "line_end": 292,
+    "pipeline_ids": [],
+    "tags": [
+      "trap",
+      "code",
+      "tool",
+      "docker",
+      "reproducibility"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "sharp_edges_7",
+    "content": "## Reference Genome Version Mismatch\n\n### **Id**\nreference-genome-mismatch\n### **Severity**\ncritical\n### **Summary**\nMixing reference genome versions produces wrong variants and broken annotations\n### **Symptoms**\n  - Variants at wrong positions or on wrong contigs\n  - VEP/SnpEff annotation produces empty or wrong results\n  - LiftOver fails or produces low-quality results\n  - Cross-sample analysis has zero overlap\n### **Why**\n  Reference assemblies (hg19/GRCh37 vs hg38/GRCh38) have different\n  coordinate systems, contig names (1 vs chr1), and sequences.\n  Mixing them silently corrupts analysis:\n  - BAM aligned to hg38 but GATK uses hg37 reference\n  - dbSNP from hg37 applied to hg38-aligned BAM\n  - Annotation databases (VEP, SnpEff) built for wrong assembly\n  \n### **Gotcha**\n  # Contig name mismatch: GRCh38 uses 'chr1', some tools expect '1'\n  samtools view -h aligned.bam | head\n  # @SQ SN:chr1 LN:248956422  (hg38)\n  # But reference FASTA has:\n  # >1  (ensembl style, no 'chr' prefix)\n  \n  # dbSNP from wrong build\n  gatk HaplotypeCaller --variant dbsnp_138.b37.vcf  # b37 build!\n  # Applied to GRCh38 BAM -> wrong positions\n  \n### **Solution**\n  # Verify ALL reference files use the same build:\n  # - Reference FASTA (.fa/.fa.gz)\n  # - Index files (.bwt, .fai, .dict)\n  # - Known sites (dbSNP, Mills indels, gnomAD)\n  # - Annotation databases (VEP cache, SnpEff database)\n  \n  # Check contig names and lengths match\n  samtools view -H aligned.bam | grep \"^@SQ\" | head\n  grep \"^>\" reference.fa | head\n  # Both must have identical SN and LN values\n  \n  # Use consistent naming convention (recommend 'chr' prefix for GRCh38)\n  # Build a single reference bundle and use it consistently:\n  # GRCh38_bundle/\n  # ├── Homo_sapiens_assembly38.fasta\n  # ├── Homo_sapiens_assembly38.fasta.fai\n  # ├── Homo_sapiens_assembly38.dict\n  # ├── Homo_sapiens_assembly38.fasta.bwt\n  # ├── known_sites/\n  # │   ├── dbsnp_146.hg38.vcf.gz\n  # │   ├── Mills_and_1000G_gold_standard.indels.hg38.vcf.gz\n  # │   └── gnomad.v4.1.sites.vcf.gz\n  # └── annotation/\n  #     └── vep_cache/\n  \n  # For liftOver, verify mapping rate > 95%\n  # Discard variants that failed liftOver",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "Reference Genome Version Mismatch",
+    "line_start": 293,
+    "line_end": 353,
+    "pipeline_ids": [
+      "wgs-germline"
+    ],
+    "tags": [
+      "trap",
+      "tool",
+      "reproducibility"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "sharp_edges_8",
+    "content": "## GATK BQSR With Wrong Known Sites\n\n### **Id**\ngatk-bqsr-wrong-sites\n### **Severity**\nhigh\n### **Summary**\nBase Quality Score Recalibration uses wrong known variants database\n### **Symptoms**\n  - Over-filtering of good bases (quality scores too low)\n  - Under-filtering of bad bases (false positive variants)\n  - Different variant calls on re-run with updated dbSNP\n### **Why**\n  BQSR adjusts base quality scores based on known variant sites.\n  If known sites are from wrong genome build or too old,\n  it systematically mislabels real variants as sequencing errors.\n  \n### **Gotcha**\n  # Using b37 known sites on GRCh38\n  gatk BaseRecalibrator \\\n      -I input.bam \\\n      -R GRCh38.fa \\\n      --known-sites dbsnp_138.b37.vcf.gz  # WRONG BUILD\n  \n  # Using very old dbSNP (138) when 156 is available\n  # Missing thousands of known variants -> recalibration over-corrects\n  \n### **Solution**\n  # Use GATK resource bundle matching your reference:\n  # GRCh38:\n  gatk BaseRecalibrator \\\n      -R Homo_sapiens_assembly38.fasta \\\n      -I input.bam \\\n      --known-sites Homo_sapiens_assembly38.dbsnp138.vcf \\\n      --known-sites Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \\\n      --known-sites Homo_sapiens_assembly38.known_indels.vcf.gz\n  \n  # Always check known sites version matches reference build\n  # Update known sites when new dbSNP/gnomAD releases available\n  # Document exact known sites versions in pipeline config",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "GATK BQSR With Wrong Known Sites",
+    "line_start": 354,
+    "line_end": 394,
+    "pipeline_ids": [
+      "wgs-germline"
+    ],
+    "tags": [
+      "qc",
+      "trap",
+      "tool",
+      "reproducibility"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "sharp_edges_9",
+    "content": "## Sample Cross-Contamination\n\n### **Id**\nsample-contamination\n### **Severity**\ncritical\n### **Summary**\nSample mix-up or contamination produces wrong variant calls\n### **Symptoms**\n  - Tumor-normal pairs have swapped samples\n  - Unusually high heterozygosity in \"pure\" samples\n  - Sex chromosome mismatch (XX sample called as XY)\n  - Identity check fails against genotyping array\n### **Why**\n  Sample swaps can happen at collection, library prep, or sequencing.\n  Cross-contamination (index hopping) on multiplexed runs is common.\n  Without verification, downstream analysis is meaningless.\n  \n### **Gotcha**\n  # Index hopping on patterned flowcells (NovaSeq)\n  # ~1% of reads have wrong index\n  # For pooled normal/tumor, this means tumor reads in normal\n  # -> Mutect2 filters out real somatic variants\n  \n  # Sample swap in tumor-normal pair\n  # Normal is actually tumor, tumor is actually normal\n  # -> All \"somatic\" variants are germline\n  \n### **Solution**\n  # Run VerifyBamID or Somalier on every BAM\n  # Check against expected sex and population\n  \n  # VerifyBamID2\n  verifybamid2 --reference GRCh38.fa \\\n      --bam sample.bam \\\n      --vcf reference_panel.vcf.gz\n  \n  # Somalier (fast, works on BAM/CRAM)\n  somalier extract -f reference.fa sample.bam\n  somalier relate sample1.somalier sample2.somalier\n  \n  # Check sex: count X/Y chromosome reads\n  # Female: X ~2x autosomes, Y ~0\n  # Male: X ~1x autosomes, Y ~1x autosomes\n  \n  # For tumor-normal: verify relatedness (should be same person)\n  # FREM (FREquency-based contamination Estimation for Mutect2)\n  # is built into GATK Mutect2\n  \n  # Use unique dual indexes (UDI) to prevent index hopping\n  # Not combinatorial dual indexes",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "Sample Cross-Contamination",
+    "line_start": 395,
+    "line_end": 446,
+    "pipeline_ids": [
+      "wgs-germline",
+      "wgs-somatic"
+    ],
+    "tags": [
+      "qc",
+      "trap",
+      "code",
+      "tool"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "sharp_edges_10",
+    "content": "## GATK HaplotypeCaller Emitting Wrong Confidence\n\n### **Id**\ngatk-gvcf-mode-misuse\n### **Severity**\nhigh\n### **Summary**\nWrong GVCF mode causes missing variants or bloated files\n### **Symptoms**\n  - Joint genotyping fails or takes excessive memory\n  - Non-variant blocks have wrong confidence\n  - Missing calls in regions that should have variants\n### **Why**\n  HaplotypeCaller has two GVCF modes:\n  - --emit-ref-confidence GVCF (for joint genotyping later)\n  - --emit-ref-confidence BP_RESOLUTION (every position)\n  \n  Using BP_RESOLUTION creates huge files but is sometimes needed.\n  Using GVCF is standard but requires GenomicsDBImport + GenotypeGVCFs.\n  \n### **Gotcha**\n  # Emitting GVCF but then running HaplotypeCaller in normal mode\n  # instead of GenotypeGVCFs for joint calling\n  gatk HaplotypeCaller --emit-ref-confidence GVCF -O sample.g.vcf.gz\n  # Then wrongly:\n  gatk HaplotypeCaller -V sample.g.vcf.gz  # WRONG - can't genotype a GVCF\n  # Correct:\n  gatk GenomicsDBImport --genomicsdb-workspace-path db \\\n      --variant sample.g.vcf.gz\n  gatk GenotypeGVCFs -G db -R ref.fa -O joint.vcf.gz\n  \n  # Using BP_RESOLUTION for large cohorts -> TB-sized files\n  gatk HaplotypeCaller --emit-ref-confidence BP_RESOLUTION\n  # 30x WGS human: ~50GB per sample in BP_RESOLUTION vs ~5GB in GVCF\n  \n### **Solution**\n  # For single-sample: emit regular VCF (no GVCF)\n  gatk HaplotypeCaller -I input.bam -R ref.fa -O output.vcf.gz\n  \n  # For joint genotyping (recommended for cohorts >3):\n  # Step 1: Per-sample GVCF\n  gatk HaplotypeCaller --emit-ref-confidence GVCF \\\n      -I sample.bam -R ref.fa -O sample.g.vcf.gz\n  \n  # Step 2: GenomicsDBImport (batch samples)\n  gatk GenomicsDBImport \\\n      --genomicsdb-workspace-path genomicsdb \\\n      --variant samples_list.txt \\\n      --batch-size 50\n  \n  # Step 3: Joint genotyping\n  gatk GenotypeGVCFs \\\n      -G genomicsdb -R ref.fa \\\n      --only-output-callable-regions \\\n      -O joint.vcf.gz\n  \n  # Only use BP_RESOLUTION if you need every-position reference calls\n  # (e.g., specific QC applications)",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "GATK HaplotypeCaller Emitting Wrong Confidence",
+    "line_start": 447,
+    "line_end": 506,
+    "pipeline_ids": [
+      "wgs-germline"
+    ],
+    "tags": [
+      "qc",
+      "trap",
+      "tool",
+      "hpc"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "sharp_edges_11",
+    "content": "## VQSR Apply: Chain vs Parallel Strategy\n\n### **Id**\nvqsr-chain-vs-parallel\n### **Severity**\nhigh\n### **Summary**\nUsing parallel ApplyVQSR (SNP and INDEL independently from raw VCF) instead of chain (SNP first, then INDEL on filtered VCF) produces lower quality INDEL calls\n### **Symptoms**\n  - Higher false positive rate in INDEL calls\n  - INDEL tranches model trained on unfiltered SNP noise\n  - Inconsistent variant quality between runs using different strategies\n  - Downstream analysis gets noisier INDEL set\n### **Why**\nGATK VQSR has two application strategies:\n- Chain (recommended): Apply SNP VQSR first, then apply INDEL VQSR on the SNP-filtered VCF\n- Parallel (non-recommended): Apply SNP and INDEL VQSR independently from the same raw VCF\n\nThe chain approach is recommended because INDEL model training and filtering benefits\nfrom SNP quality already being optimized. Low-quality SNPs can interfere with INDEL\nvariant quality assessment in the raw VCF.\n\n### **Gotcha**\n``bash\n# WRONG: Parallel - both read from raw VCF independently\ngatk ApplyVQSR -V raw.vcf.gz -O snps_pass.vcf.gz -mode SNP --truth-sensitivity-filter-level 99.5 ...\ngatk ApplyVQSR -V raw.vcf.gz -O indels_pass.vcf.gz -mode INDEL --truth-sensitivity-filter-level 99.0 ...\n# INDEL model sees unfiltered SNP noise\n\n# CORRECT: Chain - INDEL reads from SNP-filtered VCF\ngatk ApplyVQSR -V raw.vcf.gz -O tmp_snp.vcf.gz -mode SNP --truth-sensitivity-filter-level 99.5 ...\ngatk ApplyVQSR -V tmp_snp.vcf.gz -O final.vcf.gz -mode INDEL --truth-sensitivity-filter-level 99.0 ...\n``\n\n### **Solution**\n``bash\n# Always use chain strategy (GATK official recommendation)\n# Step 1: Apply SNP model to raw VCF\ngatk ApplyVQSR \\\n    -V input_norm.vcf.gz \\\n    -O tmp_snp_recal.vcf.gz \\\n    --recal-file global_snps.recal \\\n    --tranches-file global_snps.tranches \\\n    -mode SNP \\\n    --truth-sensitivity-filter-level 99.5\n\n# Step 2: Apply INDEL model to SNP-filtered VCF\ngatk ApplyVQSR \\\n    -V tmp_snp_recal.vcf.gz \\\n    -O final_PASS.vcf.gz \\\n    --recal-file global_indels.recal \\\n    --tranches-file global_indels.tranches \\\n    -mode INDEL \\\n    --truth-sensitivity-filter-level 99.0\n\n# If downstream needs separated SNP/INDEL files:\n# Split AFTER chain ApplyVQSR, not during\nbcftools view -v snps -f PASS final_PASS.vcf.gz -Oz -o pure_snps.vcf.gz\nbcftools view -v indels -f PASS final_PASS.vcf.gz -Oz -o pure_indels.vcf.gz\n``\n\n[由 Step 5 知识积累自动添加, 日期: 2026-07-29]",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "VQSR Apply: Chain vs Parallel Strategy",
+    "line_start": 507,
+    "line_end": 570,
+    "pipeline_ids": [
+      "wgs-germline"
+    ],
+    "tags": [
+      "qc",
+      "trap",
+      "tool"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "sharp_edges_12",
+    "content": "## BQSR With Incomplete Known Sites\n\n### **Id**\nbqsr-incomplete-known-sites\n### **Severity**\nmedium\n### **Summary**\nBaseRecalibrator only uses dbSNP as known sites, missing Mills indels and other resources, causing suboptimal base quality recalibration\n### **Symptoms**\n  - Over-correction of bases at real indel sites (treated as errors)\n  - Slightly lower variant quality at indel flanking regions\n  - Recalibration table shows higher error rate near indels\n### **Why**\nBQSR models systematic errors in base quality scores.\nIt needs known variant sites to distinguish real variants from sequencing errors.\nIf only dbSNP is provided, indel regions are not masked, and real indel\nflanking bases are incorrectly treated as sequencing errors.\n\nGATK recommends providing ALL available known sites databases:\n- dbSNP (SNP sites)\n- Mills indels (known indel sites)\n- Known indels (additional indel sites)\n\n### **Gotcha**\n``bash\n# Suboptimal: only dbSNP\ngatk BaseRecalibrator \\\n    -I sample.bam \\\n    -R ref.fa \\\n    --known-sites dbsnp_138.vcf.gz\n# Real indel bases treated as errors -> over-correction\n\n# Correct: all known sites\ngatk BaseRecalibrator \\\n    -I sample.bam \\\n    -R ref.fa \\\n    --known-sites dbsnp_138.vcf.gz \\\n    --known-sites Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \\\n    --known-sites Homo_sapiens_assembly38.known_indels.vcf.gz\n``\n\n### **Solution**\n``bash\n# Always provide all available known sites matching your reference build\ngatk BaseRecalibrator \\\n    -R Homo_sapiens_assembly38.fasta \\\n    -I sample.markdup.bam \\\n    --known-sites Homo_sapiens_assembly38.dbsnp138.vcf.gz \\\n    --known-sites Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \\\n    --known-sites Homo_sapiens_assembly38.known_indels.vcf.gz \\\n    -O sample.recal.table\n\n# Verify known sites match reference build (GRCh38/hg38)\n# Do NOT use b37 known sites on GRCh38 reference\n``\n\n[由 Step 5 知识积累自动添加, 日期: 2026-07-29]",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "BQSR With Incomplete Known Sites",
+    "line_start": 571,
+    "line_end": 628,
+    "pipeline_ids": [
+      "wgs-germline"
+    ],
+    "tags": [
+      "trap",
+      "tool"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "sharp_edges_13",
+    "content": "## Manta SV: Not Filtering PASS Variants\n\n### **Id**\nmanta-missing-pass-filter\n### **Severity**\nmedium\n### **Summary**\nUsing raw Manta diploidSV.vcf.gz without filtering PASS variants introduces low-quality SV calls\n### **Symptoms**\n  - High false positive rate in downstream SV analysis\n  - Low-quality SV candidates with MinQUALLow or LowQual filters\n  - Inflated SV count in annotation reports\n### **Why**\nManta outputs all SV candidates in candidateSV.vcf.gz, and scored variants in diploidSV.vcf.gz.\nNot all variants in diploidSV.vcf.gz pass quality filters. Variants without PASS filter\nhave insufficient evidence or low quality scores.\n\n### **Gotcha**\n```bash\n# WRONG: using raw output directly\ncp results/variants/diploidSV.vcf.gz final.vcf.gz\n# Includes LowQual, MinQUALLow filtered variants\n\n# CORRECT: filter PASS only\nbcftools view -f PASS diploidSV.vcf.gz -O z -o filteredSV.vcf.gz\ntabix -p vcf filteredSV.vcf.gz\n```\n\n### **Solution**\n```bash\n# Always filter PASS variants from Manta output\nbcftools view -f PASS -O z -o sample.filteredSV.vcf.gz sample.manta.diploidSV.vcf.gz\ntabix -p vcf sample.filteredSV.vcf.gz\n\n# Verify: compare raw vs filtered counts\nraw_count=$(bcftools view -H diploidSV.vcf.gz | wc -l)\nfiltered_count=$(bcftools view -H filteredSV.vcf.gz | wc -l)\necho \"Raw: $raw_count | PASS: $filtered_count\"\n```\n\n[由 Step 5 知识积累自动添加, 日期: 2026-07-29]",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "Manta SV: Not Filtering PASS Variants",
+    "line_start": 629,
+    "line_end": 671,
+    "pipeline_ids": [],
+    "tags": [
+      "qc",
+      "trap"
+    ],
+    "chunk_type": "code"
+  },
+  {
+    "chunk_id": "sharp_edges_14",
+    "content": "## GATK gCNV: Inconsistent Counts File Row Count\n\n### **Id**\ngcnv-inconsistent-counts\n### **Severity**\nhigh\n### **Summary**\nDifferent samples have different row counts in counts.tsv files, causing GermlineCNVCaller to fail\n### **Symptoms**\n  - GermlineCNVCaller crashes with interval mismatch error\n  - Some samples have fewer/more rows than expected\n  - FilterIntervals produces inconsistent interval lists\n### **Why**\nCollectReadCounts uses interval lists to count reads per bin.\nIf samples use different interval files, or if the reference has different contigs,\nthe output TSV files will have different row counts.\nAll samples in a cohort MUST use the same RAW_INTERVALS and NOISE_BED.\n\n### **Gotcha**\n```bash\n# WRONG: different interval files for different batches\n# Batch 1: --interval-list wgs_1000bp_v1.interval_list\n# Batch 2: --interval-list wgs_1000bp_v2.interval_list\n# -> Different row counts, GermlineCNVCaller fails\n\n# CORRECT: same interval file for ALL samples\nINTERVALS=\"Homo_sapiens_assembly38.wgs.1000bp.interval_list\"\ngatk CollectReadCounts -L \"$INTERVALS\" --XL \"$NOISE_BED\" ...\n```\n\n### **Solution**\n```bash\n# Verify all counts files have identical row count BEFORE running gCNV\nEXPECTED_ROW=2954698  # WGS 1000bp, GRCh38, main chromosomes\nfor f in counts_dir/*.counts.tsv; do\n    rows=$(wc -l < \"$f\")\n    if [ \"$rows\" -ne \"$EXPECTED_ROW\" ]; then\n        echo \"ERROR: $f has $rows rows (expected $EXPECTED_ROW)\" >&2\n        exit 1\n    fi\ndone\necho \"All counts files consistent\"\n\n# Always use the same RAW_INTERVALS and NOISE_BED for all samples\n# Re-run CollectReadCounts for inconsistent samples with correct intervals\n```\n\n[由 Step 5 知识积累自动添加, 日期: 2026-07-29]",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "GATK gCNV: Inconsistent Counts File Row Count",
+    "line_start": 672,
+    "line_end": 721,
+    "pipeline_ids": [
+      "wgs-germline"
+    ],
+    "tags": [
+      "qc",
+      "trap",
+      "tool",
+      "hpc"
+    ],
+    "chunk_type": "code"
+  },
+  {
+    "chunk_id": "sharp_edges_15",
+    "content": "## GATK gCNV: Main Chromosome Filtering Required\n\n### **Id**\ngcnv-scaffold-contamination\n### **Severity**\nmedium\n### **Summary**\nIncluding unplaced scaffolds and alt contigs causes gCNV model instability and excessive runtime\n### **Symptoms**\n  - GermlineCNVCaller takes excessively long to converge\n  - PostprocessGermlineCNVCalls fails with contig not in dictionary error\n  - Many low-quality CNV calls on scaffold regions\n### **Why**\nGRCh38 contains many unplaced scaffolds and alt contigs.\nThese regions have abnormal read depth patterns that destabilize the gCNV model.\nFiltering to main chromosomes (chr1-22, X, Y) before modeling is recommended.\n\n### **Gotcha**\n```bash\n# WRONG: using all intervals including scaffolds\ngatk GermlineCNVCaller -L \"$FILTERED_INTERVALS\" ...\n# Includes chrUn_*, chr*_random, chr*_alt -> model instability\n\n# CORRECT: filter to main chromosomes only\ngrep '^@' \"$FILTERED_INTERVALS\" > \"$MAIN_FILTERED_INTERVALS\"\nawk '!/^@/ && $1 ~ /^chr([1-9]|1[0-9]|2[0-2]|[XY])$/' \"$FILTERED_INTERVALS\" >> \"$MAIN_FILTERED_INTERVALS\"\ngatk GermlineCNVCaller -L \"$MAIN_FILTERED_INTERVALS\" ...\n```\n\n### **Solution**\n```bash\n# After FilterIntervals, extract only main chromosomes\nMAIN_INTERVALS=\"${GCNV_RESOURCES}/wgs_1000bp.main_chrs.gc_filtered.interval_list\"\ngrep '^@' \"$FILTERED_INTERVALS\" > \"$MAIN_INTERVALS\"\nawk '!/^@/ && $1 ~ /^chr([1-9]|1[0-9]|2[0-2]|[XY])$/' \"$FILTERED_INTERVALS\" >> \"$MAIN_INTERVALS\"\n\n# Use MAIN_INTERVALS for all downstream gCNV steps\n# Also verify reference .dict matches main chromosome names\n```\n\n[由 Step 5 知识积累自动添加, 日期: 2026-07-29]",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\sharp_edges.md",
+    "section_title": "GATK gCNV: Main Chromosome Filtering Required",
+    "line_start": 722,
+    "line_end": 763,
+    "pipeline_ids": [
+      "wgs-germline"
+    ],
+    "tags": [
+      "qc",
+      "trap",
+      "code",
+      "tool"
+    ],
+    "chunk_type": "code"
+  },
+  {
+    "chunk_id": "study_designs_0",
+    "content": "# Bioinformatics Workflows - 研究设计标准流程\n\n本文件覆盖生物信息学一般研究设计的标准分析流程，包括家系分析、病例对照 GWAS、孟德尔随机化、多基因风险评分和罕见变异分析。\n\n---",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\study_designs.md",
+    "section_title": "Preamble",
+    "line_start": 1,
+    "line_end": 6,
+    "pipeline_ids": [
+      "gwas"
+    ],
+    "tags": [],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "study_designs_1",
+    "content": "## 家系分析 (Family / Pedigree Analysis)\n\n### 核心场景\n- **Trio 分析**（先证者 + 父母）：检测 de novo 突变，诊断罕见遗传病\n- **核心家系扩展**（含同胞）：共分离分析、单倍型推断\n- **大家系/系谱分析**：连锁分析定位致病位点\n\n### Trio De Novo 突变检测流程\n\n```\n1. 变异检测 (GATK HaplotypeCaller, 每个家庭成员单独)\n   → 输入: BAM (先证者, 父, 母)\n   → 输出: gVCF per sample\n\n2. 联合基因分型 (GATK GenomicsDBImport + GenotypeGVCFs)\n   → 输入: 3 个 gVCF\n   → 输出: joint-genotyped VCF\n\n3. VQSR 或硬过滤 (GATK VariantRecalibrator / VariantFiltration)\n   → 输出: 高质量 VCF\n\n4. 变异注释 (VEP / ANNOVAR / SnpEff)\n   → 输出: 注释 VCF\n\n5. De novo 突变识别 (GATK VariantFiltration 或 DeNovoGear / triodenovo)\n   → 过滤条件: 孩子杂合, 父母均为参考基因型\n   → 输出: de novo 候选 VCF\n\n6. 验证与优先级排序\n   → 移除区段性重复区域 (Segmental Duplication)\n   → 检查 mappability (UCSC mappability track)\n   → 评估致病性 (ACMG/AMP 指南, CADD, REVEL, SpliceAI)\n```\n\n### 工具与版本\n\n| 步骤 | 推荐工具 | 版本 | Docker |\n|------|---------|------|--------|\n| 变异检测 | GATK HaplotypeCaller | 4.4+ | broadinstitute/gatk:4.4.0.0 |\n| 联合基因分型 | GATK GenotypeGVCFs | 4.4+ | broadinstitute/gatk:4.4.0.0 |\n| De novo 识别 | GATK GenotypeRefinement | 4.4+ | broadinstitute/gatk:4.4.0.0 |\n| De novo (专用) | DeNovoGear / triodenovo | 0.5+ | - |\n| 注释 | Ensembl VEP | 110+ | ensemblorg/ensembl-vep:110 |\n| 致病性预测 | CADD, REVEL, SpliceAI | - | - |\n| 单倍型推断 | SHAPEIT4 / BEAGLE 5.4 | - | - |\n| IBD 检测 | KING / PLINK 2.0 | - | - |\n\n### 关键 QC 阈值\n- De novo 突变率：~1.0-1.5 × 10⁻⁸/位点/代（全基因组约 60-100 个 de novo）\n- 需排除假阳性：低 mappability 区、区段性重复、低复杂度区\n- 亲缘关系验证：KING kinship coefficient ≈ 0.5（一级亲属）、IBD0 < 0.01\n- 先证者覆盖度 ≥ 30x（WGS）或 ≥ 100x（WES）\n\n### GATK GenotypeRefinement 模式（推荐）\n```bash\n# Step 1: Calculate genotype priors\ngatk CalculateGenotypePosteriors \\\n    -V joint.vcf.gz \\\n    -O joint_with_posteriors.vcf.gz \\\n    --pedigree trio.ped \\\n    --supporting-callsets gnomad.vcf.gz\n\n# Step 2: Phase by transmission\ngatk PhaseByTransmission \\\n    -V joint_with_posteriors.vcf.gz \\\n    --pedigree trio.ped \\\n    -O phased.vcf.gz\n\n# Step 3: Refine de novo calls\ngatk VariantAnnotator \\\n    -V phased.vcf.gz \\\n    -O annotated.vcf.gz \\\n    --resource gnomad.vcf.gz \\\n    --expression \"GNOMAD_AF\"\n\n# Filter de novo: child=het, parents=hom-ref\ngatk VariantFiltration \\\n    -V annotated.vcf.gz \\\n    -O denovo_candidates.vcf.gz \\\n    --filter-name \"de_novo\" \\\n    --filter-expression \"vc.getGenotype('child').isHet() && \\\n        vc.getGenotype('father').isHomRef() && \\\n        vc.getGenotype('mother').isHomRef()\"\n```\n\n### PLINK 家系 QC\n```bash\n# 验证亲缘关系\nplink --bfile data --genome --min 0.2 --out relatedness_check\n\n# 检查孟德尔错误\nplink --bfile data --me 1 1 --set-me-missing --make-bed --out mendel_checked\n\n# 家系关联分析 (TDT)\nplink --bfile data --tdt --out tdt_results\n```\n\n---",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\study_designs.md",
+    "section_title": "家系分析 (Family / Pedigree Analysis)",
+    "line_start": 7,
+    "line_end": 105,
+    "pipeline_ids": [
+      "family-trio-wgs",
+      "gwas",
+      "wgs-germline",
+      "wes"
+    ],
+    "tags": [
+      "qc",
+      "trap",
+      "tool",
+      "docker",
+      "reproducibility"
+    ],
+    "chunk_type": "code"
+  },
+  {
+    "chunk_id": "study_designs_2",
+    "content": "## 病例对照 GWAS (Case-Control Genome-Wide Association Study)\n\n### 核心场景\n- 检测常见变异（MAF > 1%）与表型的关联\n- 病例 vs 对照的差异等位基因频率\n- 需要大样本（通常 > 1000 例）\n\n### 标准分析流程\n\n```\n1. 基因型数据 QC\n   ├─ 样本 QC: 缺失率, 性别检查, 杂合度, 亲缘关系\n   ├─ 变异 QC: 缺失率, MAF, HWE, 差异缺失\n   └─ 输出: 高质量 PLINK 文件集\n\n2. 群体分层校正\n   ├─ PCA (主成分分析)\n   ├─ 去除异常样本\n   └─ 将 PC1-PC10 作为协变量\n\n3. 关联分析\n   ├─ 二分类表型: 逻辑回归 (PLINK --logistic / SAIGE / REGENIE)\n   ├─ 连续表型: 线性回归 (PLINK --linear / BOLT-LMM)\n   └─ 混合模型校正 (SAIGE / REGENIE / BOLT-LMM)\n\n4. 结果解读\n   ├─ Manhattan plot, QQ plot\n   ├─ 基因组膨胀因子 λ_GC (目标: 0.95-1.05)\n   ├─ 显著性阈值: P < 5×10⁻⁸ (全基因组), P < 1×10⁻⁵ (提示性)\n   └→ LD clumping + 注释\n```\n\n### PLINK QC 标准命令\n```bash\n# Step 1: 样本级 QC\nplink --bfile raw_data \\\n    --missing \\\n    --het \\\n    --sex \\\n    --check-bims \\\n    --make-bed --out qc_step1\n\n# 移除高缺失样本 (>3%)\nplink --bfile qc_step1 --mind 0.03 --make-bed --out qc_step2\n\n# Step 2: 变异级 QC\n# 移除高缺失变异 (>2%)\nplink --bfile qc_step2 --geno 0.02 --make-bed --out qc_step3\n\n# 移除低 MAF (<1%)\nplink --bfile qc_step3 --maf 0.01 --make-bed --out qc_step4\n\n# HWE 检验 (仅对照中, P < 1×10⁻⁶ 移除)\nplink --bfile qc_step4 --hwe 1e-6 --make-bed --out qc_step5\n\n# 差异缺失检验 (病例 vs 对照, P < 1×10⁻⁵ 移除)\nplink --bfile qc_step5 --test-missing --out diff_missing\nplink --bfile qc_step5 --exclude diff_missing.diff.miss --make-bed --out qc_final\n\n# 亲缘关系检测 (移除二级以上亲属)\nplink --bfile qc_final --king-cutoff 0.0884 --make-bed --out qc_unrelated\n# 0.0884 = 二级亲属阈值 (PI_HAT ≈ 0.0884)\n```\n\n### 群体分层校正\n```bash\n# PCA (GCTA 或 PLINK)\ngcta --bfile qc_unrelated --autosome --make-grm --out grm\ngcta --grm grm --pca 20 --out pca_results\n\n# 或使用 PLINK 2.0\nplink2 --bfile qc_unrelated --pca 20 --out pca_results\n\n# R: 可视化 PC1 vs PC2, 标注病例/对照\n# 检查是否有群体异常样本\n```\n\n### 关联分析（三种方法）\n\n```bash\n# 方法 1: PLINK 逻辑回归 (基础, 适合中小样本)\nplink --bfile qc_unrelated \\\n    --logistic \\\n    --covar pca_results.eigenvec \\\n    --covar-name PC1,PC2,PC3,PC4,PC5 \\\n    --ci 0.95 \\\n    --pheno phenotype.txt \\\n    --out gwas_results\n\n# 方法 2: SAIGE (推荐, 大样本 + 病例不平衡)\n# Step 1: 空模型 (拟合均值和方差)\nRscript step1_fitNULLGLMM.R \\\n    --phenoFile=pheno.txt \\\n    --phenoCol=pheno \\\n    --covarColList=PC1,PC2,PC3,PC4,PC5 \\\n    --sampleIDCol=IID \\\n    --bedFile=qc_unrelated.bed \\\n    --bimFile=qc_unrelated.bim \\\n    --famFile=qc_unrelated.fam \\\n    --GRMFile=grm \\\n    --outputPrefix=saige_null\n\n# Step 2: 关联检验\nRscript step2_SPAtests.R \\\n    --nullModel=saige_null.rda \\\n    --bedFile=qc_unrelated.bed \\\n    --bimFile=qc_unrelated.bim \\\n    --famFile=qc_unrelated.fam \\\n    --outputFile=saige_results.txt\n\n# 方法 3: REGENIE (两步法, 适合 UKB 级别大数据)\n# Step 1: 空模型\nregenie \\\n    --step 1 \\\n    --bed qc_unrelated \\\n    --phenoFile pheno.txt \\\n    --covarFile covariates.txt \\\n    --covarColList PC1,PC2,PC3,PC4,PC5 \\\n    --bt \\\n    --bsize 1000 \\\n    --lowmem \\\n    --out regenie_step1\n\n# Step 2: 关联检验\nregenie \\\n    --step 2 \\\n    --bed qc_unrelated \\\n    --phenoFile pheno.txt \\\n    --covarFile covariates.txt \\\n    --covarColList PC1,PC2,PC3,PC4,PC5 \\\n    --bt \\\n    --pred regenie_step1_pred.list \\\n    --bsize 400 \\\n    --out regenie_results\n```\n\n### GWAS QC 阈值汇总\n\n| QC 步骤 | 指标 | 阈值 | 工具 |\n|---------|------|------|------|\n| 样本缺失率 | --mind | < 0.03 (3%) | PLINK |\n| 变异缺失率 | --geno | < 0.02 (2%) | PLINK |\n| 最小等位基因频率 | --maf | > 0.01 (1%) | PLINK |\n| HWE (仅对照) | --hwe | P > 1×10⁻⁶ | PLINK |\n| 差异缺失 | --test-missing | P > 1×10⁻⁵ | PLINK |\n| 杂合度异常 | ±3 SD | - | PLINK --het |\n| 亲缘关系 | PI_HAT | < 0.0884 (移除二级以上) | PLINK --king |\n| 性别一致性 | F coefficient | 男 0.8-1.0, 女 < 0.2 | PLINK --check-sex |\n| 基因组膨胀因子 | λ_GC | 0.95-1.05 | LDSC / GCTA |\n| 显著性阈值 | P value | < 5×10⁻⁸ | - |\n\n---",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\study_designs.md",
+    "section_title": "病例对照 GWAS (Case-Control Genome-Wide Association Study)",
+    "line_start": 106,
+    "line_end": 258,
+    "pipeline_ids": [
+      "gwas"
+    ],
+    "tags": [
+      "qc",
+      "tool"
+    ],
+    "chunk_type": "code"
+  },
+  {
+    "chunk_id": "study_designs_3",
+    "content": "## 孟德尔随机化 (Mendelian Randomization, MR)\n\n### 核心场景\n- 利用遗传变异作为工具变量评估暴露与结局的因果关系\n- 双样本 MR（使用 GWAS summary statistics）\n- 不需要个体基因型数据\n\n### 标准分析流程\n\n```\n1. 选择工具变量\n   ├─ 从暴露 GWAS 中选 IV (P < 5×10⁻⁸)\n   ├─ Clumping (r² < 0.001, window 10Mb)\n   ├─ 去除与结局连锁不平衡的 IV\n   └→ 检查 IV 强度 (F-statistic > 10)\n\n2. 提取结局 GWAS 中的对应 SNP\n   ├─ 正链对齐 (harmonization)\n   ├─ 去除回文 SNP (中间等位基因, MAF > 0.4 去除)\n   └→ 输出: 暴露 β + SE, 结局 β + SE\n\n3. MR 估计\n   ├─ IVW (逆方差加权) - 主分析方法\n   ├─ MR-Egger - 检验水平多效性\n   ├─ 加权中位数 (Weighted Median)\n   ├─ 加权模式 (Weighted Mode)\n   └→ 最多似然法 (Maximum Likelihood)\n\n4. 敏感性分析\n   ├─ Cochran's Q (异质性检验)\n   ├─ MR-Egger 截距 (水平多效性)\n   ├─ Leave-one-out (逐个 SNP 剔除)\n   ├─ MR-PRESSO (离群值检测)\n   └→ Steiger filtering (因果方向检验)\n\n5. 多变量 MR (可选)\n   ├─ 控制混杂暴露\n   └→ 评估独立因果效应\n```\n\n### TwoSampleMR R 包标准代码\n\n```r\n# 安装\ninstall.packages(\"TwoSampleMR\", repos = c(\"https://mrcieu.r-universe.dev\", \"https://cloud.r-project.org\"))\n\nlibrary(TwoSampleMR)\n\n# Step 1: 提取暴露 GWAS 工具变量\nexposure_dat <- extract_instruments(\n    outcomes = \"ieu-a-2\",  # BMI GWAS ID\n    p1 = 5e-8,              # 全基因组显著性阈值\n    clump = TRUE,           # LD clumping\n    r2 = 0.001,             # r² 阈值\n    kb = 10000              # clumping window\n)\n\n# 检查工具变量强度 (F-statistic)\n# F = beta² / se², 要求 F > 10\nexposure_dat$F_stat <- (exposure_dat$beta.exposure / exposure_dat$se.exposure)^2\nmean(exposure_dat$F_stat)  # 应 > 10\n\n# Step 2: 提取结局 GWAS 中对应 SNP\noutcome_dat <- extract_outcome_data(\n    snps = exposure_dat$SNP,\n    outcomes = \"ieu-a-7\"  # 冠心病 GWAS ID\n)\n\n# Step 3: 正链对齐 (harmonization)\ndat <- harmonise_data(\n    exposure_dat = exposure_dat,\n    outcome_dat = outcome_dat,\n    action = 2  # 去除回文 SNP (MAF > 0.4)\n)\n\n# Step 4: MR 分析\nres <- mr(dat)\n\n# res 包含:\n# - mr_ivw (逆方差加权, 主方法)\n# - mr_egger_regression (MR-Egger)\n# - mr_weighted_median (加权中位数)\n# - mr_weighted_mode (加权模式)\n\n# Step 5: 敏感性分析\n# 异质性检验\nhet <- mr_heterogeneity(dat)\n# Cochran's Q: P < 0.05 表示存在异质性\n\n# 水平多效性\npleio <- mr_pleiotropy_test(dat)\n# MR-Egger 截距 P < 0.05 表示存在水平多效性\n\n# Leave-one-out\nloo <- mr_leaveoneout(dat)\n\n# 单个 SNP 分析\nsingle <- mr_singlesnp(dat)\n\n# Step 6: 可视化\nmr_scatter_plot(res, dat)       # 散点图\nmr_forest_plot(single)          # 森林图\nmr_funnel_plot(single)         # 漏斗图\nmr_leaveoneout_plot(loo)       # Leave-one-out 图\n```\n\n### MR-PRESSO 离群值检测\n```r\nlibrary(MRPRESSO)\npresso <- mr_presso(\n    BetaOutcome = \"beta.outcome\",\n    BetaExposure = \"beta.exposure\",\n    SdOutcome = \"se.outcome\",\n    SdExposure = \"se.exposure\",\n    data = dat,\n    OUTLIERtest = TRUE,\n    DISTORTIONtest = TRUE,\n    NbDistribution = 1000,\n    SignifThreshold = 0.05\n)\n```\n\n### 关键 QC 阈值\n\n| 步骤 | 指标 | 阈值 | 说明 |\n|------|------|------|------|\n| 工具变量选择 | P value | < 5×10⁻⁸ | 全基因组显著性 |\n| LD clumping | r² | < 0.001 | 独立 SNP |\n| Clumping window | kb | 10,000 | 10 Mb 窗口 |\n| F-statistic | F | > 10 | 强工具变量 |\n| 回文 SNP | MAF | > 0.4 去除 | 避免链方向不确定 |\n| 异质性 | Cochran's Q | P > 0.05 | 同质 |\n| 水平多效性 | MR-Egger 截距 | P > 0.05 | 无显著多效性 |\n| 因果方向 | Steiger | - | 暴露→结局方向正确 |\n\n---",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\study_designs.md",
+    "section_title": "孟德尔随机化 (Mendelian Randomization, MR)",
+    "line_start": 259,
+    "line_end": 395,
+    "pipeline_ids": [
+      "mendelian-randomization"
+    ],
+    "tags": [
+      "qc"
+    ],
+    "chunk_type": "code"
+  },
+  {
+    "chunk_id": "study_designs_4",
+    "content": "## 多基因风险评分 (Polygenic Risk Score, PRS)\n\n### 核心场景\n- 利用 GWAS summary statistics 预测个体遗传风险\n- 适用于疾病风险分层、预后评估\n- 需要 base data (GWAS) + target data (个体基因型)\n\n### 标准分析流程\n\n```\n1. 准备数据\n   ├─ Base data: GWAS summary statistics (β, SE, P, SNP, EA, OA)\n   ├─ Target data: 个体基因型 (PLINK format)\n   └→ 确保 base 和 target 使用相同参考基因组\n\n2. 质量控制\n   ├─ Base: 移除低质量 SNP (MAF < 0.01, INFO < 0.8)\n   ├─ Target: 标准 GWAS QC (见上方 GWAS 部分)\n   └→ 正链对齐 (base 和 target 的效应等位基因一致)\n\n3. PRS 计算 (三种方法)\n   ├─ Clumping + Thresholding (C+T) - PRSice-2\n   ├─ Bayesian (连续收缩) - LDpred2, PRS-CS\n   └→ LDpred2-autom / PRS-CS-auto (自动调参)\n\n4. 模型评估\n   ├─ R² (变异解释率)\n   ├<arg_value> AUC / C-index (分类性能)\n   └→ 十折交叉验证\n```\n\n### PRSice-2 标准命令\n```bash\n# PRSice-2 (C+T 方法)\nRscript PRSice.R \\\n    --prsice PRSice_linux \\\n    --base base_gwas.txt \\\n    --target target_data \\\n    --base-maf MAF \\\n    --base-info INFO \\\n    --base-A1 A1 \\\n    --base-A2 A2 \\\n    --base-bp BP \\\n    --base-chr CHR \\\n    --base-pvalue P \\\n    --base-effect BETA \\\n    --target-A1 A1 \\\n    --target-A2 A2 \\\n    --stat OR \\\n    --binary-target T \\\n    --pheno-file phenotype.txt \\\n    --pheno-col Phenotype \\\n    --cov-file covariates.txt \\\n    --cov-col PC1,PC2,PC3,PC4,PC5,Sex \\\n    --bar-levels 5e-8,1e-6,1e-4,1e-3,0.01,0.05,0.1,0.5,1 \\\n    --fastscore \\\n    --all-score \\\n    --out prs_results\n\n# --bar-levels: 多个 P 阈值\n# --fastscore: 只计算指定阈值 (不做全范围扫描)\n# --all-score: 输出所有阈值的 PRS\n```\n\n### LDpred2 (Bayesian 方法, 推荐)\n```r\nlibrary(bigsnpr)\nlibrary(data.table)\n\n# Step 1: 读取 GWAS summary statistics\nsumstats <- fread(\"base_gwas.txt\")\nsumstats <- sumstats[, .(chr, pos, rsid, ea, nea, beta, p)]\n\n# Step 2: 与目标基因型对齐\nsnp_info <- snp_match(sumstats, map = bigsnpr::snp_attach(\"target_data.rds\")$map)\n\n# Step 3: LD 参考面板 (使用目标数据自身或参考面板)\nLD <- snp_cor(G, ind.col = ind_chr, ncores = nb_cores())\n\n# Step 4: LDpred2-auto (自动调参, 推荐)\nbeta_inf <- snp_ldpred2_inf(\n    corr = LD,\n    fbeta = snp_info$beta,\n    fbeta_se = snp_info$beta_se\n)\n\nbeta_auto <- snp_ldpred2_auto(\n    corr = LD,\n    fbeta = snp_info$beta,\n    fbeta_se = snp_info$beta_se\n)\n\n# Step 5: 计算 PRS\nprs <- big_prodVec(G, beta_auto[[1]]$beta_estim, ind.col = ind_chr)\n```\n\n### PRS-CS (Bayesian 连续收缩, 大样本推荐)\n```bash\n# PRS-CS (Python)\npython PRS_cs.py \\\n    --ref_dir=/path/to/ld_reference \\\n    --bim_prefix=target_data \\\n    --sst_file=base_gwas.txt \\\n    --n_gwas=sample_size \\\n    --out_dir=output \\\n    --chrom=22\n\n# PRS-CS-auto (自动调参)\npython PRS_cs_auto.py \\\n    --ref_dir=/path/to/ld_reference \\\n    --bim_prefix=target_data \\\n    --sst_file=base_gwas.txt \\\n    --n_gwas=sample_size \\\n    --out_dir=output\n```\n\n### PRS 评估指标\n\n| 指标 | 计算方法 | 解读 |\n|------|---------|------|\n| R² (连续表型) | 线性回归 PRS ~ 表型 | 解释方差比例 |\n| Pseudo-R² (二分类) | Nagelkerke R² | 模型解释力 |\n| AUC (二分类) | ROC 曲线下面积 | 分类性能 |\n| OR per SD | PRS 每升高 1 SD 的 OR | 风险倍数 |\n| 分层分析 | 最高 5%/10% vs 最低 | 风险分层效果 |\n\n---",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\study_designs.md",
+    "section_title": "多基因风险评分 (Polygenic Risk Score, PRS)",
+    "line_start": 396,
+    "line_end": 523,
+    "pipeline_ids": [
+      "gwas",
+      "prs"
+    ],
+    "tags": [
+      "qc",
+      "tool"
+    ],
+    "chunk_type": "code"
+  },
+  {
+    "chunk_id": "study_designs_5",
+    "content": "## 罕见变异分析 (Rare Variant Analysis)\n\n### 核心场景\n- 单个罕见变异（MAF < 1%）统计效力不足\n- 基因聚合检验提高检测效力\n- 适用于外显子组/全基因组测序数据\n\n### 分析方法\n\n| 方法 | 原理 | 适用场景 |\n|------|------|---------|\n| Burden test | 基因内所有罕见变异计数求和 | 变异方向一致 |\n| SKAT | 平方和检验 (variance-component) | 变异方向不一致 |\n| SKAT-O | Burden + SKAT 自适应混合 | 方向未知 |\n| CMC | 混合模型组合 | 多频率分层 |\n| ACAT | 从每个变异 P 值组合 | 超大样本 |\n\n### SKAT 标准流程 (R)\n```r\nlibrary(SKAT)\n\n# 准备数据\n# Z: 基因型矩阵 (n × m, 个体 × 变异)\n# y: 表型向量\n# X: 协变量矩阵\n# obj: NULL model (仅协变量)\n\n# Step 1: 拟合空模型\nobj <- SKAT_Null_Model(\n    y ~ PC1 + PC2 + PC3 + Age + Sex,\n    out_type = \"D\"  # \"D\" 二分类, \"C\" 连续\n)\n\n# Step 2: Burden test\np_burden <- Burden(Z, obj, r.corr = 1)$p.value\n\n# Step 3: SKAT (variance-component)\np_skat <- SKAT(Z, obj, r.corr = 0)$p.value\n\n# Step 4: SKAT-O (自适应混合, 推荐)\np_skato <- SKAT(Z, obj, r.corr = NA)$p.value\n\n# Step 5: 全基因组 (per-gene)\n# 遍历所有基因, 输出 per-gene P value\nfor (gene in gene_list) {\n    Z_gene <- extract_gene_genotypes(gene)\n    p <- SKAT(Z_gene, obj, r.corr = NA)$p.value\n    results <- rbind(results, data.frame(gene, p))\n}\n\n# 多重检验校正\nresults$q <- p.adjust(results$p, method = \"BH\")  # FDR\n# 显著性: FDR q < 0.05\n```\n\n### 罕见变异 QC 阈值\n\n| QC 步骤 | 指标 | 阈值 |\n|---------|------|------|\n| 变异质量 | QUAL | > 30 |\n| 变异深度 | DP | > 10 |\n| MAF 上限 | MAF | < 0.01 (1%) |\n| 基因注释 | 功能影响 | missense, nonsense, splice-site |\n| synonymous | 通常排除 | - |\n| CADD | 预测有害性 | > 20 (推荐) |\n| 多重检验 | FDR | q < 0.05 |\n\n---\n\n### GenotypeRefinement 在完整家系 WGS 流程中的精确位置\n\n[由 Step 5 知识积累自动添加, 日期: 2026-07-29]\n\nGenotypeRefinement 应插入在 **VQSR 过滤完成之后、队列 QC 之前**，是家系数据区别于普通队列分析的关键专属步骤。\n\n`完整家系 WGS 流程:`\n  FASTQ -> BWA -> MarkDuplicates -> BQSR -> HaplotypeCaller(-ERC GVCF)\n  -> GenomicsDBImport -> GenotypeGVCFs\n  -> bcftools norm (左对齐+拆分多等位)\n  -> VariantRecalibrator (VQSR 训练)\n  -> ApplyVQSR (链式: SNP 99.5% -> INDEL 99.0%)\n  -> [此处插入 GenotypeRefinement]  <- 家系专属\n  -> 队列 QC (基因型/位点/样本/家系孟德尔)\n  -> 下游分析 (de novo / 共分离 / 注释)\n\n**GenotypeRefinement 三步详细说明：**\n\n| 步骤 | 工具 | 作用 | 输入 | 输出 |\n|------|------|------|------|------|\n| 1. 基因型后验优化 | CalculateGenotypePosteriors | 结合家系 pedigree + 人群 AF（gnomAD）优化低质量基因型 | VQSR 过滤后 VCF + .ped + gnomAD | 加了 PP/GP 字段的 VCF |\n| 2. 传递相位 | PhaseByTransmission | 利用 pedigree 推断父母->子传递的等位基因，修正相位 | 上一步输出 + .ped | 加了 PQ 字段的 phased VCF |\n| 3. de novo 标注 | VariantAnnotator + VariantFiltration | 标注 de novo 候选（子杂合+父母均参考型） | phased VCF + gnomAD | de novo 候选 VCF |\n\n**关键注意事项：**\n- `CalculateGenotypePosteriors` 的 `--supporting-callsets` 推荐使用 gnomAD（需与参考基因组版本匹配）\n- `.ped` 文件格式：FamilyID IndividualID FatherID MotherID Sex Phenotype（0=未知）\n- 该步骤能显著提高低覆盖度区域（<20x）的基因型准确率\n- 如果队列中家系成员不完整（单亲），PhaseByTransmission 仍可工作但效力降低\n\n### VQSR 链式应用 vs 并行应用\n\n[由 Step 5 知识积累自动添加, 日期: 2026-07-29]\n\nGATK ApplyVQSR 有两种应用策略，对家系 WGS 队列有重要影响：\n\n| 策略 | 方法 | SNP 模型输入 | INDEL 模型输入 | GATK 推荐 | 适用场景 |\n|------|------|------------|--------------|----------|---------|\n| 链式（顺序） | 先 SNP 过滤，再用过滤后 VCF 过滤 INDEL | 原始 VCF | SNP 过滤后 VCF | YES 官方推荐 | 标准分析 |\n| 并行（独立） | SNP 和 INDEL 各自从原始 VCF 独立过滤 | 原始 VCF | 原始 VCF | 非推荐 | 需要分离输出时 |\n\n**链式应用（推荐）代码模式：**\n```bash\n# Step 1: 先对原始 VCF 应用 SNP VQSR\ngatk ApplyVQSR \\\n    -V input_norm.vcf.gz \\\n    -O tmp_snp_recal.vcf.gz \\\n    --recal-file global_snps.recal \\\n    --tranches-file global_snps.tranches \\\n    -mode SNP \\\n    --truth-sensitivity-filter-level 99.5\n\n# Step 2: 对 SNP 过滤后的 VCF 继续应用 INDEL VQSR\ngatk ApplyVQSR \\\n    -V tmp_snp_recal.vcf.gz \\\n    -O final_PASS.vcf.gz \\\n    --recal-file global_indels.recal \\\n    --tranches-file global_indels.tranches \\\n    -mode INDEL \\\n    --truth-sensitivity-filter-level 99.0\n```\n\n**为什么推荐链式：** INDEL 模型的训练和过滤基于 SNP 质量已优化的 VCF，避免低质量 SNP 干扰 INDEL 判定。GATK 官方文档明确推荐链式应用。\n\n**如果下游需要分离的 SNP/INDEL 文件：** 在链式 ApplyVQSR 完成后，用 bcftools 拆分即可，无需用并行策略：\n```bash\nbcftools view -v snps -f PASS final_PASS.vcf.gz -Oz -o pure_snps.vcf.gz\nbcftools view -v indels -f PASS final_PASS.vcf.gz -Oz -o pure_indels.vcf.gz\n```\n\n---",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\study_designs.md",
+    "section_title": "罕见变异分析 (Rare Variant Analysis)",
+    "line_start": 524,
+    "line_end": 663,
+    "pipeline_ids": [
+      "family-trio-wgs",
+      "rare-variant",
+      "wgs-germline"
+    ],
+    "tags": [
+      "qc",
+      "tool",
+      "reproducibility"
+    ],
+    "chunk_type": "code"
+  },
+  {
+    "chunk_id": "study_designs_6",
+    "content": "## 研究设计流程图坐标参考\n\n家系分析 (Trio) 步骤坐标（position.y 递增 120）：\n\n| 步骤 | y 坐标 |\n|------|--------|\n| 变异检测 | 0 |\n| 联合基因分型 | 120 |\n| VQSR/硬过滤 | 240 |\n| GenotypeRefinement | 360 |\n| 变异注释 | 480 |\n| De novo 识别 | 600 |\n| 验证排序 | 720 |\n\nGWAS 步骤坐标：\n\n| 步骤 | y 坐标 |\n|------|--------|\n| 基因型 QC | 0 |\n| 群体分层校正 | 120 |\n| 关联分析 | 240 |\n| 结果解读 | 360 |\n\nMR 步骤坐标：\n\n| 步骤 | y 坐标 |\n|------|--------|\n| 选择工具变量 | 0 |\n| 提取结局 SNP | 120 |\n| MR 估计 | 240 |\n| 敏感性分析 | 360 |\n| 多变量 MR (可选) | 480 |\n\nPRS 步骤坐标：\n\n| 步骤 | y 坐标 |\n|------|--------|\n| 准备数据 | 0 |\n| 质量控制 | 120 |\n| PRS 计算 | 240 |\n| 模型评估 | 360 |\n\n---",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\study_designs.md",
+    "section_title": "研究设计流程图坐标参考",
+    "line_start": 664,
+    "line_end": 708,
+    "pipeline_ids": [
+      "family-trio-wgs",
+      "gwas",
+      "mendelian-randomization"
+    ],
+    "tags": [
+      "qc"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_0",
+    "content": "## Using Latest Container Tag\n\n### **Id**\nlatest-container-tag\n### **Severity**\nwarning\n### **Type**\nregex\n### **Pattern**\n  - container.*['\"].*:latest['\"]\n  - docker.*:latest\n  - singularity.*:latest\n### **Message**\nPin container version instead of 'latest' for reproducibility.\n### **Fix Action**\nUse specific version tag (e.g., :0.7.17--h5bf99c6_8)\n### **Applies To**\n  - **/*.nf\n  - **/nextflow.config\n  - **/*.smk\n  - **/Snakefile",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Using Latest Container Tag",
+    "line_start": 3,
+    "line_end": 24,
+    "pipeline_ids": [],
+    "tags": [
+      "code",
+      "docker",
+      "reproducibility"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_1",
+    "content": "## Shell Without Pipefail\n\n### **Id**\nno-pipefail\n### **Severity**\nwarning\n### **Type**\nregex\n### **Pattern**\n  - shell:\\s*['\"]\\s*[^'\"]*\\|[^'\"]*['\"](?![\\s\\S]{0,50}pipefail)\n  - shell:\\s*'''[^']*\\|[^']*'''(?![\\s\\S]{0,50}pipefail)\n### **Message**\nUse 'set -euo pipefail' in shell blocks with pipes.\n### **Applies To**\n  - **/*.nf",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Shell Without Pipefail",
+    "line_start": 25,
+    "line_end": 40,
+    "pipeline_ids": [],
+    "tags": [
+      "trap",
+      "code"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_2",
+    "content": "## Hardcoded Thread Count\n\n### **Id**\nhardcoded-thread-count\n### **Severity**\ninfo\n### **Type**\nregex\n### **Pattern**\n  - -t\\s+[0-9]+(?![\\s\\S]{0,20}\\$\\{?task\\.cpus)\n  - --threads\\s+[0-9]+(?![\\s\\S]{0,20}\\$\\{?task\\.cpus)\n  - -p\\s+[0-9]+(?![\\s\\S]{0,20}threads)\n### **Message**\nUse dynamic thread allocation (task.cpus or {threads}).\n### **Applies To**\n  - **/*.nf\n  - **/*.smk",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Hardcoded Thread Count",
+    "line_start": 41,
+    "line_end": 58,
+    "pipeline_ids": [],
+    "tags": [
+      "code"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_3",
+    "content": "## Process Without Version Tracking\n\n### **Id**\nno-version-output\n### **Severity**\ninfo\n### **Type**\nregex\n### **Pattern**\n  - process\\s+\\w+\\s*\\{[^}]*output:[^}]*(?!versions)[^}]*\\}\n### **Message**\nInclude versions.yml output for tool version tracking.\n### **Applies To**\n  - **/*.nf",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Process Without Version Tracking",
+    "line_start": 59,
+    "line_end": 73,
+    "pipeline_ids": [],
+    "tags": [
+      "code",
+      "reproducibility"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_4",
+    "content": "## Temp Files Without Backup Strategy\n\n### **Id**\ntemp-without-protected\n### **Severity**\ninfo\n### **Type**\nregex\n### **Pattern**\n  - temp\\([^)]+\\.bam[^)]*\\)\n  - temp\\([^)]+\\.vcf[^)]*\\)\n### **Message**\nConsider keeping intermediate BAM/VCF until pipeline completes.\n### **Applies To**\n  - **/*.smk",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Temp Files Without Backup Strategy",
+    "line_start": 74,
+    "line_end": 89,
+    "pipeline_ids": [],
+    "tags": [
+      "code"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_5",
+    "content": "## Snakemake Rule Without Log\n\n### **Id**\nmissing-log-directive\n### **Severity**\ninfo\n### **Type**\nregex\n### **Pattern**\n  - rule\\s+\\w+:[^}]*(?!log:)[^}]*shell:\n### **Message**\nAdd log directive to capture stderr for debugging.\n### **Applies To**\n  - **/*.smk\n  - **/Snakefile",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Snakemake Rule Without Log",
+    "line_start": 90,
+    "line_end": 105,
+    "pipeline_ids": [],
+    "tags": [
+      "code"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_6",
+    "content": "## Process Without Resource Limits\n\n### **Id**\nno-resource-specification\n### **Severity**\nwarning\n### **Type**\nregex\n### **Pattern**\n  - process\\s+\\w+\\s*\\{[^}]*(?!memory|cpus|label)[^}]*\\}\n### **Message**\nSpecify memory and CPU requirements for cluster execution.\n### **Applies To**\n  - **/*.nf",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Process Without Resource Limits",
+    "line_start": 106,
+    "line_end": 120,
+    "pipeline_ids": [],
+    "tags": [
+      "code",
+      "hpc"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_7",
+    "content": "## Merging Files Without Sorting\n\n### **Id**\nunsorted-merge-input\n### **Severity**\ninfo\n### **Type**\nregex\n### **Pattern**\n  - collect\\(\\)(?![\\s\\S]{0,50}sort)\n  - bcftools\\s+merge(?![\\s\\S]{0,50}sort)\n### **Message**\nSort input files before merging for reproducible order.\n### **Applies To**\n  - **/*.nf\n  - **/*.smk",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Merging Files Without Sorting",
+    "line_start": 121,
+    "line_end": 137,
+    "pipeline_ids": [],
+    "tags": [
+      "code",
+      "reproducibility"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_8",
+    "content": "## Process Without Error Handling\n\n### **Id**\nno-error-strategy\n### **Severity**\ninfo\n### **Type**\nregex\n### **Pattern**\n  - process\\s+\\w+\\s*\\{[^}]*(?!errorStrategy)[^}]*\\}\n### **Message**\nConsider adding errorStrategy for retry on transient failures.\n### **Applies To**\n  - **/*.nf",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Process Without Error Handling",
+    "line_start": 138,
+    "line_end": 152,
+    "pipeline_ids": [],
+    "tags": [
+      "trap",
+      "code"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_9",
+    "content": "## Absolute Path in Workflow Definition\n\n### **Id**\nabsolute-path-in-workflow\n### **Severity**\nwarning\n### **Type**\nregex\n### **Pattern**\n  - ['\"]/home/[a-z]+/.*['\"]\n  - ['\"]/data/.*['\"]\n  - ['\"]C:\\\\.*['\"]\n### **Message**\nUse relative paths or params for portability.\n### **Applies To**\n  - **/*.nf\n  - **/*.smk\n  - **/Snakefile",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Absolute Path in Workflow Definition",
+    "line_start": 153,
+    "line_end": 171,
+    "pipeline_ids": [],
+    "tags": [
+      "code"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_10",
+    "content": "## Mixing Reference Genome Builds\n\n### **Id**\nreference-build-mismatch\n### **Severity**\ncritical\n### **Type**\nregex\n### **Pattern**\n  - hg19.*GRCh38\n  - b37.*hg38\n  - GRCh37.*assembly38\n  - dbsnp_138\\.b37.*assembly38\n### **Message**\nReference genome builds are mixed. All files must use the same build.\n### **Fix Action**\nUse a consistent reference bundle (e.g., GRCh38 for all: FASTA, index, known sites, annotation).\n### **Applies To**\n  - **/*.nf\n  - **/*.smk\n  - **/*.wdl\n  - **/nextflow.config\n  - **/config/*.yaml",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Mixing Reference Genome Builds",
+    "line_start": 172,
+    "line_end": 195,
+    "pipeline_ids": [],
+    "tags": [
+      "code"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_11",
+    "content": "## GATK GVCF Without Joint Genotyping\n\n### **Id**\ngvcf-without-genotyping\n### **Severity**\nwarning\n### **Type**\nregex\n### **Pattern**\n  - emit-ref-confidence\\s+GVCF(?!.*GenotypeGVCFs)(?!.*GenomicsDBImport)\n### **Message**\nGVCF was emitted but no joint genotyping (GenotypeGVCFs/GenomicsDBImport) follows.\n### **Fix Action**\nAdd GenomicsDBImport + GenotypeGVCFs steps, or use regular VCF if single-sample.\n### **Applies To**\n  - **/*.nf\n  - **/*.smk\n  - **/*.wdl",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "GATK GVCF Without Joint Genotyping",
+    "line_start": 196,
+    "line_end": 214,
+    "pipeline_ids": [],
+    "tags": [
+      "code",
+      "tool"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_12",
+    "content": "## Missing Read Group In Alignment\n\n### **Id**\nmissing-read-group\n### **Severity**\nwarning\n### **Type**\nregex\n### **Pattern**\n  - bwa\\s+mem(?![\\s\\S]{0,200}-R)\n  - bwa-mem2(?![\\s\\S]{0,200}-R)\n### **Message**\nBWA alignment without -R read group. GATK requires read groups.\n### **Fix Action**\nAdd -R '@RG\\tID:sample\\tSM:sample\\tPL:ILLUMINA\\tLB:lib1' to bwa mem command.\n### **Applies To**\n  - **/*.nf\n  - **/*.smk\n  - **/*.sh",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Missing Read Group In Alignment",
+    "line_start": 215,
+    "line_end": 234,
+    "pipeline_ids": [
+      "wgs-germline"
+    ],
+    "tags": [
+      "code",
+      "tool"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_13",
+    "content": "## Hardcoded Memory For Genomics Tools\n\n### **Id**\nhardcoded-memory-genomics\n### **Severity**\nwarning\n### **Type**\nregex\n### **Pattern**\n  - memory\\s*=\\s*['\"]\\d+\\s*GB['\"](?![\\s\\S]{0,100}attempt|input|cpus)\n### **Message**\nStatic memory for genomics tools causes OOM or waste. Use dynamic allocation.\n### **Fix Action**\nUse memory { 8.GB * task.attempt } with errorStrategy retry for variable-size inputs.\n### **Applies To**\n  - **/*.nf",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Hardcoded Memory For Genomics Tools",
+    "line_start": 235,
+    "line_end": 251,
+    "pipeline_ids": [],
+    "tags": [
+      "trap",
+      "code"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_14",
+    "content": "## Peak Calling Without IDR\n\n### **Id**\npeak-calling-without-idr\n### **Severity**\nwarning\n### **Type**\nregex\n### **Pattern**\n  - macs2(?![\\s\\S]{0,500}idr|IDR)\n### **Message**\nPeak calling without IDR analysis. ENCODE requires IDR for reproducibility.\n### **Fix Action**\nAdd idr step after MACS2 peak calling for replicate concordance analysis.\n### **Applies To**\n  - **/*.nf\n  - **/*.smk\n  - **/*.sh",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Peak Calling Without IDR",
+    "line_start": 252,
+    "line_end": 270,
+    "pipeline_ids": [
+      "chip-seq"
+    ],
+    "tags": [
+      "code",
+      "tool"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "validations_15",
+    "content": "## Unsorted BAM Output\n\n### **Id**\nunsorted-bam-output\n### **Severity**\nwarning\n### **Type**\nregex\n### **Pattern**\n  - bwa\\s+mem(?![\\s\\S]{0,300}sort|samtools\\s+sort)\n  - bowtie2(?![\\s\\S]{0,300}sort|samtools\\s+sort)\n### **Message**\nAlignment output is not sorted. Downstream tools require coordinate-sorted BAM.\n### **Fix Action**\nPipe alignment output through samtools sort: bwa mem ref reads | samtools sort -o out.bam.\n### **Applies To**\n  - **/*.nf\n  - **/*.smk\n  - **/*.sh",
+    "source_file": "E:\\skills\\bioinformatics-workflows\\references\\validations.md",
+    "section_title": "Unsorted BAM Output",
+    "line_start": 271,
+    "line_end": 290,
+    "pipeline_ids": [],
+    "tags": [
+      "code",
+      "tool"
+    ],
+    "chunk_type": "paragraph"
+  },
+  {
+    "chunk_id": "pipeline_16s",
+    "content": "# Pipeline: 16S rRNA Amplicon Sequencing (16S rRNA 扩增子测序)\nCategory: microbiome\nTags: 16S, 扩增子, QIIME2, DADA2\nOverview: 16S rRNA 基因扩增子测序标准分析流程，从原始读段到 ASV 表、物种注释和多样性分析。\n\n## Source: QIIME 2 + DADA2 (type: official)\nStep: 数据导入\nTools: QIIME 2 tools import 2024.5\nParams: --type SampleData[PairedEndSequencesWithQuality]\nDocker: quay.io/qiime2/core:2024.5\nStep: 去噪 + ASV 推断\nTools: QIIME 2 dada2 denoise-paired 2024.5\nParams: --p-trunc-len-f 240 --p-trunc-len-r 200\nDocker: quay.io/qiime2/core:2024.5\nStep: 物种注释\nTools: QIIME 2 feature-classifier 2024.5\nParams: --p-classifier silva-138-99-classifier.qza\nDocker: quay.io/qiime2/core:2024.5\nStep: 系统发育树构建\nTools: QIIME 2 phylogeny 2024.5\nParams: align-to-tree-mafft-fasttree\nDocker: quay.io/qiime2/core:2024.5\nStep: 多样性分析\nTools: QIIME 2 diversity core-metrics-phylogenetic 2024.5\nParams: --p-sampling-depth 10000\nDocker: quay.io/qiime2/core:2024.5\nStep: 差异分析\nTools: ANCOM-BC / LEfSe 2024.5 / 1.0\nDocker: quay.io/qiime2/core:2024.5",
+    "source_file": "src/data/pipelines/16s.json",
+    "section_title": "16S rRNA Amplicon Sequencing",
+    "line_start": 1,
+    "line_end": 29,
+    "pipeline_ids": [
+      "16s"
+    ],
+    "tags": [
+      "microbiome",
+      "16S",
+      "扩增子",
+      "QIIME2",
+      "DADA2"
+    ],
+    "chunk_type": "pipeline"
+  },
+  {
+    "chunk_id": "pipeline_chip-seq",
+    "content": "# Pipeline: ChIP-seq / CUT&RUN (ChIP-seq / CUT&RUN 分析)\nCategory: epigenetics\nTags: ChIP-seq, CUT&RUN, peak calling, 组蛋白修饰, 转录因子\nOverview: 染色质免疫沉淀测序（ChIP-seq）和其升级版 CUT&RUN 的标准分析流程，涵盖 peak calling、注释、motif 分析和差异结合分析。\n\n## Source: ENCODE Guidelines (type: official)\nStep: 质控 + 比对\nTools: FastQC 0.12.1, Bowtie2 2.5\nParams: --very-sensitive\nDocker: biocontainers/fastqc:0.12.1; biocontainers/bowtie2:2.5\nStep: 读段过滤\nTools: Samtools + Picard 1.18\nParams: -q 30\nDocker: biocontainers/samtools:1.18\nStep: Peak Calling\nTools: MACS2 / MACS3 3.0\nParams: -g hs -q 0.05 --nomodel --extsize 200\nDocker: biocontainers/macs2:2.2\nStep: Peak 质控 + 可视化\nTools: deepTools 3.5\nParams: plotFingerprint, plotHeatmap\nDocker: biocontainers/deeptools:3.5\nStep: Peak 注释\nTools: ChIPseeker (R) 1.38\nDocker: bioconductor/bioconductor_docker\nStep: Motif 富集分析\nTools: MEME-ChIP / HOMER 5.5 / 4.11\nDocker: biocontainers/meme:5.5\nStep: 差异结合分析\nTools: DiffBind (R) / DESeq2 3.12\nDocker: bioconductor/bioconductor_docker",
+    "source_file": "src/data/pipelines/chip-seq.json",
+    "section_title": "ChIP-seq / CUT&RUN",
+    "line_start": 1,
+    "line_end": 31,
+    "pipeline_ids": [
+      "chip-seq"
+    ],
+    "tags": [
+      "epigenetics",
+      "ChIP-seq",
+      "CUT&RUN",
+      "peak calling",
+      "组蛋白修饰",
+      "转录因子"
+    ],
+    "chunk_type": "pipeline"
+  },
+  {
+    "chunk_id": "pipeline_family-trio-wgs",
+    "content": "# Pipeline: Family Trio WGS Germline (家系WGS种系变异分析)\nCategory: dna\nTags: 家系分析, Trio, GATK, de novo, 遗传病\nOverview: 适用于父母-子代 Trio 家系的全基因组种系变异联合检测。基于 GATK Best Practices (v4.5)，覆盖 FASTQ→VCF 全链路，包含联合分型、de novo 检出、遗传模式筛选。\n\n## Source: GATK Best Practices (type: official)\nStep: 比对 (BWA-MEM2)\nTools: BWA-MEM2 2.2\nParams: -M -R @RG\\\tID:sample\\\tSM:sample\\\tPL:ILLUMINA\nDocker: biocontainers/bwa-mem2:2.2.1\nStep: 标记重复 + BQSR\nTools: GATK MarkDuplicates 4.5, GATK BaseRecalibrator 4.5, GATK ApplyBQSR 4.5\nParams: --known-sites dbsnp.vcf\nDocker: broadinstitute/gatk:4.5.0.0; broadinstitute/gatk:4.5.0.0; broadinstitute/gatk:4.5.0.0\nStep: 单样本 GVCF\nTools: GATK HaplotypeCaller 4.5\nParams: -ERC GVCF --native-pair-hmm-threads 8\nDocker: broadinstitute/gatk:4.5.0.0\nStep: GVCF 整合\nTools: GATK GenomicsDBImport 4.5\nParams: --genomicsdb-workspace-path gendb --intervals chr.list\nDocker: broadinstitute/gatk:4.5.0.0\nStep: 联合基因分型\nTools: GATK GenotypeGVCFs 4.5\nParams: --include-non-variant-sites\nDocker: broadinstitute/gatk:4.5.0.0\nStep: VQSR 过滤 / Hard-Filtering\nTools: GATK VariantRecalibrator 4.5, GATK ApplyVQSR 4.5, GATK VariantFiltration 4.5\nParams: -mode SNP --max-gaussians 4; --truth-sensitivity-filter-level 99.7; --filter-expression \"QD<2.0||FS>60||MQ<40\"\nDocker: broadinstitute/gatk:4.5.0.0; broadinstitute/gatk:4.5.0.0; broadinstitute/gatk:4.5.0.0\nStep: De Novo 检测\nTools: GATK PossibleDeNovo 4.5\nParams: --ped family.ped --max-parent-af 0.001\nDocker: broadinstitute/gatk:4.5.0.0\nStep: 家系遗传模式筛选\nTools: slivar 0.3, GATK SelectVariants 4.5\nParams: --ped family.ped --trio --gnomad-max-af 0.01 --impactful; --select-type-to-include SNP\nDocker: brentp/slivar:0.3; broadinstitute/gatk:4.5.0.0\nStep: 变异注释 + QC 报告\nTools: Ensembl VEP 112, MultiQC 1.21\nParams: --everything --fork 8 --pick\nDocker: ensemblorg/ensembl-vep:112; multiqc/multiqc:1.21",
+    "source_file": "src/data/pipelines/family-trio-wgs.json",
+    "section_title": "Family Trio WGS Germline",
+    "line_start": 1,
+    "line_end": 42,
+    "pipeline_ids": [
+      "family-trio-wgs"
+    ],
+    "tags": [
+      "dna",
+      "家系分析",
+      "Trio",
+      "GATK",
+      "de novo",
+      "遗传病"
+    ],
+    "chunk_type": "pipeline"
+  },
+  {
+    "chunk_id": "pipeline_gwas",
+    "content": "# Pipeline: GWAS Case-Control (病例对照 GWAS 分析)\nCategory: dna\nTags: GWAS, 病例对照, SAIGE, REGENIE, PLINK, 群体遗传\nOverview: 全基因组关联分析标准流程，覆盖基因型 QC、群体分层校正、关联分析（PLINK/SAIGE/REGENIE）和结果解读。适用于常见变异（MAF > 1%）与二分类/连续表型的关联检测。\n\n## Source: PLINK GWAS (type: official)\nStep: 基因型数据 QC\nTools: PLINK 1.9 / 2.0, PLINK --king 2.0\nParams: --mind 0.03 --geno 0.02 --maf 0.01 --hwe 1e-6; --king-cutoff 0.0884\nStep: 群体分层校正\nTools: GCTA / PLINK 2.0 1.94 / 2.0\nParams: --pca 20\nStep: 关联分析\nTools: PLINK --logistic 1.9, SAIGE 1.3+, REGENIE 3.4+\nParams: --covar PC1-PC5 --ci 0.95; step1: fitNULLGLMM, step2: SPAtests; --step 1 --step 2 --bt\nStep: 结果解读\nTools: LDSC / GCTA 1.0.1 / 1.94",
+    "source_file": "src/data/pipelines/gwas.json",
+    "section_title": "GWAS Case-Control",
+    "line_start": 1,
+    "line_end": 17,
+    "pipeline_ids": [
+      "gwas"
+    ],
+    "tags": [
+      "dna",
+      "GWAS",
+      "病例对照",
+      "SAIGE",
+      "REGENIE",
+      "PLINK",
+      "群体遗传"
+    ],
+    "chunk_type": "pipeline"
+  },
+  {
+    "chunk_id": "pipeline_mendelian-randomization",
+    "content": "# Pipeline: Mendelian Randomization (孟德尔随机化分析)\nCategory: dna\nTags: 孟德尔随机化, MR, TwoSampleMR, 工具变量, 因果推断\nOverview: 利用遗传变异作为工具变量评估暴露与结局的因果关系。支持双样本 MR（使用 GWAS summary statistics），覆盖 IV 选择、harmonization、多方法 MR 估计和敏感性分析。\n\n## Source: TwoSampleMR (MRC IEU) (type: official)\nStep: 选择工具变量\nTools: TwoSampleMR R 包 0.6+\nParams: extract_instruments(p1=5e-8, clump=T, r2=0.001, kb=10000)\nStep: 提取结局 SNP + Harmonization\nTools: TwoSampleMR harmonise_data() 0.6+\nParams: action=2\nStep: MR 估计\nTools: TwoSampleMR mr() 0.6+\nParams: method_list=c('mr_ivw','mr_egger_regression','mr_weighted_median')\nStep: 敏感性分析\nTools: TwoSampleMR mr_heterogeneity() 0.6+, TwoSampleMR mr_pleiotropy_test() 0.6+, MR-PRESSO 1.0, TwoSampleMR mr_leaveoneout() 0.6+\nParams: NbDistribution=1000, SignifThreshold=0.05\nStep: 多变量 MR (可选)\nTools: TwoSampleMR mv_multivariable_mr() 0.6+",
+    "source_file": "src/data/pipelines/mendelian-randomization.json",
+    "section_title": "Mendelian Randomization",
+    "line_start": 1,
+    "line_end": 20,
+    "pipeline_ids": [
+      "mendelian-randomization"
+    ],
+    "tags": [
+      "dna",
+      "孟德尔随机化",
+      "MR",
+      "TwoSampleMR",
+      "工具变量",
+      "因果推断"
+    ],
+    "chunk_type": "pipeline"
+  },
+  {
+    "chunk_id": "pipeline_metagenomics",
+    "content": "# Pipeline: Shotgun Metagenomics (宏基因组分析)\nCategory: microbiome\nTags: 宏基因组, 微生物组, MetaPhlAn, 功能注释\nOverview: 鸟枪法宏基因组测序分析流程，涵盖宿主去除、分类学注释、功能注释和多样本比较。\n\n## Source: bioBakery (MetaPhlAn + HUMAnN) (type: official)\nStep: 质控 + 宿主去除\nTools: FastQC 0.12.1, KneadData 0.12\nParams: --reference-db human_genome\nDocker: biocontainers/fastqc:0.12.1; biobakery/kneaddata:0.12\nStep: 分类学注释\nTools: MetaPhlAn 4 4.0\nParams: --input_type fastq\nDocker: biobakery/metaphlan:4.0\nStep: 功能注释\nTools: HUMAnN 3 3.8\nDocker: biobakery/humann:3.8\nStep: 组装 + 分箱（可选）\nTools: MEGAHIT 1.2, MetaBAT2 2.15\nParams: --min-contig-len 500\nDocker: biocontainers/megahit:1.2; biocontainers/metabat2:2.15\nStep: 统计分析与可视化\nTools: R: vegan, phyloseq, MaAsLin2 \nDocker: bioconductor/bioconductor_docker",
+    "source_file": "src/data/pipelines/metagenomics.json",
+    "section_title": "Shotgun Metagenomics",
+    "line_start": 1,
+    "line_end": 24,
+    "pipeline_ids": [
+      "metagenomics"
+    ],
+    "tags": [
+      "microbiome",
+      "宏基因组",
+      "微生物组",
+      "MetaPhlAn",
+      "功能注释"
+    ],
+    "chunk_type": "pipeline"
+  },
+  {
+    "chunk_id": "pipeline_prs",
+    "content": "# Pipeline: Polygenic Risk Score (多基因风险评分分析)\nCategory: dna\nTags: PRS, 多基因风险评分, PRSice, LDpred2, PRS-CS, 风险预测\nOverview: 利用 GWAS summary statistics 预测个体遗传风险。支持 Clumping+Thresholding（PRSice-2）、Bayesian 连续收缩（LDpred2、PRS-CS）三种方法，覆盖数据准备、QC、PRS 计算和模型评估。\n\n## Source: PRSice-2 (type: official)\nStep: 准备数据\nTools: PLINK 1.9 / 2.0\nParams: --bfile\nStep: 质量控制\nTools: PLINK / QCTOOL 2.0 / 2\nParams: --maf 0.01 --info 0.8\nStep: PRS 计算\nTools: PRSice-2 2.3+, LDpred2 (bigsnpr) 1.12+, PRS-CS 1.0\nParams: --bar-levels 5e-8,1e-6,...,1 --fastscore; snp_ldpred2_auto(); --n_gwas=<N>\nStep: 模型评估\nTools: R / PLINK 4.3+ / 2.0\nParams: --score",
+    "source_file": "src/data/pipelines/prs.json",
+    "section_title": "Polygenic Risk Score",
+    "line_start": 1,
+    "line_end": 18,
+    "pipeline_ids": [
+      "prs"
+    ],
+    "tags": [
+      "dna",
+      "PRS",
+      "多基因风险评分",
+      "PRSice",
+      "LDpred2",
+      "PRS-CS",
+      "风险预测"
+    ],
+    "chunk_type": "pipeline"
+  },
+  {
+    "chunk_id": "pipeline_rare-variant",
+    "content": "# Pipeline: Rare Variant Aggregation (罕见变异聚合分析)\nCategory: dna\nTags: 罕见变异, SKAT, SKAT-O, Burden test, ACAT, 基因聚合检验\nOverview: 针对罕见变异（MAF < 1%）统计效力不足的问题，通过基因级聚合检验提高检测效力。支持 Burden test（方向一致）、SKAT（方差分量）、SKAT-O（自适应混合）和 ACAT（超大样本）。\n\n## Source: SKAT/SKAT-O (type: official)\nStep: 变异 QC\nTools: GATK / BCFtools 4.5 / 1.17\nParams: QUAL>30, DP>10, MAF<0.01\nStep: 功能注释\nTools: VEP / ANNOVAR 112 / 2023\nParams: --everything\nDocker: ensemblorg/ensembl-vep:112\nStep: 拟合空模型\nTools: SKAT R 包 2.2+\nParams: out_type='D' or 'C'\nStep: Burden test\nTools: SKAT Burden() 2.2+\nParams: r.corr=1\nStep: SKAT 检验\nTools: SKAT SKAT() 2.2+\nParams: r.corr=0\nStep: SKAT-O（推荐）\nTools: SKAT SKAT() 2.2+\nParams: r.corr=NA\nStep: 多重检验校正\nTools: R p.adjust() 4.3+\nParams: method='BH'",
+    "source_file": "src/data/pipelines/rare-variant.json",
+    "section_title": "Rare Variant Aggregation",
+    "line_start": 1,
+    "line_end": 28,
+    "pipeline_ids": [
+      "rare-variant"
+    ],
+    "tags": [
+      "dna",
+      "罕见变异",
+      "SKAT",
+      "SKAT-O",
+      "Burden test",
+      "ACAT",
+      "基因聚合检验"
+    ],
+    "chunk_type": "pipeline"
+  },
+  {
+    "chunk_id": "pipeline_rna-seq",
+    "content": "# Pipeline: RNA-seq Differential Expression (RNA-seq 差异表达分析)\nCategory: rna\nTags: 转录组, 差异表达, DESeq2, 富集分析\nOverview: 转录组测序标准分析流程，从原始 FASTQ 到差异表达基因列表及功能富集。支持有生物学重复的 case-control 设计。\n\n## Source: nf-core/rnaseq (type: community)\nStep: 质控 + 修剪\nTools: FastQC 0.12.1, Trim Galore 0.6.10\nParams: --fastqc\nDocker: nfcore/rnaseq:3.14; nfcore/rnaseq:3.14\nStep: 比对 + 定量\nTools: STAR 2.7.11, Salmon 1.10\nParams: --twopassMode Basic\nDocker: nfcore/rnaseq:3.14; nfcore/rnaseq:3.14\nStep: 比对后质控\nTools: RSeQC 5.0\nDocker: nfcore/rnaseq:3.14\nStep: 差异表达分析\nTools: DESeq2 (R/Bioconductor) 1.44\nParams: design = ~ condition\nDocker: bioconductor/bioconductor_docker\nStep: 功能富集分析\nTools: clusterProfiler (R) 4.10\nDocker: bioconductor/bioconductor_docker",
+    "source_file": "src/data/pipelines/rna-seq.json",
+    "section_title": "RNA-seq Differential Expression",
+    "line_start": 1,
+    "line_end": 24,
+    "pipeline_ids": [
+      "rna-seq"
+    ],
+    "tags": [
+      "rna",
+      "转录组",
+      "差异表达",
+      "DESeq2",
+      "富集分析"
+    ],
+    "chunk_type": "pipeline"
+  },
+  {
+    "chunk_id": "pipeline_scrna-seq",
+    "content": "# Pipeline: Single-cell RNA-seq (单细胞 RNA-seq 分析)\nCategory: rna\nTags: 单细胞, Seurat, Scanpy, 聚类, 细胞注释\nOverview: 10x Genomics 单细胞转录组标准分析流程，涵盖数据预处理、降维聚类、差异分析和细胞类型注释。\n\n## Source: Seurat (R) (type: official)\nStep: 数据预处理\nTools: Cell Ranger 8.0, Seurat 5.1\nParams: min.cells=3, min.features=200\nStep: 归一化 + 高变基因\nTools: Seurat SCTransform 5.1\nParams: vars.to.regress = percent.mt\nStep: 降维\nTools: Seurat RunPCA + RunUMAP 5.1\nParams: dims=1:30\nStep: 聚类\nTools: Seurat FindNeighbors + FindClusters 5.1\nParams: resolution=0.5\nStep: 细胞类型注释\nTools: SingleR / CellTypist 2.0 / 1.0\nStep: 高级分析\nTools: Monocle3 / CellChat / SCENIC ",
+    "source_file": "src/data/pipelines/scrna-seq.json",
+    "section_title": "Single-cell RNA-seq",
+    "line_start": 1,
+    "line_end": 22,
+    "pipeline_ids": [
+      "scrna-seq"
+    ],
+    "tags": [
+      "rna",
+      "单细胞",
+      "Seurat",
+      "Scanpy",
+      "聚类",
+      "细胞注释"
+    ],
+    "chunk_type": "pipeline"
+  },
+  {
+    "chunk_id": "pipeline_wes",
+    "content": "# Pipeline: WES Variant Calling (WES 捕获测序分析)\nCategory: dna\nTags: 外显子组, 捕获测序, 靶向\nOverview: 全外显子组测序分析流程。与 WGS 类似，但需额外注意捕获区间限制、GC 偏倚和探针效率差异。\n\n## Source: GATK WES Guidelines (type: official)\nStep: 质控 + 修剪\nTools: FastQC 0.12.1\nDocker: biocontainers/fastqc:0.12.1\nStep: 比对 + 去重\nTools: BWA-MEM 0.7.17\nParams: -M -R\nDocker: biocontainers/bwa:0.7.17\nStep: BQSR\nTools: GATK BQSR 4.5\nDocker: broadinstitute/gatk:4.5.0.0\nStep: HaplotypeCaller\nTools: GATK HaplotypeCaller 4.5\nParams: -L targets.interval_list -ERC GVCF\nDocker: broadinstitute/gatk:4.5.0.0\nStep: 联合基因分型\nTools: GATK GenomicsDBImport + GenotypeGVCFs 4.5\nParams: -L targets.interval_list\nDocker: broadinstitute/gatk:4.5.0.0\nStep: VQSR / Hard Filtering\nTools: GATK VQSR / VariantFiltration 4.5\nDocker: broadinstitute/gatk:4.5.0.0\nStep: 注释\nTools: ANNOVAR 2023\nDocker: nongxd/annovar:latest",
+    "source_file": "src/data/pipelines/wes.json",
+    "section_title": "WES Variant Calling",
+    "line_start": 1,
+    "line_end": 30,
+    "pipeline_ids": [
+      "wes"
+    ],
+    "tags": [
+      "dna",
+      "外显子组",
+      "捕获测序",
+      "靶向"
+    ],
+    "chunk_type": "pipeline"
+  },
+  {
+    "chunk_id": "pipeline_wgbs",
+    "content": "# Pipeline: WGBS / RRBS Methylation (全基因组甲基化分析)\nCategory: epigenetics\nTags: 甲基化, WGBS, Bismark, DMR\nOverview: 全基因组亚硫酸氢盐测序（WGBS）或简化代表性亚硫酸氢盐测序（RRBS）数据分析流程，涵盖比对、甲基化 calling 和差异甲基化区域鉴定。\n\n## Source: Bismark Pipeline (type: official)\nStep: 质控 + 修剪\nTools: FastQC 0.12.1, Trim Galore 0.6.10\nParams: --rrbs (for RRBS)\nDocker: biocontainers/fastqc:0.12.1; biocontainers/trim-galore:0.6.10\nStep: 亚硫酸氢盐比对\nTools: Bismark 0.24\nParams: --bowtie2 -N 1 -L 28\nDocker: biocontainers/bismark:0.24\nStep: 去重\nTools: Bismark deduplicate_bismark 0.24\nDocker: biocontainers/bismark:0.24\nStep: 甲基化提取\nTools: Bismark methylation_extractor 0.24\nParams: --comprehensive --bedGraph\nDocker: biocontainers/bismark:0.24\nStep: 差异甲基化分析\nTools: DSS / methylKit (R) 2.48 / 1.28\nDocker: bioconductor/bioconductor_docker\nStep: 注释 + 可视化\nTools: annotatr (R) / Gviz \nDocker: bioconductor/bioconductor_docker",
+    "source_file": "src/data/pipelines/wgbs.json",
+    "section_title": "WGBS / RRBS Methylation",
+    "line_start": 1,
+    "line_end": 27,
+    "pipeline_ids": [
+      "wgbs"
+    ],
+    "tags": [
+      "epigenetics",
+      "甲基化",
+      "WGBS",
+      "Bismark",
+      "DMR"
+    ],
+    "chunk_type": "pipeline"
+  },
+  {
+    "chunk_id": "pipeline_wgs-germline",
+    "content": "# Pipeline: WGS Germline Variant Calling (WGS 种系变异分析)\nCategory: dna\nTags: 家系分析, 遗传病, GATK, BWA\nOverview: 适用于遗传病家系或散发样本的全基因组种系变异检测。从原始 FASTQ 出发，经质控、比对、变异检测、过滤、注释，最终获得高质量变异列表用于下游临床解读。\n\n## Source: GATK Best Practices (type: official)\nStep: 原始数据质控\nTools: FastQC 0.12.1, MultiQC 1.21\nParams: --extract\nDocker: biocontainers/fastqc:0.12.1; multiqc/multiqc:1.21\nStep: 读段修剪（可选）\nTools: fastp 0.23.4\nParams: --qualified_quality_phred 20 --length_required 50\nDocker: biocontainers/fastp:0.23.4\nStep: 序列比对\nTools: BWA-MEM 0.7.17\nParams: -M -R @RG\\t...\nDocker: biocontainers/bwa:0.7.17\nStep: 标记重复序列\nTools: GATK MarkDuplicatesSpark 4.5\nParams: --remove-sequencing-duplicates\nDocker: broadinstitute/gatk:4.5.0.0\nStep: 碱基质量重校准 (BQSR)\nTools: GATK BaseRecalibrator 4.5, GATK ApplyBQSR 4.5\nParams: --known-sites dbsnp.vcf\nDocker: broadinstitute/gatk:4.5.0.0; broadinstitute/gatk:4.5.0.0\nStep: 变异检测\nTools: GATK HaplotypeCaller 4.5\nParams: -ERC GVCF --native-pair-hmm-threads 8\nDocker: broadinstitute/gatk:4.5.0.0\nStep: 联合基因分型\nTools: GATK GenomicsDBImport 4.5, GATK GenotypeGVCFs 4.5\nParams: --genomicsdb-workspace-path gendb\nDocker: broadinstitute/gatk:4.5.0.0; broadinstitute/gatk:4.5.0.0\nStep: 变异质控过滤 (VQSR)\nTools: GATK VariantRecalibrator 4.5, GATK ApplyVQSR 4.5\nParams: -mode SNP -resource:hapmap,...; --truth-sensitivity-filter-level 99.7\nDocker: broadinstitute/gatk:4.5.0.0; broadinstitute/gatk:4.5.0.0\nStep: 变异注释\nTools: ANNOVAR 2023, VEP 112\nParams: -protocol refGene,gnomad41_genome,clinvar; --everything --fork 8\nDocker: nongxd/annovar:latest; ensemblorg/ensembl-vep:112\nStep: 家系共分离分析\nTools: GATK PhaseByTransmission 4.5, slivar 0.3\nParams: --ped family.ped; --ped family.ped --trio\nDocker: broadinstitute/gatk:4.5.0.0; brentp/slivar:0.3\n## Source: nf-core/sarek (type: community)\nStep: 质控 + 修剪\nTools: FastQC 0.12.1, Trim Galore 0.6.10\nParams: --fastqc\nDocker: nfcore/sarek:3.4; nfcore/sarek:3.4\nStep: 比对 + 标记重复\nTools: BWA-MEM / DRAGMAP 0.7.17 / 3.5, GATK MarkDuplicates 4.5\nDocker: nfcore/sarek:3.4; nfcore/sarek:3.4\nStep: BQSR\nTools: GATK BaseRecalibrator + ApplyBQSR 4.5\nDocker: nfcore/sarek:3.4\nStep: 变异检测 + 过滤\nTools: GATK HaplotypeCaller / DeepVariant / Strelka2 4.5 / 1.5 / 2.9, GATK VQSR / CNNScoreVariants 4.5\nDocker: nfcore/sarek:3.4; nfcore/sarek:3.4\nStep: 注释 + 报告\nTools: VEP / snpEff 112 / 5.1\nDocker: nfcore/sarek:3.4",
+    "source_file": "src/data/pipelines/wgs-germline.json",
+    "section_title": "WGS Germline Variant Calling",
+    "line_start": 1,
+    "line_end": 63,
+    "pipeline_ids": [
+      "wgs-germline"
+    ],
+    "tags": [
+      "dna",
+      "家系分析",
+      "遗传病",
+      "GATK",
+      "BWA"
+    ],
+    "chunk_type": "pipeline"
+  },
+  {
+    "chunk_id": "pipeline_wgs-somatic",
+    "content": "# Pipeline: WGS Somatic Variant Calling (WGS 体细胞变异分析)\nCategory: dna\nTags: 肿瘤, Mutect2, 配对样本\nOverview: 肿瘤-正常配对样本的体细胞变异检测，鉴定 SNV、Indel 和 CNV。核心流程基于 GATK4 Mutect2 + 过滤 + 注释。\n\n## Source: GATK4 Somatic (type: official)\nStep: 质控 + 修剪\nTools: FastQC 0.12.1, fastp 0.23.4\nParams: --qualified_quality_phred 20\nDocker: biocontainers/fastqc:0.12.1; biocontainers/fastp:0.23.4\nStep: 比对 + 去重\nTools: BWA-MEM 0.7.17, GATK MarkDuplicates 4.5\nParams: -M -R\nDocker: biocontainers/bwa:0.7.17; broadinstitute/gatk:4.5.0.0\nStep: BQSR\nTools: GATK BaseRecalibrator + ApplyBQSR 4.5\nDocker: broadinstitute/gatk:4.5.0.0\nStep: Mutect2 体细胞变异检测\nTools: GATK Mutect2 4.5\nParams: -tumor TUMOR -normal NORMAL --germline-resource af-only-gnomad.vcf\nDocker: broadinstitute/gatk:4.5.0.0\nStep: 过滤体细胞变异\nTools: GATK FilterMutectCalls 4.5\nDocker: broadinstitute/gatk:4.5.0.0\nStep: 变异注释\nTools: VEP 112, maftools (R) 2.18\nParams: --everything --fork 8\nDocker: ensemblorg/ensembl-vep:112; bioconductor/bioconductor_docker",
+    "source_file": "src/data/pipelines/wgs-somatic.json",
+    "section_title": "WGS Somatic Variant Calling",
+    "line_start": 1,
+    "line_end": 28,
+    "pipeline_ids": [
+      "wgs-somatic"
+    ],
+    "tags": [
+      "dna",
+      "肿瘤",
+      "Mutect2",
+      "配对样本"
+    ],
+    "chunk_type": "pipeline"
+  }
+]
