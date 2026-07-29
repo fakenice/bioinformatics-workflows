@@ -1,15 +1,19 @@
 import { ChevronDown, ChevronUp, ExternalLink, BookOpen } from "lucide-react";
 import { useState } from "react";
 import type { Reference } from "../types/pipeline";
-
-const typeLabels: Record<string, string> = {
-  official: "官方文档",
-  community: "社区资源",
-  paper: "学术论文",
-};
+import { useT } from "../i18n";
 
 export default function ReferenceAccordion({ references }: { references: Reference[] }) {
   const [open, setOpen] = useState(false);
+  const t = useT();
+
+  const typeLabels: Record<string, string> = {
+    official: t("references.types.official"),
+    community: t("references.types.community"),
+    paper: t("references.types.paper"),
+  };
+
+  const countLabel = t("references.count").replace("{count}", String(references.length));
 
   return (
     <div
@@ -23,7 +27,7 @@ export default function ReferenceAccordion({ references }: { references: Referen
       >
         <span className="flex items-center gap-2">
           <BookOpen className="w-4 h-4" />
-          参考文献({references.length})
+          {countLabel}
         </span>
         {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
       </button>

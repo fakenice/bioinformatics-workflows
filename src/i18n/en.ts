@@ -52,6 +52,15 @@ const en = {
     footerNote:
       "This page renders SKILL.md + references/ from the Skill repository, sharing the same data source as FlowSeq pipelines.",
   },
+  references: {
+    title: "References",
+    count: "References ({count})",
+    types: {
+      official: "Official",
+      community: "Community",
+      paper: "Paper",
+    },
+  },
   tagTranslations: {
     "扩增子": "Amplicon",
     "组蛋白修饰": "Histone Mod.",

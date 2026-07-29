@@ -76,7 +76,7 @@ export default function PipelinePage() {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-bold truncate" style={{ color: "var(--color-text-primary)" }}>
-                {lang === "en" ? selectedPipeline.name : selectedPipeline.nameZH}
+                {lang === "en" ? (selectedPipeline.nameEn || selectedPipeline.name) : selectedPipeline.nameZH}
               </h1>
               {selectedPipeline.version && (
                 <span

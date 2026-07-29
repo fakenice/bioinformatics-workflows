@@ -29,7 +29,8 @@ export function pipelineToMarkdown(
   const lines: string[] = [];
 
   // Title
-  lines.push(`# ${isEn ? pipeline.name : pipeline.nameZH}`);
+  const titleText = isEn ? (pipeline.nameEn || pipeline.name) : pipeline.nameZH;
+  lines.push(`# ${titleText}`);
   lines.push("");
 
   // Source line

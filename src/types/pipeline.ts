@@ -46,6 +46,7 @@ export interface ChangelogEntry {
 export interface PipelineDefinition {
   id: string;
   name: string;
+  nameEn?: string;
   nameZH: string;
   category: Category;
   tags: string[];
