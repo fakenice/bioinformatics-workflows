@@ -10,30 +10,36 @@
     "de novo",
     "遗传病"
   ],
-  "overview": "适用于父母-子代 Trio 家系的全基因组种系变异联合检测。基于 GATK Best Practices (v4.5) 与 nf-core/sarek (v3.9)，覆盖 FASTQ→VCF 全链路，包含联合分型、de novo 检出、遗传模式筛选。",
+  "overview": "适用于父母-子代 Trio 家系的全基因组种系变异联合检测。基于 GATK Best Practices (v4.5)，覆盖 FASTQ→VCF 全链路，包含联合分型、de novo 检出、遗传模式筛选。",
+  "overviewEn": "Joint germline variant detection for parent-child trio families using GATK Best Practices (v4.5). Covers the full FASTQ-to-VCF pipeline including joint genotyping, de novo detection, and inheritance pattern filtering.",
   "icon": "dna",
   "version": "1.0.0",
   "sources": [
     {
       "id": "gatk",
       "name": "GATK Best Practices",
+      "nameEn": "GATK Best Practices",
       "type": "official",
       "url": "https://gatk.broadinstitute.org/hc/en-us/articles/360035535932",
       "steps": [
         {
           "id": "step-1",
           "name": "比对 (BWA-MEM2)",
+          "nameEn": "Alignment (BWA-MEM2)",
           "description": "将 Clean Reads 比对到 hg38 参考基因组",
+          "descriptionEn": "Align Clean Reads to the hg38 reference genome",
           "tools": [
             {
               "name": "BWA-MEM2",
               "version": "2.2",
-              "params": "-M -R @RG\\tID:sample\\tSM:sample\\tPL:ILLUMINA",
+              "params": "-M -R @RG\\\tID:sample\\\tSM:sample\\\tPL:ILLUMINA",
               "docker": "biocontainers/bwa-mem2:2.2.1",
-              "notes": "BWA-MEM2 比 BWA-MEM 快约 2×。也可选 DragMap 提速 3-5×。"
+              "notes": "BWA-MEM2 比 BWA-MEM 快约 2×。也可选 DragMap 提速 3-5×。",
+              "notesEn": "BWA-MEM2 is ~2× faster than BWA-MEM. DragMap option available for 3-5× speedup."
             }
           ],
           "notes": "BWA-MEM2 比 BWA-MEM 快约 2×。也可选 DragMap 提速 3-5×。",
+          "notesEn": "BWA-MEM2 is ~2× faster than BWA-MEM. DragMap option available for 3-5× speedup.",
           "position": {
             "x": 0,
             "y": 0
@@ -42,14 +48,17 @@
         {
           "id": "step-2",
           "name": "标记重复 + BQSR",
+          "nameEn": "Mark Duplicates + BQSR",
           "description": "标记 PCR 重复并对碱基质量进行重校准",
+          "descriptionEn": "Mark PCR duplicates and recalibrate base quality scores",
           "tools": [
             {
               "name": "GATK MarkDuplicates",
               "version": "4.5",
               "params": "",
               "docker": "broadinstitute/gatk:4.5.0.0",
-              "notes": "BQSR 基于 dbSNP/1000G/Mills 等已知位点集。家系分析中不推荐完全移除重复，仅标记即可。"
+              "notes": "BQSR 基于 dbSNP/1000G/Mills 等已知位点集。家系分析中不推荐完全移除重复，仅标记即可。",
+              "notesEn": "BQSR based on dbSNP/1000G/Mills known variant sets. For trio analysis, marking duplicates is preferred over removal."
             },
             {
               "name": "GATK BaseRecalibrator",
@@ -65,6 +74,7 @@
             }
           ],
           "notes": "BQSR 基于 dbSNP/1000G/Mills 等已知位点集。家系分析中不推荐完全移除重复，仅标记即可。",
+          "notesEn": "BQSR based on dbSNP/1000G/Mills known variant sets. For trio analysis, marking duplicates is preferred over removal.",
           "position": {
             "x": 0,
             "y": 120
@@ -73,17 +83,21 @@
         {
           "id": "step-3",
           "name": "单样本 GVCF",
+          "nameEn": "Single-sample GVCF",
           "description": "HaplotypeCaller GVCF 模式，每个样本独立生成",
+          "descriptionEn": "HaplotypeCaller in GVCF mode, one per sample",
           "tools": [
             {
               "name": "GATK HaplotypeCaller",
               "version": "4.5",
               "params": "-ERC GVCF --native-pair-hmm-threads 8",
               "docker": "broadinstitute/gatk:4.5.0.0",
-              "notes": "GVCF 模式便于后续增量联合 calling。Trio 中 3 个样本完全并行。"
+              "notes": "GVCF 模式便于后续增量联合 calling。Trio 中 3 个样本完全并行。",
+              "notesEn": "GVCF mode enables incremental joint calling. 3 trio samples run fully in parallel."
             }
           ],
           "notes": "GVCF 模式便于后续增量联合 calling。Trio 中 3 个样本完全并行。",
+          "notesEn": "GVCF mode enables incremental joint calling. 3 trio samples run fully in parallel.",
           "position": {
             "x": 0,
             "y": 240
@@ -92,17 +106,21 @@
         {
           "id": "step-4",
           "name": "GVCF 整合",
+          "nameEn": "GVCF Consolidation",
           "description": "将 3 个 GVCF 导入 GenomicsDB 数据库",
+          "descriptionEn": "Import 3 GVCFs into GenomicsDB",
           "tools": [
             {
               "name": "GATK GenomicsDBImport",
               "version": "4.5",
               "params": "--genomicsdb-workspace-path gendb --intervals chr.list",
               "docker": "broadinstitute/gatk:4.5.0.0",
-              "notes": "按染色体区间并行导入。3 个样本的 Trio 直接全基因组导入即可。"
+              "notes": "按染色体区间并行导入。3 个样本的 Trio 直接全基因组导入即可。",
+              "notesEn": "Parallel import by chromosome interval. For a 3-sample trio, direct genome-wide import suffices."
             }
           ],
           "notes": "按染色体区间并行导入。3 个样本的 Trio 直接全基因组导入即可。",
+          "notesEn": "Parallel import by chromosome interval. For a 3-sample trio, direct genome-wide import suffices.",
           "position": {
             "x": 0,
             "y": 360
@@ -111,17 +129,21 @@
         {
           "id": "step-5",
           "name": "联合基因分型",
+          "nameEn": "Joint Genotyping",
           "description": "基于 GenomicsDB 进行家系联合分型",
+          "descriptionEn": "Joint genotyping from GenomicsDB for trio",
           "tools": [
             {
               "name": "GATK GenotypeGVCFs",
               "version": "4.5",
               "params": "--include-non-variant-sites",
               "docker": "broadinstitute/gatk:4.5.0.0",
-              "notes": "联合分型可利用群体信息提高稀有变异敏感性，并输出一致的基因型矩阵。对 Trio 设计增益明显。"
+              "notes": "联合分型可利用群体信息提高稀有变异敏感性，并输出一致的基因型矩阵。对 Trio 设计增益明显。",
+              "notesEn": "Leverages population information to improve rare variant sensitivity and produce a consistent genotype matrix. Significant boost for trio designs."
             }
           ],
           "notes": "联合分型可利用群体信息提高稀有变异敏感性，并输出一致的基因型矩阵。对 Trio 设计增益明显。",
+          "notesEn": "Leverages population information to improve rare variant sensitivity and produce a consistent genotype matrix. Significant boost for trio designs.",
           "position": {
             "x": 0,
             "y": 480
@@ -130,14 +152,17 @@
         {
           "id": "step-6",
           "name": "VQSR 过滤 / Hard-Filtering",
+          "nameEn": "VQSR Filtering / Hard-Filtering",
           "description": "分别对 SNP 和 Indel 进行 VQSR 质量重校准；小样本备选硬过滤",
+          "descriptionEn": "VQSR recalibration for SNPs and Indels; Hard-Filtering for small cohorts",
           "tools": [
             {
               "name": "GATK VariantRecalibrator",
               "version": "4.5",
               "params": "-mode SNP --max-gaussians 4",
               "docker": "broadinstitute/gatk:4.5.0.0",
-              "notes": "⚠ VQSR 至少需要 30 样本才稳健。Trio 小样本建议 Hard-Filtering：QD<2.0, FS>60, MQ<40, SOR>3.0。"
+              "notes": "⚠ VQSR 至少需要 30 样本才稳健。Trio 小样本建议 Hard-Filtering：QD<2.0, FS>60, MQ<40, SOR>3.0。",
+              "notesEn": "VQSR requires >=30 samples for robustness. For small trio cohorts, Hard-Filtering recommended: QD<2.0, FS>60, MQ<40, SOR>3.0."
             },
             {
               "name": "GATK ApplyVQSR",
@@ -153,6 +178,7 @@
             }
           ],
           "notes": "⚠ VQSR 至少需要 30 样本才稳健。Trio 小样本建议 Hard-Filtering：QD<2.0, FS>60, MQ<40, SOR>3.0。",
+          "notesEn": "VQSR requires >=30 samples for robustness. For small trio cohorts, Hard-Filtering recommended: QD<2.0, FS>60, MQ<40, SOR>3.0.",
           "position": {
             "x": 0,
             "y": 600
@@ -161,17 +187,21 @@
         {
           "id": "step-7",
           "name": "De Novo 检测",
+          "nameEn": "De Novo Detection",
           "description": "基于 PED 家系文件识别新发变异",
+          "descriptionEn": "Identify de novo variants using PED pedigree file",
           "tools": [
             {
               "name": "GATK PossibleDeNovo",
               "version": "4.5",
               "params": "--ped family.ped --max-parent-af 0.001",
               "docker": "broadinstitute/gatk:4.5.0.0",
-              "notes": "筛选仅先证者存在、父母为参考纯合的变异。结合 gnomAD MAF<0.01 及功能注释进一步缩窄候选。"
+              "notes": "筛选仅先证者存在、父母为参考纯合的变异。结合 gnomAD MAF<0.01 及功能注释进一步缩窄候选。",
+              "notesEn": "Filter for variants present only in proband, homozygous reference in both parents. Narrow candidates with gnomAD MAF<0.01 and functional annotation."
             }
           ],
           "notes": "筛选仅先证者存在、父母为参考纯合的变异。结合 gnomAD MAF<0.01 及功能注释进一步缩窄候选。",
+          "notesEn": "Filter for variants present only in proband, homozygous reference in both parents. Narrow candidates with gnomAD MAF<0.01 and functional annotation.",
           "position": {
             "x": 0,
             "y": 720
@@ -180,14 +210,17 @@
         {
           "id": "step-8",
           "name": "家系遗传模式筛选",
+          "nameEn": "Inheritance Pattern Screening",
           "description": "按 AD/AR/X-linked 等遗传模式 + 表型过滤候选基因",
+          "descriptionEn": "Filter by AD/AR/X-linked inheritance patterns plus phenotype",
           "tools": [
             {
               "name": "slivar",
               "version": "0.3",
               "params": "--ped family.ped --trio --gnomad-max-af 0.01 --impactful",
               "docker": "brentp/slivar:0.3",
-              "notes": "slivar 一站式支持 de novo、compound het、AR homozygous、AD inherited 等模式。结合表型 HPO 词条效果更佳。"
+              "notes": "slivar 一站式支持 de novo、compound het、AR homozygous、AD inherited 等模式。结合表型 HPO 词条效果更佳。",
+              "notesEn": "slivar provides one-stop support for de novo, compound het, AR homozygous, AD inherited patterns. Combine with HPO terms for better results."
             },
             {
               "name": "GATK SelectVariants",
@@ -197,6 +230,7 @@
             }
           ],
           "notes": "slivar 一站式支持 de novo、compound het、AR homozygous、AD inherited 等模式。结合表型 HPO 词条效果更佳。",
+          "notesEn": "slivar provides one-stop support for de novo, compound het, AR homozygous, AD inherited patterns. Combine with HPO terms for better results.",
           "position": {
             "x": 0,
             "y": 840
@@ -205,14 +239,17 @@
         {
           "id": "step-9",
           "name": "变异注释 + QC 报告",
+          "nameEn": "Variant Annotation + QC Report",
           "description": "功能注释 + MultiQC 汇总",
+          "descriptionEn": "Functional annotation + MultiQC summary report",
           "tools": [
             {
               "name": "Ensembl VEP",
               "version": "112",
               "params": "--everything --fork 8 --pick",
               "docker": "ensemblorg/ensembl-vep:112",
-              "notes": "VEP 输出含 gnomAD AF、ClinVar 临床意义、CADD/SIFT/PolyPhen 预测分数。MultiQC 汇总覆盖度、Ti/Tv、比对率等。"
+              "notes": "VEP 输出含 gnomAD AF、ClinVar 临床意义、CADD/SIFT/PolyPhen 预测分数。MultiQC 汇总覆盖度、Ti/Tv、比对率等。",
+              "notesEn": "VEP output includes gnomAD AF, ClinVar significance, CADD/SIFT/PolyPhen scores. MultiQC summarizes coverage, Ti/Tv ratio, alignment rate, etc."
             },
             {
               "name": "MultiQC",
@@ -222,6 +259,7 @@
             }
           ],
           "notes": "VEP 输出含 gnomAD AF、ClinVar 临床意义、CADD/SIFT/PolyPhen 预测分数。MultiQC 汇总覆盖度、Ti/Tv、比对率等。",
+          "notesEn": "VEP output includes gnomAD AF, ClinVar significance, CADD/SIFT/PolyPhen scores. MultiQC summarizes coverage, Ti/Tv ratio, alignment rate, etc.",
           "position": {
             "x": 0,
             "y": 960
@@ -248,161 +286,6 @@
           "title": "slivar: rapid population-scale trio analysis (Pedersen et al.)",
           "url": "https://github.com/brentp/slivar",
           "type": "community"
-        }
-      ]
-    },
-    {
-      "id": "nfcore",
-      "name": "nf-core/sarek",
-      "type": "community",
-      "url": "https://nf-co.re/sarek/3.9",
-      "steps": [
-        {
-          "id": "step-1",
-          "name": "质控 + 修剪",
-          "description": "FastQC + fastp 一体化 QC",
-          "tools": [
-            {
-              "name": "FastQC",
-              "version": "0.12.1",
-              "params": "",
-              "docker": "nfcore/sarek:3.9",
-              "notes": "fastp 一步完成质控、接头去除、质量裁剪，效率高于 Trim Galore。"
-            },
-            {
-              "name": "fastp",
-              "version": "0.23.4",
-              "params": "--qualified_quality_phred 20",
-              "docker": "nfcore/sarek:3.9"
-            }
-          ],
-          "notes": "fastp 一步完成质控、接头去除、质量裁剪，效率高于 Trim Galore。",
-          "position": {
-            "x": 0,
-            "y": 0
-          }
-        },
-        {
-          "id": "step-2",
-          "name": "比对 + 去重",
-          "description": "BWA-MEM2 / DragMap 比对并 MarkDuplicates",
-          "tools": [
-            {
-              "name": "BWA-MEM2 / DragMap / Sentieon",
-              "version": "—",
-              "params": "",
-              "docker": "nfcore/sarek:3.9",
-              "notes": "三选一。DragMap 速度最快（DRAGEN 算法），Sentieon 商用精度最高。"
-            },
-            {
-              "name": "GATK MarkDuplicates",
-              "version": "4.5",
-              "params": "",
-              "docker": "nfcore/sarek:3.9"
-            }
-          ],
-          "notes": "三选一。DragMap 速度最快（DRAGEN 算法），Sentieon 商用精度最高。",
-          "position": {
-            "x": 0,
-            "y": 120
-          }
-        },
-        {
-          "id": "step-3",
-          "name": "BQSR (可选)",
-          "description": "碱基质量重校准，可通过 --no_bqsr 跳过",
-          "tools": [
-            {
-              "name": "GATK BaseRecalibrator + ApplyBQSR",
-              "version": "4.5",
-              "params": "",
-              "docker": "nfcore/sarek:3.9",
-              "notes": "现代测序平台此步收益递减，但临床级分析仍推荐保留。"
-            }
-          ],
-          "notes": "现代测序平台此步收益递减，但临床级分析仍推荐保留。",
-          "position": {
-            "x": 0,
-            "y": 240
-          }
-        },
-        {
-          "id": "step-4",
-          "name": "变异检测",
-          "description": "HaplotypeCaller / DeepVariant / Strelka2 多工具可选",
-          "tools": [
-            {
-              "name": "GATK HaplotypeCaller",
-              "version": "4.5",
-              "params": "",
-              "docker": "nfcore/sarek:3.9",
-              "notes": "DeepVariant 基于 CNN，对 Indel 灵敏度最高。可多工具并行取交集提升准确性。"
-            },
-            {
-              "name": "DeepVariant",
-              "version": "1.6",
-              "params": "",
-              "docker": "nfcore/sarek:3.9"
-            },
-            {
-              "name": "Strelka2",
-              "version": "2.9",
-              "params": "",
-              "docker": "nfcore/sarek:3.9"
-            }
-          ],
-          "notes": "DeepVariant 基于 CNN，对 Indel 灵敏度最高。可多工具并行取交集提升准确性。",
-          "position": {
-            "x": 0,
-            "y": 360
-          }
-        },
-        {
-          "id": "step-5",
-          "name": "注释 + MultiQC 报告",
-          "description": "snpEff/VEP 注释 + 全流程 QC 汇总",
-          "tools": [
-            {
-              "name": "snpEff / VEP",
-              "version": "5.1 / 112",
-              "params": "",
-              "docker": "nfcore/sarek:3.9",
-              "notes": "snpEff 比 VEP 轻量。自动产出 MultiQC HTML 报告，含覆盖度、GC bias、insert size 等。"
-            },
-            {
-              "name": "MultiQC",
-              "version": "1.21",
-              "params": "",
-              "docker": "nfcore/sarek:3.9"
-            }
-          ],
-          "notes": "snpEff 比 VEP 轻量。自动产出 MultiQC HTML 报告，含覆盖度、GC bias、insert size 等。",
-          "position": {
-            "x": 0,
-            "y": 480
-          }
-        }
-      ],
-      "references": [
-        {
-          "title": "nf-core/sarek v3.9 Documentation",
-          "url": "https://nf-co.re/sarek/latest",
-          "type": "official"
-        },
-        {
-          "title": "Hanssen et al. (2024) NAR Genomics and Bioinformatics 6(2):lqae031",
-          "url": "https://doi.org/10.1093/nargab/lqae031",
-          "type": "paper"
-        },
-        {
-          "title": "nf-core: community curated bioinformatics pipelines (Ewels et al., 2020)",
-          "url": "https://doi.org/10.1038/s41587-020-0439-x",
-          "type": "paper"
-        },
-        {
-          "title": "DeepVariant: A Universal SNP and Indel Variant Caller (Poplin et al., 2018)",
-          "url": "https://doi.org/10.1038/nbt.4235",
-          "type": "paper"
         }
       ]
     }
