@@ -25,7 +25,7 @@ description: "Search official standard bioinformatics analysis pipelines (GATK, 
 | DNA 甲基化 (WGBS/RRBS) | epigenetics | nf-core/methylseq | Bismuth/Singer lab guidelines | Bismark, methylKit |
 | 微生物组 (16S/宏基因组) | microbiome | nf-core/ampliseq, nf-core/mag | QIIME2, EBI Metagenomics | QIIME2, MetaPhlAn, HUMAnN |
 | 长读长测序 | dna | nf-core/nanoseq | ONT/PacBio guidelines | Minimap2, Clair3, Sniffles |
-| 结构变异 (SV/CNV) | dna | nf-core/sarek (--tools) | GATK-gCNV, Manta, Lumpy | Manta, Lumpy, GATK gCNV |
+| 结构变异 (SV/CNV) | dna | nf-core/sarek (--tools) | GATK-gCNV, Manta, Lumpy, AnnotSV | Manta, Lumpy, GATK gCNV, AnnotSV |
 | 免疫组库 | dna | nf-core/airrflow | AIRR Community standards | MiXCR, IgBlast |
 
 ## 研究设计标准流程快速参考
