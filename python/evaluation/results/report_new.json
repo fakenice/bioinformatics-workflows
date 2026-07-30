@@ -1,0 +1,1103 @@
+{
+  "overall_score": 0.825,
+  "scores": {
+    "pipeline_selection_accuracy": 1.0,
+    "knowledge_grounding_rate": 1.0,
+    "parameter_correctness": 1.0,
+    "reference_coverage": 0.95,
+    "schema_validity": 1.0,
+    "workflow_completeness": 0.0
+  },
+  "details": [
+    {
+      "metric": "pipeline_selection_accuracy",
+      "score": 1.0,
+      "total": 20,
+      "correct": 20,
+      "by_category": {
+        "dna": {
+          "total": 9,
+          "correct": 9,
+          "accuracy": 1.0
+        },
+        "rna": {
+          "total": 2,
+          "correct": 2,
+          "accuracy": 1.0
+        },
+        "epigenetics": {
+          "total": 3,
+          "correct": 3,
+          "accuracy": 1.0
+        },
+        "genetic_epi": {
+          "total": 1,
+          "correct": 1,
+          "accuracy": 1.0
+        },
+        "microbiome": {
+          "total": 2,
+          "correct": 2,
+          "accuracy": 1.0
+        },
+        "cross_cutting": {
+          "total": 2,
+          "correct": 2,
+          "accuracy": 1.0
+        },
+        "uncovered": {
+          "total": 1,
+          "correct": 1,
+          "accuracy": 1.0
+        }
+      },
+      "details": [
+        {
+          "id": "TC-001",
+          "query": "我有 trio WGS 数据，想找 de novo 突变，给我标准流程",
+          "expected": "family-trio-wgs",
+          "predicted": "family-trio-wgs",
+          "ok": true
+        },
+        {
+          "id": "TC-002",
+          "query": "我想做全基因组关联分析，病例对照设计，用什么流程",
+          "expected": "gwas",
+          "predicted": "gwas",
+          "ok": true
+        },
+        {
+          "id": "TC-003",
+          "query": "肿瘤配对样本的体细胞突变检测标准流程",
+          "expected": "wgs-somatic",
+          "predicted": "wgs-somatic",
+          "ok": true
+        },
+        {
+          "id": "TC-004",
+          "query": "scRNA-seq 标准分析流程，从 fastq 到细胞注释",
+          "expected": "scrna-seq",
+          "predicted": "scrna-seq",
+          "ok": true
+        },
+        {
+          "id": "TC-005",
+          "query": "ChIP-seq 的标准流程是什么，怎么评估 peak 质量",
+          "expected": "chip-seq",
+          "predicted": "chip-seq",
+          "ok": true
+        },
+        {
+          "id": "TC-006",
+          "query": "孟德尔随机化分析怎么做，我需要灵敏度分析",
+          "expected": "mendelian-randomization",
+          "predicted": "mendelian-randomization",
+          "ok": true
+        },
+        {
+          "id": "TC-007",
+          "query": "WGBS 全基因组甲基化分析流程",
+          "expected": "wgbs",
+          "predicted": "wgbs",
+          "ok": true
+        },
+        {
+          "id": "TC-008",
+          "query": "16S rRNA 扩增子测序分析流程",
+          "expected": "16s",
+          "predicted": "16s",
+          "ok": true
+        },
+        {
+          "id": "TC-009",
+          "query": "宏基因组 shotgun 测序的标准分析流程",
+          "expected": "metagenomics",
+          "predicted": "metagenomics",
+          "ok": true
+        },
+        {
+          "id": "TC-010",
+          "query": "WES 外显子组测序，家系分析怎么做的",
+          "expected": "wes",
+          "predicted": "wes",
+          "ok": true
+        },
+        {
+          "id": "TC-011",
+          "query": "PRS 多基因风险评分怎么算",
+          "expected": "prs",
+          "predicted": "prs",
+          "ok": true
+        },
+        {
+          "id": "TC-012",
+          "query": "罕见变异聚合分析，SKAT-O 方法",
+          "expected": "rare-variant",
+          "predicted": "rare-variant",
+          "ok": true
+        },
+        {
+          "id": "TC-013",
+          "query": "BQSR 这一步有什么常见的坑",
+          "expected": "wgs-germline",
+          "predicted": "wgs-germline",
+          "ok": true
+        },
+        {
+          "id": "TC-014",
+          "query": "Nextflow 管线里并行任务写同一个文件会有什么问题",
+          "expected": null,
+          "predicted": null,
+          "ok": true
+        },
+        {
+          "id": "TC-015",
+          "query": "RNA-seq 差异表达分析，用 DESeq2 还是 edgeR",
+          "expected": "rna-seq",
+          "predicted": "rna-seq",
+          "ok": true
+        },
+        {
+          "id": "TC-016",
+          "query": "GWAS 里面人群分层怎么处理",
+          "expected": "gwas",
+          "predicted": "gwas",
+          "ok": true
+        },
+        {
+          "id": "TC-017",
+          "query": "空间转录组分析流程，有什么标准推荐",
+          "expected": null,
+          "predicted": null,
+          "ok": true
+        },
+        {
+          "id": "TC-018",
+          "query": "我的 WGS 脚本应该怎么写才能可复现",
+          "expected": "wgs-germline",
+          "predicted": "wgs-germline",
+          "ok": true
+        },
+        {
+          "id": "TC-019",
+          "query": "ATAC-seq 和 ChIP-seq 的区别是什么，流程有什么不同",
+          "expected": "chip-seq",
+          "predicted": "chip-seq",
+          "ok": true
+        },
+        {
+          "id": "TC-020",
+          "query": "帮我生成一个 trio WGS de novo 的 Nextflow 脚本",
+          "expected": "family-trio-wgs",
+          "predicted": "family-trio-wgs",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "metric": "knowledge_grounding_rate",
+      "score": 1.0,
+      "ungrounded_rate": 0.0,
+      "total_entities_cited": 75,
+      "total_ungrounded": 0,
+      "kb_size": {
+        "tools": 121,
+        "dois": 27,
+        "urls": 69
+      },
+      "details": [
+        {
+          "id": "TC-001",
+          "total_entities_cited": 4,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-002",
+          "total_entities_cited": 5,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-003",
+          "total_entities_cited": 5,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-004",
+          "total_entities_cited": 3,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-005",
+          "total_entities_cited": 4,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-006",
+          "total_entities_cited": 5,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-007",
+          "total_entities_cited": 3,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-008",
+          "total_entities_cited": 5,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-009",
+          "total_entities_cited": 4,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-010",
+          "total_entities_cited": 3,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-011",
+          "total_entities_cited": 6,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-012",
+          "total_entities_cited": 7,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-013",
+          "total_entities_cited": 1,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-014",
+          "total_entities_cited": 0,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-015",
+          "total_entities_cited": 5,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-016",
+          "total_entities_cited": 3,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-017",
+          "total_entities_cited": 3,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-018",
+          "total_entities_cited": 1,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-019",
+          "total_entities_cited": 4,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-020",
+          "total_entities_cited": 4,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        }
+      ]
+    },
+    {
+      "metric": "parameter_correctness",
+      "score": 1.0,
+      "total_params_checked": 9,
+      "invalid_params": 0,
+      "details": [
+        {
+          "id": "TC-001",
+          "params_extracted": {
+            "threads": [
+              8.0
+            ]
+          },
+          "violations": [],
+          "param_count": 1,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-002",
+          "params_extracted": {
+            "MAF": [
+              0.01,
+              0.01
+            ],
+            "HWE": [
+              1.0
+            ]
+          },
+          "violations": [],
+          "param_count": 3,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-003",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-004",
+          "params_extracted": {
+            "resolution": [
+              0.5
+            ]
+          },
+          "violations": [],
+          "param_count": 1,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-005",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-006",
+          "params_extracted": {
+            "MAF": [
+              0.4
+            ],
+            "F-statistic": [
+              10.0
+            ]
+          },
+          "violations": [],
+          "param_count": 2,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-007",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-008",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-009",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-010",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-011",
+          "params_extracted": {
+            "MAF": [
+              0.01,
+              0.01
+            ]
+          },
+          "violations": [],
+          "param_count": 2,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-012",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-013",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-014",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-015",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-016",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-017",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-018",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-019",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-020",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        }
+      ]
+    },
+    {
+      "metric": "reference_coverage",
+      "score": 0.95,
+      "total_steps": 20,
+      "steps_with_references": 19,
+      "details": [
+        {
+          "id": "TC-001",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "GATK Best Practices"
+          ],
+          "sources_found": [
+            "GATK Best Practices"
+          ],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-002",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "PLINK",
+            "SAIGE"
+          ],
+          "sources_found": [
+            "PLINK",
+            "SAIGE"
+          ],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-003",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "GATK Best Practices"
+          ],
+          "sources_found": [],
+          "sources_missed": [
+            "GATK Best Practices"
+          ]
+        },
+        {
+          "id": "TC-004",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "Seurat"
+          ],
+          "sources_found": [
+            "Seurat"
+          ],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-005",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "ENCODE"
+          ],
+          "sources_found": [
+            "ENCODE"
+          ],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-006",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "TwoSampleMR"
+          ],
+          "sources_found": [
+            "TwoSampleMR"
+          ],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-007",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "Bismark"
+          ],
+          "sources_found": [
+            "Bismark"
+          ],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-008",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "QIIME2"
+          ],
+          "sources_found": [
+            "QIIME2"
+          ],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-009",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "MetaPhlAn",
+            "HUMAnN"
+          ],
+          "sources_found": [
+            "MetaPhlAn",
+            "HUMAnN"
+          ],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-010",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "GATK Best Practices"
+          ],
+          "sources_found": [
+            "GATK Best Practices"
+          ],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-011",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "LDpred2",
+            "PRSice"
+          ],
+          "sources_found": [
+            "LDpred2",
+            "PRSice"
+          ],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-012",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "SKAT"
+          ],
+          "sources_found": [
+            "SKAT"
+          ],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-013",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [],
+          "sources_found": [],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-014",
+          "steps_total": 1,
+          "steps_with_refs": 0,
+          "expected_sources": [],
+          "sources_found": [],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-015",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "edgeR",
+            "DESeq2"
+          ],
+          "sources_found": [
+            "edgeR",
+            "DESeq2"
+          ],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-016",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [],
+          "sources_found": [],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-017",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [],
+          "sources_found": [],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-018",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [],
+          "sources_found": [],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-019",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "ENCODE"
+          ],
+          "sources_found": [
+            "ENCODE"
+          ],
+          "sources_missed": []
+        },
+        {
+          "id": "TC-020",
+          "steps_total": 1,
+          "steps_with_refs": 1,
+          "expected_sources": [
+            "GATK Best Practices"
+          ],
+          "sources_found": [
+            "GATK Best Practices"
+          ],
+          "sources_missed": []
+        }
+      ]
+    },
+    {
+      "metric": "schema_validity",
+      "score": 1.0,
+      "total_json_outputs": 1,
+      "valid_jsons": 1,
+      "details": [
+        {
+          "id": "TC-001",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-002",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-003",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-004",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-005",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-006",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-007",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-008",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-009",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-010",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-011",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-012",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-013",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-014",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-015",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-016",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-017",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-018",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-019",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-020",
+          "has_json_output": true,
+          "valid": true,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "metric": "workflow_completeness",
+      "score": 0.0,
+      "total_standard_steps": 8,
+      "total_covered_steps": 0,
+      "cases_evaluated": 2,
+      "details": [
+        {
+          "case_id": "TC-001",
+          "pipeline_id": "family-trio-wgs",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-002",
+          "pipeline_id": "gwas",
+          "score": 0.0,
+          "standard_steps": [
+            "Quality Control",
+            "Association Testing",
+            "Visualization",
+            "Annotation"
+          ],
+          "matched": [],
+          "missing": [
+            "Quality Control",
+            "Association Testing",
+            "Visualization",
+            "Annotation"
+          ]
+        },
+        {
+          "case_id": "TC-003",
+          "pipeline_id": "wgs-somatic",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-004",
+          "pipeline_id": "scrna-seq",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-005",
+          "pipeline_id": "chip-seq",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-006",
+          "pipeline_id": "mendelian-randomization",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-007",
+          "pipeline_id": "wgbs",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-008",
+          "pipeline_id": "16s",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-009",
+          "pipeline_id": "metagenomics",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-010",
+          "pipeline_id": "wes",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-011",
+          "pipeline_id": "prs",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-012",
+          "pipeline_id": "rare-variant",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-013",
+          "pipeline_id": "wgs-germline",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-014",
+          "pipeline_id": "",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-015",
+          "pipeline_id": "rna-seq",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-016",
+          "pipeline_id": "gwas",
+          "score": 0.0,
+          "standard_steps": [
+            "Quality Control",
+            "Association Testing",
+            "Visualization",
+            "Annotation"
+          ],
+          "matched": [],
+          "missing": [
+            "Quality Control",
+            "Association Testing",
+            "Visualization",
+            "Annotation"
+          ]
+        },
+        {
+          "case_id": "TC-017",
+          "pipeline_id": "",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-018",
+          "pipeline_id": "wgs-germline",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-019",
+          "pipeline_id": "chip-seq",
+          "score": null,
+          "note": "no standard steps defined"
+        },
+        {
+          "case_id": "TC-020",
+          "pipeline_id": "family-trio-wgs",
+          "score": null,
+          "note": "no standard steps defined"
+        }
+      ]
+    }
+  ]
+}

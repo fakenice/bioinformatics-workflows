@@ -1,0 +1,28 @@
+{
+  "description": "Prompt Only vs Prompt + Skill 对比",
+  "baseline_file": "results\\baseline_outputs.json",
+  "skill_file": "results\\outputs.json",
+  "comparison": [
+    {
+      "metric": "pipeline_selection_accuracy",
+      "prompt_only": 0.95,
+      "prompt_plus_skill": 1.0,
+      "delta": 0.05,
+      "delta_pct": "+5.3%"
+    },
+    {
+      "metric": "parameter_correctness",
+      "prompt_only": 0.3333,
+      "prompt_plus_skill": 1.0,
+      "delta": 0.6667,
+      "delta_pct": "+200.0%"
+    },
+    {
+      "metric": "reference_coverage",
+      "prompt_only": 0.0,
+      "prompt_plus_skill": 0.95,
+      "delta": 0.95,
+      "delta_pct": "+inf%"
+    }
+  ]
+}

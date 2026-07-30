@@ -1,0 +1,22 @@
+{
+  "TC-001": "Trio WGS 找 de novo 突变，大致流程：BWA 比对 → GATK HaplotypeCaller 检测变异 → 对比父母与先证者基因型筛选新生突变。注意小样本别用 VQSR。",
+  "TC-002": "病例对照 GWAS：用 PLINK 或 SAIGE 做 QC 和关联分析。过滤 MAF > 0.05、HWE，再做逻辑回归。结果画 Manhattan plot。",
+  "TC-003": "肿瘤配对体细胞突变：BWA 比对后用 Mutect2 检测，配对 tumor/normal 样本，过滤假阳性即可。注意 BQSR 的 known sites 要对。",
+  "TC-004": "scRNA-seq：Cell Ranger 生成表达矩阵，Seurat 做降维聚类，resolution=8 聚类，nCount_RNA > 300000 过滤，然后注释细胞类型。",
+  "TC-005": "ChIP-seq：Bowtie2 比对，MACS2 call peak，看 FRiP 和 IDR 评估质量，再注释 peak 和做 motif 分析。",
+  "TC-006": "孟德尔随机化：用 TwoSampleMR 选工具变量，F-statistic 检验，做 IVW 和 MR-Egger，再用 MR-PRESSO 做灵敏度分析。",
+  "TC-007": "WGBS 甲基化：Bismark 比对，提取甲基化，再用 DSS 找差异甲基化区域。注意 bisulfite 转换的处理。",
+  "TC-008": "16S 扩增子：QIIME2 导入数据，DADA2 去噪生成 ASV，物种注释后算 alpha/beta 多样性。",
+  "TC-009": "宏基因组 shotgun：先去宿主，再用 MetaPhlAn 注释物种，HUMAnN 做功能注释，最后统计可视化。",
+  "TC-010": "WES 家系分析：BWA 比对，GATK HaplotypeCaller 在捕获区间内 calling，联合分型后注释，按 ACMG 分级。",
+  "TC-011": "PRS 多基因风险评分：用 base data 和 target data，PLINK 算评分，LD clumping 后选阈值，评估模型。",
+  "TC-012": "罕见变异聚合分析：先注释变异，按基因分组，用 SKAT-O 做聚合检验，Burden test 和 SKAT 对比，最后 FDR 校正。",
+  "TC-013": "BQSR 常见的问题主要是 known sites 版本不匹配，要用和参考基因组一致的 dbSNP 和 indels 文件，另外 known sites 要给全。",
+  "TC-014": "Nextflow 里多个任务并行写同一文件会数据竞争，结果不确定。建议每个任务写独立文件再合并，或者用工作流管理器的 channel 机制。",
+  "TC-015": "RNA-seq 差异表达：DESeq2 和 edgeR 都可以，基于负二项分布。看 log2 fold change 和 adjusted p-value，显著阈值 padj < 0.05。",
+  "TC-016": "GWAS 人群分层：用 PCA 算主成分，把 PC 作为协变量纳入模型，检查基因组膨胀因子，也可以用混合模型方法。",
+  "TC-017": "空间转录组分析不在当前知识库覆盖范围内，建议参考 10x Visium 或 Squidpy 的官方文档。",
+  "TC-018": "WGS 脚本可复现：用容器固定版本，脚本加 set -euo pipefail，资源用 $task.cpus 动态分配，参考基因组版本统一，支持断点续跑。",
+  "TC-019": "ATAC-seq 和 ChIP-seq 区别：ChIP 用抗体富集特定蛋白结合 DNA，ATAC 用 Tn5 切开放染色质。流程都用 Bowtie2 比对和 MACS2 call peak，但 ATAC 要去线粒体 reads。",
+  "TC-020": "Trio WGS de novo 的 Nextflow 脚本：定义 fastqc/trim/align/markdup/bqsr/calling/genotype/filter/denovo/annotate 等 process，用 GATK 工具链，最后 slivar 做家系过滤。"
+}

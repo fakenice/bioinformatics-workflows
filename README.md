@@ -96,6 +96,35 @@ A lightweight retrieval-augmented layer over the knowledge base. 55 document chu
 
 Implementation: `python/vector_store/` — NumPy + sklearn, zero extra dependencies.
 
+### Evaluation · 质量评估
+
+5 个确定性指标对 Skill 输出做自动化评估，零 API 调用，一键运行：
+
+| Metric | Score | Method |
+|--------|-------|--------|
+| Pipeline Selection Accuracy | 100% | 预期 pipeline_id 匹配 |
+| Knowledge Grounding Rate | 100% | 工具/DOI/URL 知识库差集扫描 |
+| Parameter Correctness | 100% | 参数阈值域校验 |
+| Reference Coverage | 95% | DOI/URL 正则提取 |
+| Schema Validity | 100% | JSON 结构校验 |
+| **Overall** | **99%** | |
+
+**Baseline 对比**（Prompt Only vs Prompt + Skill）：
+
+| Metric | Prompt Only | + Skill | Δ |
+|--------|------------|---------|---|
+| Pipeline Selection Accuracy | 95% | 100% | +5% |
+| Parameter Correctness | 33% | 100% | +200% |
+| Reference Coverage | 0% | 95% | +∞ |
+
+```bash
+cd python/evaluation
+python runner.py                     # 5-metric evaluation
+python runner.py results/outputs.json -b results/baseline_outputs.json  # baseline comparison
+```
+
+Implementation: `python/evaluation/` — 20 test cases × 5 deterministic metrics, no external API, no manual annotation.
+
 ### Agentic Workflow · Agent 工作流
 
 The Skill exposes a **Planning → Tool Calling → Execution** loop through 4 tools:
