@@ -229,6 +229,12 @@ npm run preview
 
 ---
 
+## Agent & RAG Implementation
+
+The current implementation exposes tools through a local Python registry. The architecture is adapter-friendly and can be extended to MCP, REST APIs, or other agent protocols without changing the knowledge layer.
+
+---
+
 ## License
 
 MIT
