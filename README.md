@@ -10,7 +10,7 @@
 
 ```
 ┌──────────┐
-│   User   │  "我有 trio WGS 数据，想找 de novo 突变"
+│   User   │ 
 └────┬─────┘
      │  Natural language query
      ▼
