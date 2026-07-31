@@ -10,29 +10,52 @@
 
 ```
 ┌──────────┐
-│   User   │ 
+│   User   │
 └────┬─────┘
      │  Natural language query
      ▼
-┌──────────┐
-│  Skill   │  SKILL.md — triggers, execution flow, safety rules
-└────┬─────┘
-     │
-     ▼
-┌─────────────────────┐
-│  Workflow Selection │  14 pipelines × multi-source (GATK / nf-core / ENCODE)
-│  + Semantic Search  │  + 55-chunk vector index over references
-└────┬────────────────┘
-     │  Matched pipeline + traps + validations
-     ▼
-┌──────────────────────────┐
-│   Knowledge Constraints  │  references/*.md as grounding context
-│  study_designs           │  ─── decision matrix for 14 NGS designs
-│  patterns                │  ─── reusable code patterns
-│  sharp_edges             │  ─── known pitfalls per pipeline
-│  validations             │  ─── quality check rules
-│  + 14 pipeline JSONs     │  ─── structured tool/param/reference data
-└────┬─────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│  Skill (SKILL.md)                                            │
+│                                                              │
+│  Step 1: Understand query → omics type + study design        │
+│                                                              │
+│     ┌─ Covered in quick reference table? ─┐                  │
+│     │ YES                    │ NO         │                  │
+│     ▼                        ▼            │                  │
+│  Step 2a                    Step 2b       │                  │
+│  Preset search queries      Generic search (3 rounds)        │
+│  (per-category keywords)    Round 1: find authoritative src  │
+│  web_search("GATK...")      Round 2: drill into best source  │
+│  web_search("nf-core...")   Round 3: supplement QC metrics   │
+│     │                        │                               │
+│     └────────┬───────────────┘                               │
+│              ▼                                               │
+│  Step 3: Extract structured info                             │
+│  (steps, tool versions, QC thresholds, references)           │
+│              │                                               │
+│              ▼                                               │
+│  Step 4: Output → Markdown table | FlowSeq JSON              │
+│              │                                               │
+│              ▼                                               │
+│  Step 5: Knowledge accumulation (feedback loop)              │
+│  ┌─────────────────────────────────────────────────────┐     │
+│  │  Write back to:                                      │     │
+│  │  • SKILL.md quick reference table  (Step 2b → 2a)   │     │
+│  │  • references/study_designs.md    (detailed pipeline)│     │
+│  │  • references/sharp_edges.md      (new pitfalls)     │     │
+│  │  • src/data/pipelines/{slug}.json (FlowSeq source)   │     │
+│  └──────────────┬──────────────────────────────────────┘     │
+└─────────────────┼────────────────────────────────────────────┘
+                  │  Grounded context (references/*.md + 14 pipeline JSONs)
+                  ▼
+┌──────────────────────────────────────┐
+│  Knowledge Constraints               │
+│  study_designs  — decision matrix    │
+│  patterns       — reusable code      │
+│  sharp_edges    — known pitfalls     │
+│  validations    — QC rules           │
+│  + Semantic Search (55-chunk index)  │
+└────┬─────────────────────────────────┘
      │  Constrained context window
      ▼
 ┌──────────┐
@@ -46,7 +69,7 @@
 └─────────────────────────┘
 ```
 
-**Key insight**: The Skill does not let the LLM freely improvise. Every pipeline step, tool version, QC threshold, and reference must trace back to the knowledge base — this is what makes the generated output *traceable* and *reproducible*.
+**Key insight**: The Skill does not let the LLM freely improvise. Every pipeline step, tool version, QC threshold, and reference must trace back to the knowledge base. When a query hits an uncovered domain, the generic search path (Step 2b) not only answers the user but also feeds back into the quick reference table (Step 5), progressively shrinking uncovered territory over time.
 
 ---
 
