@@ -149,38 +149,67 @@ Detect the user's language from their query. If the user writes in Chinese, resp
 确定分析类型 → 分类（DNA/RNA/表观遗传/微生物组/研究设计）→ 查阅上方"快速参考表"判断是否属于内置覆盖范围
 
 ### Step 2a: 已覆盖流程 → 使用预设搜索策略
-如果分析类型在"快速参考表"中，使用下方预设的搜索关键词组合（根据组学类型选择）：
+如果分析类型在"快速参考表"中，使用下方预设策略。**核心原则：已知官方文档 URL 的工具，优先使用 WebFetch 直接抓取官方页面，WebSearch 仅作为补充手段（用于工具对比、版本搜索、QC 阈值等无固定官方页面的信息）。**
 
 **DNA 变异检测：**
-- `"GATK Best Practices" <germline|somatic|Mutect2> <年份>`
-- `"nf-core sarek" pipeline steps`
-- `"Broad Institute" <分析类型> workflow WDL`
+- WebFetch: `https://gatk.broadinstitute.org/hc/en-us/articles/360035531212` → GATK Germline SNPs/Indels 最佳实践
+- WebFetch: `https://gatk.broadinstitute.org/hc/en-us/articles/360035894711` → GATK Somatic (Mutect2) 最佳实践
+- WebFetch: `https://nf-co.re/sarek/latest` → nf-core/sarek 流程文档（步骤、参数、输出）
+- WebFetch: `https://github.com/broadinstitute/gatk` → GATK GitHub（最新版本、release notes）
+- WebSearch 补充: `"GATK Best Practices" <germline|somatic|Mutect2> <年份>` → 版本更新和社区讨论
+- WebSearch 补充: `"Broad Institute" <分析类型> workflow WDL` → WDL 脚本
 
 **RNA 分析：**
-- `"nf-core rnaseq" pipeline steps <年份>`
-- `"ENCODE RNA-seq pipeline" guidelines`
-- `"Bioconductor" <scRNA-seq|OSCA> workflow`
+- WebFetch: `https://nf-co.re/rnaseq/latest` → nf-core/rnaseq 流程文档
+- WebFetch: `https://nf-co.re/scrnaseq/latest` → nf-core/scrnaseq 流程文档
+- WebFetch: `https://www.encodeproject.org/rna-seq/` → ENCODE RNA-seq 标准
+- WebFetch: `https://bioconductor.org/books/release/OSCA/` → Bioconductor OSCA 单细胞分析教程
+- WebSearch 补充: `"nf-core rnaseq" pipeline steps <年份>` → 版本更新
+- WebSearch 补充: `"Bioconductor" scRNA-seq workflow` → R 包更新
 
 **表观遗传：**
-- `"ENCODE" <ATAC-seq|ChIP-seq> pipeline standards`
-- `"nf-core" <chipseq|ataacseq|methylseq> pipeline`
-- `"<分析类型> data standards" library complexity IDR`
+- WebFetch: `https://www.encodeproject.org/atac-seq/` → ENCODE ATAC-seq 标准
+- WebFetch: `https://www.encodeproject.org/chip-seq/` → ENCODE ChIP-seq 标准
+- WebFetch: `https://nf-co.re/chipseq/latest` → nf-core/chipseq 流程文档
+- WebFetch: `https://nf-co.re/atacseq/latest` → nf-core/atacseq 流程文档
+- WebFetch: `https://nf-co.re/methylseq/latest` → nf-core/methylseq 流程文档
+- WebSearch 补充: `"<分析类型> data standards" library complexity IDR` → QC 阈值细节
 
 **微生物组：**
-- `"QIIME2" <16S|shotgun> workflow official`
-- `"nf-core" <ampliseq|mag> pipeline`
-- `"HUMAnN" metagenome workflow`
+- WebFetch: `https://docs.qiime2.org/` → QIIME2 官方文档（16S/宏基因组）
+- WebFetch: `https://nf-co.re/ampliseq/latest` → nf-core/ampliseq 流程文档
+- WebFetch: `https://nf-co.re/mag/latest` → nf-core/mag 流程文档
+- WebFetch: `https://huttenhower.sph.harvard.edu/humann` → HUMAnN 官方文档
+- WebSearch 补充: `"QIIME2" <16S|shotgun> workflow official` → 版本更新
 
 **研究设计（家系/GWAS/MR/PRS）：**
-- `"GATK GenotypeRefinement" trio de novo mutation <年份>`
-- `"GWAS best practices" PLINK QC <年份>`
-- `"SAIGE" <analysis method> pipeline <年份>`
-- `"REGENIE" GWAS two-step method`
-- `"TwoSampleMR" Mendelian randomization workflow`
-- `"MR-PRESSO" sensitivity analysis`
-- `"PRSice" <version> polygenic risk score tutorial`
-- `"LDpred2" PRS calculation R bigsnpr`
-- `"SKAT" rare variant gene-based test <年份>`
+- WebFetch: `https://gatk.broadinstitute.org/hc/en-us/articles/360035531212` → GATK GenotypeRefinement（家系/Trio）
+- WebFetch: `https://www.cog-genomics.org/plink/2.0/` → PLINK 2.0 官方文档（GWAS QC、关联分析）
+- WebFetch: `https://github.com/weizhouUMN/SAIGE` → SAIGE 官方文档（大样本 GWAS）
+- WebFetch: `https://rgcgithub.github.io/regenie/` → REGENIE 官方文档（两步法 GWAS）
+- WebFetch: `https://mrcieu.github.io/TwoSampleMR/` → TwoSampleMR 官方教程（孟德尔随机化）
+- WebFetch: `https://choishingwan.github.io/PRSice/` → PRSice-2 官方教程（PRS 计算）
+- WebFetch: `https://privefl.github.io/bigsnpr/articles/LDpred2.html` → LDpred2 官方教程（PRS）
+- WebFetch: `https://github.com/szhan/SKAT` → SKAT 官方文档（罕见变异聚合检验）
+- WebSearch 补充: `"GWAS best practices" PLINK QC <年份>` → QC 阈值和社区经验
+- WebSearch 补充: `"MR-PRESSO" sensitivity analysis` → 敏感性分析细节
+- WebSearch 补充: `"SKAT" rare variant gene-based test <年份>` → 版本更新
+
+**变异注释（ANNOVAR/VEP/SnpEff/AnnotSV）：**
+- WebFetch: `https://annovar.openbioinformatics.org/en/latest/user-guide/download/` → ANNOVAR 最新数据库版本列表
+- WebFetch: `https://annovar.openbioinformatics.org/en/latest/user-guide/startup/` → ANNOVAR 官方使用教程
+- WebFetch: `https://github.com/lgmgeo/AnnotSV/blob/master/commandLineOptions.txt` → AnnotSV 完整命令行参数
+- WebFetch: `https://github.com/lgmgeo/AnnotSV` → AnnotSV 最新版本和 release notes
+- WebFetch: `https://www.ensembl.org/info/docs/tools/vep/index.html` → VEP (Ensembl) 官方文档
+- WebFetch: `https://pcingola.github.io/SnpEff/` → SnpEff 官方文档
+- WebSearch 补充: `"ANNOVAR" database download hg38 gnomad clinvar dbnsfp` → 数据库版本搜索
+- WebSearch 补充: `"ANNOVAR vs VEP vs SnpEff" comparison` → 工具对比
+
+**通用原则**：
+1. 官方文档 URL 已知的工具 → **必须先 WebFetch**，获取权威、最新的步骤、参数、版本信息
+2. WebSearch 仅用于：无固定官方页面的信息（QC 阈值、社区经验、工具对比、版本更新动态）
+3. WebFetch 失败时（页面变动、需要 JS 渲染等），回退到 WebSearch 关键词搜索
+4. 每次搜索后，如果发现了新的官方 URL，按 Step 5 知识积累规则回写到本文件中
 
 ### Step 2b: 未覆盖流程 → 通用搜索策略
 如果分析类型**不在**"快速参考表"中（如空间转录组、Hi-C、蛋白质组、代谢组、单细胞 ATAC 等），执行以下通用搜索策略：
