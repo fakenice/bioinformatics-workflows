@@ -40,10 +40,7 @@
           "position": {
             "x": 0,
             "y": 0
-          },
-          "nameEn": "QC + Trimming",
-          "descriptionEn": "FastQC + Trim Galore",
-          "notesEn": "Auto-detect adapter and trim low-quality bases."
+          }
         },
         {
           "id": "align",
@@ -67,10 +64,7 @@
           "position": {
             "x": 0,
             "y": 120
-          },
-          "nameEn": "Alignment + Quantification",
-          "descriptionEn": "STAR alignment + Salmon quantification",
-          "notesEn": "STAR two-pass alignment improves junction accuracy. Salmon provides transcript-level quantification; RSEM is an alternative."
+          }
         },
         {
           "id": "qc2",
@@ -88,10 +82,7 @@
           "position": {
             "x": 0,
             "y": 240
-          },
-          "nameEn": "Post-Alignment QC",
-          "descriptionEn": "RSeQC + Preseq + MultiQC",
-          "notesEn": "Evaluate gene body coverage uniformity, strand specificity, rRNA ratio."
+          }
         },
         {
           "id": "de",
@@ -109,10 +100,7 @@
           "position": {
             "x": 0,
             "y": 360
-          },
-          "nameEn": "Differential Expression",
-          "descriptionEn": "DESeq2 / edgeR differential analysis",
-          "notesEn": "Requires biological replicates (>=3 per condition). log2FC > 1 and padj < 0.05 as significance threshold. Visualization: MA plot, volcano plot, sample distance heatmap."
+          }
         },
         {
           "id": "enrich",
@@ -130,10 +118,7 @@
           "position": {
             "x": 0,
             "y": 480
-          },
-          "nameEn": "Functional Enrichment",
-          "descriptionEn": "GO/KEGG enrichment and GSEA analysis",
-          "notesEn": "clusterProfiler provides one-stop GO, KEGG, Reactome enrichment. GSEA is suitable for continuous trends without fixed thresholds."
+          }
         }
       ],
       "references": [
@@ -152,9 +137,7 @@
           "url": "https://doi.org/10.1016/j.xinn.2021.100141",
           "type": "paper"
         }
-      ],
-      "nameEn": "nf-core/rnaseq"
+      ]
     }
-  ],
-  "overviewEn": "Standard RNA-seq differential expression analysis pipeline. From FASTQ through QC, alignment/quantification, expression matrix construction, differential expression analysis, and functional enrichment. Suitable for transcriptome profiling studies."
+  ]
 }

@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-page: oklch(0.985 0.003 150);
-  --color-surface: oklch(0.993 0.001 140);
-  --color-surface-alt: oklch(0.975 0.005 145);
-  --color-border: oklch(0.92 0.008 150);
-  --color-border-strong: oklch(0.85 0.015 150);
-  --color-text-primary: oklch(0.20 0.01 160);
-  --color-text-secondary: oklch(0.40 0.012 155);
-  --color-text-tertiary: oklch(0.60 0.008 150);
-  --color-accent: oklch(0.52 0.14 155);
-  --color-accent-hover: oklch(0.45 0.14 155);
-  --color-accent-muted: oklch(0.92 0.04 155);
+  --color-page: oklch(0.985 0.002 300);
+  --color-surface: oklch(0.993 0.002 300);
+  --color-surface-alt: oklch(0.975 0.005 300);
+  --color-border: oklch(0.92 0.006 300);
+  --color-border-strong: oklch(0.85 0.012 300);
+  --color-text-primary: oklch(0.20 0.008 300);
+  --color-text-secondary: oklch(0.40 0.008 300);
+  --color-text-tertiary: oklch(0.60 0.005 0);
+  --color-accent: oklch(0.58 0.14 300);
+  --color-accent-hover: oklch(0.48 0.14 300);
+  --color-accent-muted: oklch(0.93 0.04 300);
   --color-amber: oklch(0.68 0.13 85);
   --color-amber-muted: oklch(0.94 0.04 85);
   --color-danger: oklch(0.52 0.18 25);

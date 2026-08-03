@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { pipelines as allPipelines, categoryTree as defaultCategoryTree } from "../data/pipelines";
+import { pipelines as allPipelines, categoryTree as builtCategoryTree } from "../data/pipelines";
 import type { PipelineDefinition, PipelineStep } from "../types/pipeline";
 import type { CategoryNode } from "../data/pipelines";
 
@@ -164,7 +164,15 @@ export const useStore = create<State>()((set, get) => {
   const deletedPipelines = loadDeletedPipelines();
   const categoryMap = loadCategoryMap();
   const categoryOverrides = loadCategoryOverrides();
-  const categoryTree = mergeCategoryTree(defaultCategoryTree, categoryOverrides);
+  // Build-time categoryTree (from category-overrides.json) is the source of truth.
+  // LocalStorage only carries runtime additions (PipelineManager UI), not deletions.
+  const runtimeDeltas: CategoryOverrides = {
+    addedParents: categoryOverrides.addedParents,
+    addedChildren: categoryOverrides.addedChildren,
+    deletedChildren: [],
+    deletedParents: [],
+  };
+  const categoryTree = mergeCategoryTree(builtCategoryTree, runtimeDeltas);
 
   const initialPipelines = allPipelines
     .filter((p) => !deletedPipelines.includes(p.id))
@@ -212,7 +220,7 @@ export const useStore = create<State>()((set, get) => {
       const categoryOverrides = loadCategoryOverrides();
       categoryOverrides.deletedParents = [];
       saveCategoryOverrides(categoryOverrides);
-      const categoryTree = mergeCategoryTree(defaultCategoryTree, categoryOverrides);
+      const categoryTree = mergeCategoryTree(builtCategoryTree, categoryOverrides);
       set({ pipelines: allPipelines, hiddenPipelines: [], categoryTree });
     },
 
@@ -256,7 +264,7 @@ export const useStore = create<State>()((set, get) => {
       // also remove from deleted list if it was previously deleted
       overrides.deletedChildren = overrides.deletedChildren.filter((d) => d !== childId);
       saveCategoryOverrides(overrides);
-      set({ categoryTree: mergeCategoryTree(defaultCategoryTree, overrides) });
+      set({ categoryTree: mergeCategoryTree(builtCategoryTree, overrides) });
     },
 
     deleteSubCategory: (childId) => {
@@ -270,7 +278,7 @@ export const useStore = create<State>()((set, get) => {
         overrides.deletedChildren.push(childId);
       }
       saveCategoryOverrides(overrides);
-      set({ categoryTree: mergeCategoryTree(defaultCategoryTree, overrides) });
+      set({ categoryTree: mergeCategoryTree(builtCategoryTree, overrides) });
     },
 
     addTopLevelCategory: (id, label, labelZH, accent) => {
@@ -282,7 +290,7 @@ export const useStore = create<State>()((set, get) => {
         children: {},
       };
       saveCategoryOverrides(overrides);
-      set({ categoryTree: mergeCategoryTree(defaultCategoryTree, overrides) });
+      set({ categoryTree: mergeCategoryTree(builtCategoryTree, overrides) });
     },
 
     deleteTopLevelCategory: (pid) => {
@@ -297,7 +305,7 @@ export const useStore = create<State>()((set, get) => {
         }
       }
       saveCategoryOverrides(overrides);
-      set({ categoryTree: mergeCategoryTree(defaultCategoryTree, overrides) });
+      set({ categoryTree: mergeCategoryTree(builtCategoryTree, overrides) });
     },
   };
 });

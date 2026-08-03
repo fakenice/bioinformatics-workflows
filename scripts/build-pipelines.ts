@@ -591,10 +591,6 @@ function main() {
   const omicsIds = [
     "wgs-germline", "wgs-somatic", "wes", "rna-seq", "scrna-seq",
     "chip-seq", "wgbs", "metagenomics", "16s",
-    "sv-annotation",
-    "manta-sv",
-    "gcnv",
-    "annovar-annotation",
   ];
 
   // Generate versions.json

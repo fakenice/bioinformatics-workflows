@@ -145,6 +145,5 @@
         }
       ]
     }
-  ],
-  "overviewEn": "16S rRNA amplicon sequencing analysis pipeline. Covers DADA2/ASV inference, taxonomic classification (SILVA/GreenGenes), diversity analysis, and differential abundance testing. Suitable for microbial community profiling."
+  ]
 }

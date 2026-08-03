@@ -41,10 +41,7 @@
           "position": {
             "x": 0,
             "y": 0
-          },
-          "nameEn": "QC + Alignment",
-          "descriptionEn": "FastQC + BWA-MEM / Bowtie2",
-          "notesEn": "ChIP-seq reads are short (50-75bp); Bowtie2 is more suitable than BWA for short reads. Evaluate NSC/RSC metrics for enrichment efficiency."
+          }
         },
         {
           "id": "filter",
@@ -62,10 +59,7 @@
           "position": {
             "x": 0,
             "y": 120
-          },
-          "nameEn": "Post-Alignment Filtering",
-          "descriptionEn": "Remove duplicates, filter MAPQ ≥ 30",
-          "notesEn": "Remove reads with MAPQ < 30. ChIP-seq usually retains duplicates (biological duplicates represent true enrichment), except for TF ChIP."
+          }
         },
         {
           "id": "peak",
@@ -83,10 +77,7 @@
           "position": {
             "x": 0,
             "y": 240
-          },
-          "nameEn": "Peak Calling",
-          "descriptionEn": "MACS2 narrow/broad peak calling",
-          "notesEn": "Narrow peaks (TFs) use default parameters; broad peaks (histone marks e.g. H3K27me3) add --broad. Input control required when available. IDR recommended for replicate consistency."
+          }
         },
         {
           "id": "qc_peak",
@@ -104,10 +95,7 @@
           "position": {
             "x": 0,
             "y": 360
-          },
-          "nameEn": "Peak QC + Visualization",
-          "descriptionEn": "FRiP + TSS enrichment + BigWig",
-          "notesEn": "FRiP is the core QC metric; ENCODE recommends >1%. plotFingerprint for enrichment strength, plotProfile for TSS signal distribution."
+          }
         },
         {
           "id": "annotate",
@@ -125,10 +113,7 @@
           "position": {
             "x": 0,
             "y": 480
-          },
-          "nameEn": "Peak Annotation",
-          "descriptionEn": "Genomic feature annotation",
-          "notesEn": "ChIPseeker annotates peaks to promoter, 5'UTR, exon, intron, intergenic. Generates pie charts and upset plots."
+          }
         },
         {
           "id": "motif",
@@ -146,10 +131,7 @@
           "position": {
             "x": 0,
             "y": 600
-          },
-          "nameEn": "Motif Analysis",
-          "descriptionEn": "HOMER/MEME motif enrichment",
-          "notesEn": "HOMER findMotifsGenome.pl is the field standard; MEME-ChIP provides more comprehensive de novo motif discovery. Focus on known TF motif enrichment."
+          }
         },
         {
           "id": "diff",
@@ -167,10 +149,7 @@
           "position": {
             "x": 0,
             "y": 720
-          },
-          "nameEn": "Differential Binding Analysis",
-          "descriptionEn": "Identify differential peaks between conditions",
-          "notesEn": "DiffBind uses read count matrices in peak regions with DESeq2 or edgeR. Biological replicates required."
+          }
         }
       ],
       "references": [
@@ -189,9 +168,7 @@
           "url": "https://deeptools.readthedocs.io/",
           "type": "official"
         }
-      ],
-      "nameEn": "ENCODE ChIP-seq Pipeline"
+      ]
     }
-  ],
-  "overviewEn": "ChIP-seq / CUT&RUN peak calling and differential binding analysis pipeline. Covers QC, alignment, peak calling (MACS2), IDR reproducibility, motif analysis, and differential binding. Suitable for TF and histone modification ChIP."
+  ]
 }

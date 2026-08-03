@@ -162,6 +162,5 @@
         }
       ]
     }
-  ],
-  "overviewEn": "Whole-genome somatic variant detection for tumor-normal paired samples. Covers alignment, somatic variant calling (Mutect2, Strelka2), CNV detection, and downstream annotation. Suitable for cancer genomics studies."
+  ]
 }

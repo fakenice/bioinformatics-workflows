@@ -51,9 +51,7 @@
           "position": {
             "x": 0,
             "y": 120
-          },
-          "nameEn": "Sequence Alignment",
-          "descriptionEn": "BWA-MEM alignment to hg38 reference"
+          }
         },
         {
           "id": "bqsr",
@@ -71,9 +69,7 @@
           "position": {
             "x": 0,
             "y": 240
-          },
-          "nameEn": "BQSR",
-          "descriptionEn": "Base quality score recalibration"
+          }
         },
         {
           "id": "hc",
@@ -127,9 +123,7 @@
           "position": {
             "x": 0,
             "y": 600
-          },
-          "nameEn": "VQSR Filtering",
-          "descriptionEn": "SNP and Indel quality recalibration"
+          }
         },
         {
           "id": "annotate",
@@ -147,9 +141,7 @@
           "position": {
             "x": 0,
             "y": 720
-          },
-          "nameEn": "Variant Annotation",
-          "descriptionEn": "VEP functional annotation"
+          }
         }
       ],
       "references": [
@@ -163,9 +155,7 @@
           "url": "https://doi.org/10.1038/gim.2015.30",
           "type": "paper"
         }
-      ],
-      "nameEn": "GATK Best Practices (WES)"
+      ]
     }
-  ],
-  "overviewEn": "Whole-exome sequencing germline variant detection pipeline. From FASTQ through QC, alignment, variant calling, filtering, and annotation. Suitable for clinical exome sequencing for rare disease diagnosis."
+  ]
 }

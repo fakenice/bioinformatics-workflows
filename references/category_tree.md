@@ -20,3 +20,17 @@
 - `rna.bulk`: 常规转录组 / Bulk RNA-seq
 - `rna.singlecell`: 单细胞 / Single-cell
 
+## epigenetics (accent: var(--color-node-epi))
+
+- **表观遗传** / Epigenetics
+
+- `epigenetics.chip`: ChIP-seq / ChIP-seq / CUT&RUN
+- `epigenetics.methyl`: 甲基化 / Methylation
+
+## microbiome (accent: var(--color-node-micro))
+
+- **微生物组** / Microbiome
+
+- `microbiome.meta`: 宏基因组 / Metagenomics
+- `microbiome.amplicon`: 扩增子 / 16S / Amplicon
+

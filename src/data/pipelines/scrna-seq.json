@@ -41,10 +41,7 @@
           "position": {
             "x": 0,
             "y": 0
-          },
-          "nameEn": "Data Preprocessing",
-          "descriptionEn": "Cell Ranger expression matrix + low-quality cell filtering",
-          "notesEn": "10x data processed by Cell Ranger mkfastq + count. Filter: nFeature_RNA > 200 & < 6000, percent.mt < 20%."
+          }
         },
         {
           "id": "normalize",
@@ -62,10 +59,7 @@
           "position": {
             "x": 0,
             "y": 120
-          },
-          "nameEn": "Normalization + HVG",
-          "descriptionEn": "SCTransform or LogNormalize",
-          "notesEn": "SCTransform outperforms traditional LogNormalize for correcting sequencing depth differences. Regress out mitochondrial gene proportion."
+          }
         },
         {
           "id": "dimreduce",
@@ -83,10 +77,7 @@
           "position": {
             "x": 0,
             "y": 240
-          },
-          "nameEn": "Dimensionality Reduction",
-          "descriptionEn": "PCA → UMAP/t-SNE",
-          "notesEn": "Use JackStraw/ElbowPlot to determine PC count. UMAP is the mainstream visualization; t-SNE can supplement."
+          }
         },
         {
           "id": "cluster",
@@ -104,10 +95,7 @@
           "position": {
             "x": 0,
             "y": 360
-          },
-          "nameEn": "Clustering",
-          "descriptionEn": "Graph clustering + differential analysis",
-          "notesEn": "Resolution parameter should be adjusted by expected cell type count (0.4-1.2). Identify cluster marker genes with FindAllMarkers."
+          }
         },
         {
           "id": "annotate",
@@ -125,10 +113,7 @@
           "position": {
             "x": 0,
             "y": 480
-          },
-          "nameEn": "Cell Type Annotation",
-          "descriptionEn": "Automatic + manual annotation",
-          "notesEn": "First use SingleR or CellTypist for automatic annotation, then manually correct with known marker genes. Recommended reference: Human Primary Cell Atlas or Blueprint/ENCODE."
+          }
         },
         {
           "id": "advanced",
@@ -146,10 +131,7 @@
           "position": {
             "x": 0,
             "y": 600
-          },
-          "nameEn": "Advanced Analysis",
-          "descriptionEn": "Trajectory / cell communication / regulatory network",
-          "notesEn": "Choose based on research goal: trajectory (Monocle3/Slingshot), ligand-receptor (CellChat/NicheNet), transcription factor (SCENIC/pySCENIC)."
+          }
         }
       ],
       "references": [
@@ -168,9 +150,7 @@
           "url": "https://doi.org/10.15252/msb.20188746",
           "type": "paper"
         }
-      ],
-      "nameEn": "Seurat (R)"
+      ]
     }
-  ],
-  "overviewEn": "Single-cell RNA-seq analysis pipeline. From raw FASTQ or count matrices through QC, normalization, dimensionality reduction, clustering, marker gene identification, and cell type annotation. Suitable for 10x Genomics and other droplet-based platforms."
+  ]
 }
