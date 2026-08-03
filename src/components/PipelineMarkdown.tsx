@@ -6,12 +6,13 @@ import { useLanguage } from "../i18n";
 
 interface PipelineMarkdownProps {
   pipeline: PipelineDefinition;
-  sourceId: string;
+  sourceId?: string;
 }
 
 export default function PipelineMarkdown({ pipeline, sourceId }: PipelineMarkdownProps) {
   const { lang } = useLanguage();
-  const markdown = pipelineToMarkdown(pipeline, sourceId, lang);
+  const effectiveSourceId = sourceId ?? pipeline.sources[0]?.id ?? "";
+  const markdown = pipelineToMarkdown(pipeline, effectiveSourceId, lang);
 
   return (
     <div

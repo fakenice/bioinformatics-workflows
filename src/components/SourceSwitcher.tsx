@@ -1,4 +1,5 @@
 import { useStore } from "../store/useStore";
+import type { PipelineSource } from "../types/pipeline";
 
 export default function SourceSwitcher() {
   const { selectedPipeline, selectedSourceId, setSelectedSourceId } = useStore();
@@ -11,7 +12,7 @@ export default function SourceSwitcher() {
         参考来源
       </span>
       <div className="flex rounded-lg p-0.5 gap-0.5" style={{ background: "var(--color-surface-alt)" }}>
-        {selectedPipeline.sources.map((src) => (
+        {selectedPipeline.sources.map((src: PipelineSource) => (
           <button
             key={src.id}
             onClick={() => setSelectedSourceId(src.id)}

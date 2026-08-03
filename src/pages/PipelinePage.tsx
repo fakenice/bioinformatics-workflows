@@ -5,6 +5,7 @@ import { useStore } from "../store/useStore";
 import { useT, useLanguage } from "../i18n";
 import PipelineMarkdown from "../components/PipelineMarkdown";
 import SourceSwitcher from "../components/SourceSwitcher";
+import type { PipelineSource } from "../types/pipeline";
 import ReferenceAccordion from "../components/ReferenceAccordion";
 import ExportModal from "../components/ExportModal";
 import { generateNextflowScript } from "../utils/scriptExporter";
@@ -18,7 +19,8 @@ export default function PipelinePage() {
 
   const exportScript = useMemo(() => {
     if (!selectedPipeline) return "";
-    return generateNextflowScript(selectedPipeline, selectedSourceId);
+    const srcId = selectedSourceId ?? selectedPipeline.sources[0]?.id ?? "";
+    return generateNextflowScript(selectedPipeline, srcId);
   }, [selectedPipeline, selectedSourceId]);
 
   const exportFileName = useMemo(() => {
@@ -51,7 +53,7 @@ export default function PipelinePage() {
   }
 
   const source =
-    selectedPipeline.sources.find((s) => s.id === selectedSourceId) ||
+    selectedPipeline.sources.find((s: PipelineSource) => s.id === selectedSourceId) ||
     selectedPipeline.sources[0];
 
   return (
@@ -155,7 +157,7 @@ export default function PipelinePage() {
 
       {/* 主体 */}
       <main className="px-5 py-6">
-        <PipelineMarkdown pipeline={selectedPipeline} sourceId={selectedSourceId} />
+        <PipelineMarkdown pipeline={selectedPipeline} sourceId={selectedSourceId ?? undefined} />
         <div className="mt-4">
           <ReferenceAccordion references={source.references || []} />
         </div>

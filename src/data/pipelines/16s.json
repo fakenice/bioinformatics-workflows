@@ -2,7 +2,7 @@
   "id": "16s",
   "name": "16S rRNA Amplicon Sequencing",
   "nameZH": "16S rRNA 扩增子测序",
-  "category": "microbiome",
+  "category": "microbiome.amplicon",
   "tags": [
     "16S",
     "扩增子",

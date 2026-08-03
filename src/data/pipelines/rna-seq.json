@@ -2,7 +2,7 @@
   "id": "rna-seq",
   "name": "RNA-seq Differential Expression",
   "nameZH": "RNA-seq 差异表达分析",
-  "category": "rna",
+  "category": "rna.bulk",
   "tags": [
     "转录组",
     "差异表达",

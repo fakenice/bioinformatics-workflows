@@ -2,7 +2,7 @@
   "id": "prs",
   "name": "Polygenic Risk Score",
   "nameZH": "多基因风险评分分析",
-  "category": "dna",
+  "category": "dna.association",
   "tags": [
     "PRS",
     "多基因风险评分",

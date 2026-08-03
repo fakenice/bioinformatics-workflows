@@ -2,7 +2,7 @@
   "id": "wgs-germline",
   "name": "WGS Germline Variant Calling",
   "nameZH": "WGS 种系变异分析",
-  "category": "dna",
+  "category": "dna.germline",
   "tags": [
     "家系分析",
     "遗传病",

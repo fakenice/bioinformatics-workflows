@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-29T03:12:32.764Z",
+  "generated": "2026-08-03T04:07:11.128Z",
   "pipelines": {
     "family-trio-wgs": "1.0.0",
     "gwas": "1.0.0",
@@ -14,6 +14,10 @@
     "chip-seq": "1.0.0",
     "wgbs": "1.0.0",
     "metagenomics": "1.0.0",
-    "16s": "1.0.0"
+    "16s": "1.0.0",
+    "sv-annotation": "1.0.0",
+    "manta-sv": "1.0.0",
+    "gcnv": "1.0.0",
+    "annovar-annotation": "1.0.0"
   }
 }

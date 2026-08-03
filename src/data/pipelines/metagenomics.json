@@ -2,7 +2,7 @@
   "id": "metagenomics",
   "name": "Shotgun Metagenomics",
   "nameZH": "宏基因组分析",
-  "category": "microbiome",
+  "category": "microbiome.meta",
   "tags": [
     "宏基因组",
     "微生物组",

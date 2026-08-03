@@ -1,5 +1,6 @@
 import { X, Box, Copy, Check } from "lucide-react";
 import { useStore } from "../store/useStore";
+import type { ToolInfo } from "../types/pipeline";
 import ReactMarkdown from "react-markdown";
 import { useState } from "react";
 
@@ -77,7 +78,7 @@ export default function DetailPanel() {
                 推荐工具
               </h3>
               <div className="space-y-3">
-                {selectedStep.tools.map((tool) => (
+                {selectedStep.tools.map((tool: ToolInfo) => (
                   <div
                     key={tool.name}
                     className="p-3.5 rounded-lg"

@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import PipelinePage from "./pages/PipelinePage";
 import ComparePage from "./pages/ComparePage";
 import DocsPage from "./pages/DocsPage";
+import PipelineManager from "./components/PipelineManager";
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/compare/:id" element={<ComparePage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/docs/:slug" element={<DocsPage />} />
+          <Route path="/manager" element={<PipelineManager />} />
         </Routes>
       </div>
     </BrowserRouter>

@@ -2,7 +2,7 @@
   "id": "rare-variant",
   "name": "Rare Variant Aggregation",
   "nameZH": "罕见变异聚合分析",
-  "category": "dna",
+  "category": "dna.association",
   "tags": [
     "罕见变异",
     "SKAT",

@@ -63,7 +63,7 @@ interface PipelineDefinition {
   id: string;
   name: string;
   nameZH: string;
-  category: "dna" | "rna" | "epigenetics" | "microbiome";
+  category: string;
   tags: string[];
   overview: string;
   overviewEn?: string;
@@ -79,7 +79,7 @@ interface PipelineTemplate {
   id: string;
   name: string;
   nameZH: string;
-  category: "dna" | "rna" | "epigenetics" | "microbiome";
+  category: string;
   tags: string[];
   overview: string;
   overviewEn?: string;
@@ -115,7 +115,7 @@ const PIPELINES: PipelineTemplate[] = [
     id: "family-trio-wgs",
     name: "Family Trio WGS Germline",
     nameZH: "家系WGS种系变异分析",
-    category: "dna",
+    category: "dna.germline",
     tags: ["家系分析", "Trio", "GATK", "de novo", "遗传病"],
     version: "1.0.0",
     overview:
@@ -204,7 +204,7 @@ const PIPELINES: PipelineTemplate[] = [
     id: "gwas",
     name: "GWAS Case-Control",
     nameZH: "病例对照 GWAS 分析",
-    category: "dna",
+    category: "dna.association",
     tags: ["GWAS", "病例对照", "SAIGE", "REGENIE", "PLINK", "群体遗传"],
     version: "1.0.0",
     overview:
@@ -265,7 +265,7 @@ const PIPELINES: PipelineTemplate[] = [
     id: "mendelian-randomization",
     name: "Mendelian Randomization",
     nameZH: "孟德尔随机化分析",
-    category: "dna",
+    category: "dna.association",
     tags: ["孟德尔随机化", "MR", "TwoSampleMR", "工具变量", "因果推断"],
     version: "1.0.0",
     overview:
@@ -331,7 +331,7 @@ const PIPELINES: PipelineTemplate[] = [
     id: "prs",
     name: "Polygenic Risk Score",
     nameZH: "多基因风险评分分析",
-    category: "dna",
+    category: "dna.association",
     tags: ["PRS", "多基因风险评分", "PRSice", "LDpred2", "PRS-CS", "风险预测"],
     version: "1.0.0",
     overview:
@@ -391,7 +391,7 @@ const PIPELINES: PipelineTemplate[] = [
     id: "rare-variant",
     name: "Rare Variant Aggregation",
     nameZH: "罕见变异聚合分析",
-    category: "dna",
+    category: "dna.association",
     tags: ["罕见变异", "SKAT", "SKAT-O", "Burden test", "ACAT", "基因聚合检验"],
     version: "1.0.0",
     overview:
@@ -533,12 +533,54 @@ function varName(id: string): string {
   return id.replace(/-/g, "");
 }
 
+function loadDeletedPipelines(): string[] {
+  const deletedPath = resolve(ROOT, "src/data/deleted-pipelines.json");
+  if (!existsSync(deletedPath)) return [];
+  try {
+    const raw = readFileSync(deletedPath, "utf-8");
+    const arr = JSON.parse(raw);
+    if (Array.isArray(arr)) return arr;
+    return [];
+  } catch {
+    console.warn("  ⚠ Failed to parse deleted-pipelines.json, skipping.");
+    return [];
+  }
+}
+
+function loadCategoryMap(): Record<string, string> {
+  const mapPath = resolve(ROOT, "src/data/category-map.json");
+  if (!existsSync(mapPath)) return {};
+  try {
+    const raw = readFileSync(mapPath, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    console.warn("  ⚠ Failed to parse category-map.json, skipping.");
+    return {};
+  }
+}
+
 function main() {
   if (!existsSync(DATA_DIR)) {
     mkdirSync(DATA_DIR, { recursive: true });
   }
 
-  for (const template of PIPELINES) {
+  // Apply project-level pipeline overrides
+  const deletedPipelines = loadDeletedPipelines();
+  const categoryMap = loadCategoryMap();
+
+  let pipelines = PIPELINES;
+  if (deletedPipelines.length > 0) {
+    pipelines = pipelines.filter((p) => !deletedPipelines.includes(p.id));
+    console.log(`  ✓ Filtered ${deletedPipelines.length} deleted pipeline(s): ${deletedPipelines.join(", ")}`);
+  }
+  if (Object.keys(categoryMap).length > 0) {
+    pipelines = pipelines.map((p) =>
+      categoryMap[p.id] ? { ...p, category: categoryMap[p.id] } : p
+    );
+    console.log(`  ✓ Applied category map (${Object.keys(categoryMap).length} override(s))`);
+  }
+
+  for (const template of pipelines) {
     const pipeline = buildPipeline(template);
     const filePath = resolve(DATA_DIR, `${template.id}.json`);
     writeFileSync(filePath, JSON.stringify(pipeline, null, 2) + "\n", "utf-8");
@@ -549,11 +591,15 @@ function main() {
   const omicsIds = [
     "wgs-germline", "wgs-somatic", "wes", "rna-seq", "scrna-seq",
     "chip-seq", "wgbs", "metagenomics", "16s",
+    "sv-annotation",
+    "manta-sv",
+    "gcnv",
+    "annovar-annotation",
   ];
 
   // Generate versions.json
   const versions: Record<string, string> = {};
-  for (const template of PIPELINES) {
+  for (const template of pipelines) {
     versions[template.id] = template.version;
   }
   // Add omics pipelines (manually maintained, assumed v1.0.0)
@@ -566,19 +612,236 @@ function main() {
   };
   writeFileSync(resolve(DATA_DIR, "versions.json"), JSON.stringify(versionsPayload, null, 2) + "\n", "utf-8");
   console.log("  ✓ versions.json");
-  const studyIds = PIPELINES.map((p) => p.id);
+  const studyIds = pipelines.map((p) => p.id);
 
-  const studyImports = PIPELINES.map(
+  const studyImports = pipelines.map(
     (p) => `import ${varName(p.id)} from "./${p.id}.json";`
   );
   const omicsImports = omicsIds.map(
     (id) => `import ${varName(id)} from "./${id}.json";`
   );
 
-  const studyExports = PIPELINES.map((p) => `  ${varName(p.id)},`);
+  const studyExports = pipelines.map((p) => `  ${varName(p.id)},`);
   const omicsExports = omicsIds.map((id) => `  ${varName(id)},`);
 
-  const indexContent = `import type { PipelineDefinition } from "../../types/pipeline";
+  // ── Category Tree (default, built-in) ────────────────────────────────
+
+interface CategoryNodeObj {
+  label: string;
+  labelZH: string;
+  accent?: string;
+  children?: Record<string, { label: string; labelZH: string }>;
+}
+
+const defaultCategoryTree: Record<string, CategoryNodeObj> = {
+  dna: {
+    label: "DNA",
+    labelZH: "DNA",
+    accent: "var(--color-node-dna)",
+    children: {
+      "dna.germline":    { label: "Germline Variant", labelZH: "种系变异" },
+      "dna.somatic":     { label: "Somatic Variant", labelZH: "体细胞变异" },
+      "dna.structural":  { label: "Structural Variant", labelZH: "结构变异" },
+      "dna.association": { label: "Association & PRS", labelZH: "关联分析与 PRS" },
+    },
+  },
+  rna: {
+    label: "RNA",
+    labelZH: "RNA",
+    accent: "var(--color-node-rna)",
+    children: {
+      "rna.bulk":        { label: "Bulk RNA-seq", labelZH: "常规转录组" },
+      "rna.singlecell":  { label: "Single-cell", labelZH: "单细胞" },
+    },
+  },
+  epigenetics: {
+    label: "Epigenetics",
+    labelZH: "表观遗传",
+    accent: "var(--color-node-epi)",
+    children: {
+      "epigenetics.chip":   { label: "ChIP-seq / CUT&RUN", labelZH: "ChIP-seq" },
+      "epigenetics.methyl": { label: "Methylation", labelZH: "甲基化" },
+    },
+  },
+  microbiome: {
+    label: "Microbiome",
+    labelZH: "微生物组",
+    accent: "var(--color-node-micro)",
+    children: {
+      "microbiome.meta":     { label: "Metagenomics", labelZH: "宏基因组" },
+      "microbiome.amplicon": { label: "16S / Amplicon", labelZH: "扩增子" },
+    },
+  },
+};
+
+const defaultCategoryIcons: Record<string, string> = {
+  dna: "dna",
+  rna: "microscope",
+  epigenetics: "layers",
+  microbiome: "bacteria",
+};
+
+// ── Apply project-level overrides ────────────────────────────────────
+
+interface CategoryOverrides {
+  addedParents: Record<string, { label: string; labelZH: string; accent?: string; children?: Record<string, { label: string; labelZH: string }> }>;
+  addedChildren: Record<string, { parentId: string; label: string; labelZH: string }>;
+  deletedChildren: string[];
+  deletedParents: string[];
+}
+
+function loadOverrides(): CategoryOverrides | null {
+  const overridesPath = resolve(ROOT, "src/data/category-overrides.json");
+  if (!existsSync(overridesPath)) return null;
+  try {
+    const raw = readFileSync(overridesPath, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    console.warn("  ⚠ Failed to parse category-overrides.json, skipping overrides.");
+    return null;
+  }
+}
+
+function mergeCategoryTree(base: Record<string, CategoryNodeObj>, overrides: CategoryOverrides): Record<string, CategoryNodeObj> {
+  const merged: Record<string, CategoryNodeObj> = JSON.parse(JSON.stringify(base));
+
+  // Remove deleted top-level parents (built-in)
+  if (overrides.deletedParents) {
+    for (const pid of overrides.deletedParents) {
+      delete merged[pid];
+    }
+  }
+
+  // Apply deleted children
+  if (overrides.deletedChildren) {
+    for (const childId of overrides.deletedChildren) {
+      for (const parent of Object.values(merged)) {
+        if (parent.children && parent.children[childId]) {
+          delete parent.children[childId];
+          break;
+        }
+      }
+    }
+  }
+
+  // Apply added children
+  if (overrides.addedChildren) {
+    for (const [childId, child] of Object.entries(overrides.addedChildren)) {
+      const parent = merged[child.parentId];
+      if (parent) {
+        if (!parent.children) parent.children = {};
+        parent.children[childId] = { label: child.label, labelZH: child.labelZH };
+      }
+    }
+  }
+
+  // Apply added top-level parents
+  if (overrides.addedParents) {
+    for (const [pid, node] of Object.entries(overrides.addedParents)) {
+      merged[pid] = {
+        label: node.label,
+        labelZH: node.labelZH,
+        accent: node.accent,
+        children: node.children ? { ...node.children } : undefined,
+      };
+    }
+  }
+
+  return merged;
+}
+
+function tsEscape(s: string): string {
+  return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+function tsifyCategoryTree(tree: Record<string, CategoryNodeObj>): string {
+  const lines: string[] = [];
+  const entries = Object.entries(tree);
+  for (let i = 0; i < entries.length; i++) {
+    const [pid, node] = entries[i];
+    const comma = i < entries.length - 1 ? "," : "";
+    lines.push(`  ${pid}: {`);
+    lines.push(`    label: "${tsEscape(node.label)}",`);
+    lines.push(`    labelZH: "${tsEscape(node.labelZH)}",`);
+    if (node.accent) lines.push(`    accent: "${tsEscape(node.accent)}",`);
+    if (node.children) {
+      const childEntries = Object.entries(node.children);
+      if (childEntries.length > 0) {
+        lines.push(`    children: {`);
+        for (let j = 0; j < childEntries.length; j++) {
+          const [cid, child] = childEntries[j];
+          const ccomma = j < childEntries.length - 1 ? "," : "";
+          lines.push(`      "${tsEscape(cid)}": { label: "${tsEscape(child.label)}", labelZH: "${tsEscape(child.labelZH)}" }${ccomma}`);
+        }
+        lines.push(`    },`);
+      }
+    }
+    lines.push(`  }${comma}`);
+  }
+  return lines.join("\n");
+}
+
+function tsifyCategoryIcons(icons: Record<string, string>): string {
+  const entries = Object.entries(icons);
+  return entries.map(([k, v]) => `  ${k}: "${tsEscape(v)}",`).join("\n");
+}
+
+// ── Load overrides and merge ─────────────────────────────────────────
+
+function buildCategoryTree(): { tree: Record<string, CategoryNodeObj>; icons: Record<string, string> } {
+  const overrides = loadOverrides();
+  if (!overrides) return { tree: defaultCategoryTree, icons: defaultCategoryIcons };
+
+  console.log("  ✓ Loaded category-overrides.json");
+  const tree = mergeCategoryTree(defaultCategoryTree, overrides);
+
+  // Auto-assign icons for new top-level categories
+  const icons: Record<string, string> = { ...defaultCategoryIcons };
+  for (const pid of Object.keys(tree)) {
+    if (!icons[pid]) icons[pid] = "layers";
+  }
+
+  return { tree, icons };
+}
+
+const { tree: mergedCategoryTree, icons: mergedCategoryIcons } = buildCategoryTree();
+
+// ── Generate references/category_tree.md ─────────────────────────────
+
+function generateCategoryMd(tree: Record<string, CategoryNodeObj>): string {
+  const lines: string[] = [
+    "# FlowSeq Category Tree",
+    "",
+    `> Auto-generated by build-pipelines.ts on ${new Date().toISOString().split("T")[0]}`,
+    "",
+    "`category` field format: `parent.child`",
+    "",
+  ];
+
+  for (const [pid, node] of Object.entries(tree)) {
+    const accentNote = node.accent ? ` (accent: ${node.accent})` : "";
+    lines.push(`## ${pid}${accentNote}`);
+    lines.push("");
+    lines.push(`- **${node.labelZH}** / ${node.label}`);
+    lines.push("");
+    if (node.children) {
+      for (const [cid, child] of Object.entries(node.children)) {
+        lines.push(`- \`${cid}\`: ${child.labelZH} / ${child.label}`);
+      }
+      lines.push("");
+    }
+  }
+
+  return lines.join("\n") + "\n";
+}
+
+const categoryMdPath = resolve(ROOT, "references/category_tree.md");
+writeFileSync(categoryMdPath, generateCategoryMd(mergedCategoryTree), "utf-8");
+console.log("  ✓ references/category_tree.md");
+
+// ── Generate index.ts ─────────────────────────────────────────────────
+
+const indexContent = `import type { PipelineDefinition } from "../../types/pipeline";
 ${studyImports.join("\n")}
 ${omicsImports.join("\n")}
 
@@ -587,18 +850,37 @@ ${studyExports.join("\n")}
 ${omicsExports.join("\n")}
 ] as PipelineDefinition[];
 
-export const categoryLabels: Record<string, string> = {
-  dna: "DNA",
-  rna: "RNA",
-  epigenetics: "表观遗传",
-  microbiome: "微生物",
+// ── Category Tree ──────────────────────────────────────────────
+
+export interface CategoryNode {
+  label: string;
+  labelZH: string;
+  children?: Record<string, { label: string; labelZH: string }>;
+  accent?: string;
+}
+
+/** Built-in default category tree (before project-level overrides). */
+export const defaultCategoryTree: Record<string, CategoryNode> = {
+${tsifyCategoryTree(defaultCategoryTree)}
 };
 
+/** Merged category tree (default + project-level overrides from category-overrides.json). */
+export const categoryTree: Record<string, CategoryNode> = {
+${tsifyCategoryTree(mergedCategoryTree)}
+};
+
+export const categoryLabels: Record<string, string> = {};
+for (const [parentId, parent] of Object.entries(categoryTree)) {
+  categoryLabels[parentId] = parent.labelZH;
+  if (parent.children) {
+    for (const [childId, child] of Object.entries(parent.children)) {
+      categoryLabels[childId] = child.labelZH;
+    }
+  }
+}
+
 export const categoryIcons: Record<string, string> = {
-  dna: "dna",
-  rna: "microscope",
-  epigenetics: "layers",
-  microbiome: "bacteria",
+${tsifyCategoryIcons(mergedCategoryIcons)}
 };
 `;
 

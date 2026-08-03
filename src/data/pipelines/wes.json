@@ -2,7 +2,7 @@
   "id": "wes",
   "name": "WES Variant Calling",
   "nameZH": "WES 捕获测序分析",
-  "category": "dna",
+  "category": "dna.germline",
   "tags": [
     "外显子组",
     "捕获测序",

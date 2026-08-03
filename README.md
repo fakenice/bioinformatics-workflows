@@ -208,7 +208,7 @@ An interactive web frontend for browsing and validating all Skill content.
 npm run dev -- --host --open
 ```
 
-Hot reload enabled. Double-click `start.bat` for one-click launch.
+Hot reload enabled. Double-click `FlowSeq.lnk` for one-click launch.
 
 **Production build:**
 

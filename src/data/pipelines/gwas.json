@@ -2,7 +2,7 @@
   "id": "gwas",
   "name": "GWAS Case-Control",
   "nameZH": "病例对照 GWAS 分析",
-  "category": "dna",
+  "category": "dna.association",
   "tags": [
     "GWAS",
     "病例对照",

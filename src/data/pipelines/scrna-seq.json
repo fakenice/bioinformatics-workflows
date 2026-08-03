@@ -2,7 +2,7 @@
   "id": "scrna-seq",
   "name": "Single-cell RNA-seq",
   "nameZH": "单细胞 RNA-seq 分析",
-  "category": "rna",
+  "category": "rna.singlecell",
   "tags": [
     "单细胞",
     "Seurat",

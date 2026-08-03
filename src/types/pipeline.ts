@@ -35,7 +35,7 @@ export interface PipelineSource {
   references: Reference[];
 }
 
-export type Category = "dna" | "rna" | "epigenetics" | "microbiome";
+export type Category = string;
 
 export interface ChangelogEntry {
   version: string;

@@ -52,21 +52,27 @@ export function useLanguage(): LangContextValue {
   return useContext(LangContext);
 }
 
-function getNestedValue(obj: Record<string, unknown>, path: string): string {
+function getNestedValue(obj: Record<string, unknown>, path: string, params?: Record<string, string>): string {
   const keys = path.split(".");
   let current: unknown = obj;
   for (const key of keys) {
     if (current == null || typeof current !== "object") return path;
     current = (current as Record<string, unknown>)[key];
   }
-  return typeof current === "string" ? current : path;
+  let result = typeof current === "string" ? current : path;
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      result = result.replace(`{${k}}`, v);
+    }
+  }
+  return result;
 }
 
-export function useT(): (path: string) => string {
+export function useT(): (path: string, params?: Record<string, string>) => string {
   const { lang } = useContext(LangContext);
   const dict = strings[lang] as unknown as Record<string, unknown>;
   return useCallback(
-    (path: string) => getNestedValue(dict, path),
+    (path: string, params?: Record<string, string>) => getNestedValue(dict, path, params),
     [dict]
   );
 }

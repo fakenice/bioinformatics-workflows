@@ -2,7 +2,7 @@
   "id": "mendelian-randomization",
   "name": "Mendelian Randomization",
   "nameZH": "孟德尔随机化分析",
-  "category": "dna",
+  "category": "dna.association",
   "tags": [
     "孟德尔随机化",
     "MR",

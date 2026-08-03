@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Dna, BookOpen } from "lucide-react";
+import { Search, Dna, BookOpen, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useStore } from "../store/useStore";
 import { useLanguage, useT } from "../i18n";
@@ -101,6 +101,31 @@ export default function Header() {
           >
             <BookOpen size={14} />
             {t("header.docs")}
+          </Link>
+
+          <Link
+            to="/manager"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              padding: "6px 12px",
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 500,
+              textDecoration: "none",
+              color: location.pathname.startsWith("/manager")
+                ? "var(--color-accent)"
+                : "var(--color-text-secondary)",
+              background: location.pathname.startsWith("/manager")
+                ? "var(--color-accent-muted)"
+                : "transparent",
+              transition: "background 0.15s",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Settings size={14} />
+            {t("header.manage")}
           </Link>
 
           <button

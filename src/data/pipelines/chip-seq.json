@@ -2,7 +2,7 @@
   "id": "chip-seq",
   "name": "ChIP-seq / CUT&RUN",
   "nameZH": "ChIP-seq / CUT&RUN 分析",
-  "category": "epigenetics",
+  "category": "epigenetics.chip",
   "tags": [
     "ChIP-seq",
     "CUT&RUN",

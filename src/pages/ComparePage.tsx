@@ -4,6 +4,7 @@ import { ArrowLeft, Check, Minus } from "lucide-react";
 import { useStore } from "../store/useStore";
 import { useT, useLanguage } from "../i18n";
 import FlowCanvas from "../components/FlowCanvas";
+import type { PipelineSource } from "../types/pipeline";
 
 const COLORS = ["var(--color-node-dna)", "var(--color-node-rna)"];
 
@@ -77,7 +78,7 @@ export default function ComparePage() {
       </header>
 
       <div className="grid grid-cols-2 gap-4">
-        {sources.map((source, si) => (
+        {sources.map((source: PipelineSource, si: number) => (
           <div key={source.id}>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-2.5 h-2.5 rounded-full" style={{ background: COLORS[si] }} />

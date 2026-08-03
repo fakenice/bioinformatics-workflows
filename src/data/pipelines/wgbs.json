@@ -2,7 +2,7 @@
   "id": "wgbs",
   "name": "WGBS / RRBS Methylation",
   "nameZH": "全基因组甲基化分析",
-  "category": "epigenetics",
+  "category": "epigenetics.methyl",
   "tags": [
     "甲基化",
     "WGBS",

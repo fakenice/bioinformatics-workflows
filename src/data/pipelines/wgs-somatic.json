@@ -2,7 +2,7 @@
   "id": "wgs-somatic",
   "name": "WGS Somatic Variant Calling",
   "nameZH": "WGS 体细胞变异分析",
-  "category": "dna",
+  "category": "dna.somatic",
   "tags": [
     "肿瘤",
     "Mutect2",

@@ -1,0 +1,195 @@
+{
+  "id": "sv-annotation",
+  "name": "SV Annotation & Classification",
+  "nameZH": "结构变异注释与致病性评估",
+  "category": "dna.structural",
+  "tags": [
+    "AnnotSV",
+    "SV",
+    "结构变异",
+    "致病性分级",
+    "ACMG",
+    "ClinGen",
+    "HPO"
+  ],
+  "overview": "基于 AnnotSV 的结构变异注释与致病性分级流程，覆盖 >20 个注释数据库（ClinVar/ClinGen/OMIM/gnomAD 等），支持 ACMG/ClinGen 五级致病性分类、HPO 表型驱动优先级排序和 SNV 交叉验证假阳性过滤。",
+  "overviewEn": "AnnotSV-based SV annotation and pathogenicity classification pipeline covering >20 annotation databases (ClinVar/ClinGen/OMIM/gnomAD etc.), supporting ACMG/ClinGen 5-tier classification, HPO-driven prioritization, and SNV cross-validation false-positive filtering.",
+  "icon": "dna",
+  "version": "1.0.0",
+  "sources": [
+    {
+      "id": "annotsv",
+      "name": "AnnotSV",
+      "nameEn": "AnnotSV",
+      "type": "official",
+      "url": "https://github.com/lgmgeo/AnnotSV",
+      "references": [
+        {
+          "title": "AnnotSV: an integrated tool for structural variations annotation (Geoffroy et al., 2018)",
+          "url": "https://doi.org/10.1093/bioinformatics/bty304",
+          "type": "paper"
+        },
+        {
+          "title": "AnnotSV and knotAnnotSV: a web server for human structural variations (Geoffroy et al., 2021)",
+          "url": "https://doi.org/10.1093/nar/gkab404",
+          "type": "paper"
+        },
+        {
+          "title": "AnnotSV GitHub Repository",
+          "url": "https://github.com/lgmgeo/AnnotSV",
+          "type": "official"
+        },
+        {
+          "title": "Technical standards for the interpretation and reporting of constitutional CNVs (Riggs et al., 2020)",
+          "url": "https://doi.org/10.1038/s41436-019-0686-8",
+          "type": "paper"
+        },
+        {
+          "title": "ClinGen Dosage Sensitivity Curation",
+          "url": "https://www.clinicalgenome.org/curation-activities/dosage-sensitivity/",
+          "type": "official"
+        }
+      ],
+      "steps": [
+        {
+          "id": "step-1",
+          "name": "安装与注释库下载",
+          "nameEn": "Install & Download Annotations",
+          "description": "源码安装 AnnotSV v3.5.10 并下载人类注释数据库",
+          "descriptionEn": "Install AnnotSV v3.5.10 from source and download human annotation databases",
+          "tools": [
+            {
+              "name": "git clone + make",
+              "version": "3.5.10",
+              "params": "make PREFIX=. install && make PREFIX=. install-human-annotation",
+              "docker": "",
+              "notes": "conda 安装需单独运行 INSTALL_annotations.sh。",
+              "notesEn": "Conda install requires separate annotation download."
+            }
+          ],
+          "notes": "推荐源码安装，注释库自动下载。",
+          "notesEn": "Source install recommended, annotations auto-downloaded.",
+          "position": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": "step-2",
+          "name": "SV 注释",
+          "nameEn": "SV Annotation",
+          "description": "对 SV VCF/BED 进行多数据库注释，生成 TSV 注释表",
+          "descriptionEn": "Multi-database annotation of SV VCF/BED, producing TSV annotation table",
+          "tools": [
+            {
+              "name": "AnnotSV",
+              "version": "3.5.10",
+              "params": "-SVinputFile sample.filteredSV.vcf.gz -outputFile sample.annotated.tsv -genomeBuild GRCh38 -annotationMode both",
+              "docker": "",
+              "notes": "覆盖 >20 个数据库：ClinVar、ClinGen、OMIM、gnomAD、dbVar、DGV。",
+              "notesEn": "Covers >20 databases: ClinVar, ClinGen, OMIM, gnomAD, dbVar, DGV."
+            }
+          ],
+          "notes": "支持 VCF/BED，输出 TSV/HTML/VCF/XLSM。",
+          "notesEn": "Supports VCF/BED, outputs TSV/HTML/VCF/XLSM.",
+          "position": {
+            "x": 1,
+            "y": 0
+          }
+        },
+        {
+          "id": "step-3",
+          "name": "表型优先级排序",
+          "nameEn": "Phenotype Prioritization",
+          "description": "基于 HPO 术语对 SV 进行表型驱动的优先级排序",
+          "descriptionEn": "HPO-driven prioritization of SVs",
+          "tools": [
+            {
+              "name": "AnnotSV -hpo",
+              "version": "3.5.10",
+              "params": "-hpo \"HP:0001156,HP:0001363\"",
+              "docker": "",
+              "notes": "Exomiser 引擎，推荐 score > 0.7。",
+              "notesEn": "Exomiser engine, recommend score > 0.7."
+            }
+          ],
+          "notes": "HPO 术语驱动 Exomiser 引擎表型-基因型关联排序。",
+          "notesEn": "HPO terms drive Exomiser engine for phenotype-genotype ranking.",
+          "position": {
+            "x": 2,
+            "y": 0
+          }
+        },
+        {
+          "id": "step-4",
+          "name": "假阳性过滤",
+          "nameEn": "False-Positive Filtering",
+          "description": "利用 SNV/indel 数据交叉验证 SV 真实性",
+          "descriptionEn": "Cross-validate SVs using SNV/indel data",
+          "tools": [
+            {
+              "name": "AnnotSV -snvIndelFiles",
+              "version": "3.5.10",
+              "params": "-snvIndelFiles sample.snv.vcf.gz",
+              "docker": "",
+              "notes": "大缺失区域杂合 SNV 提示假阳性。",
+              "notesEn": "Heterozygous SNVs in large deletions indicate false positives."
+            }
+          ],
+          "notes": "检测大缺失区域杂合 SNV，假阳性 SV 标记过滤。",
+          "notesEn": "Flag false-positive SVs via heterozygous SNV detection in large deletions.",
+          "position": {
+            "x": 3,
+            "y": 0
+          }
+        },
+        {
+          "id": "step-5",
+          "name": "ACMG/ClinGen 致病性分级",
+          "nameEn": "ACMG/ClinGen Classification",
+          "description": "自动计算 ACMG/ClinGen 五级致病性评分（Class 1-5）",
+          "descriptionEn": "Automatic ACMG/ClinGen five-tier pathogenicity scoring (Class 1-5)",
+          "tools": [
+            {
+              "name": "AnnotSV 自动 ranking",
+              "version": "3.5.10",
+              "params": "",
+              "docker": "",
+              "notes": "Class 5 (>=0.99) 致病, Class 4 (0.90-0.98) 可能致病, Class 3 VUS, Class 2 可能良性, Class 1 (<=-0.99) 良性。",
+              "notesEn": "Class 5 (>=0.99) P, Class 4 (0.90-0.98) LP, Class 3 VUS, Class 2 LB, Class 1 (<=-0.99) B."
+            }
+          ],
+          "notes": "基于 Riggs et al. 2020 ACMG/ClinGen 联合共识。",
+          "notesEn": "Based on Riggs et al. 2020 ACMG/ClinGen consensus.",
+          "position": {
+            "x": 4,
+            "y": 0
+          }
+        },
+        {
+          "id": "step-6",
+          "name": "结果过滤与输出",
+          "nameEn": "Result Filtering & Output",
+          "description": "提取致病/可能致病 SV（Class 4-5），输出多格式结果",
+          "descriptionEn": "Extract pathogenic/likely pathogenic SVs (Class 4-5)",
+          "tools": [
+            {
+              "name": "AnnotSV -rankFiltering",
+              "version": "3.5.10",
+              "params": "-rankFiltering \"4,5\"",
+              "docker": "",
+              "notes": "输出 TSV/HTML/VCF/XLSM，HTML 含交互式 knotAnnotSV 可视化。",
+              "notesEn": "Output TSV/HTML/VCF/XLSM, HTML with interactive knotAnnotSV."
+            }
+          ],
+          "notes": "仅保留 Class 4-5，交互式 HTML 用于临床审核。",
+          "notesEn": "Keep Class 4-5 only, interactive HTML for clinical review.",
+          "position": {
+            "x": 5,
+            "y": 0
+          }
+        }
+      ]
+    }
+  ]
+}
