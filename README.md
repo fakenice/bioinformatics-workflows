@@ -177,15 +177,13 @@ An interactive web frontend for browsing and validating all Skill content.
 
 ### Features
 
-- **Skill Doc Browser** — sidebar navigation rendering SKILL.md + all `references/*.md`
-- **Pipeline Browser** — 14 pipelines with structured step tables, tools, parameters, QC thresholds
-- **Source Switching** — toggle between GATK / nf-core / ENCODE sources per pipeline
-- **Compare Mode** — side-by-side pipeline diff across sources
-- **Full-Text Search (Ctrl+K)** — instant search across pipelines, docs, and tools
-- **Nextflow Export** — one-click `.nf` script generation (copy or download)
-- **Version Management** — track and switch pipeline versions
-- **Reverse Search** — find which pipeline uses a given tool
-- **i18n** — EN/中文 toggle, auto language detection
+- **分类导航**：支持 DNA 分析、RNA 分析、表观遗传、微生物组四大领域，每个领域下设细分方向子分类（如 DNA → 种系变异 / 体细胞变异 / 关联分析，微生物组 → 宏基因组 / 16S 扩增子等），支持按分类筛选管线
+- **智能搜索**：`Ctrl+K` 快捷键唤起搜索框，支持管线名称模糊搜索
+- **管线详情**：每个管线展示标准化分析步骤链、推荐工具及版本、参考权威文献（含 DOI 可点击跳转）
+- **中英文切换**：右上角 `EN` / `中` 按钮，支持界面语言即时切换
+- **管线对比**：选中多条管线进行工具链对比分析
+- **本地启动**：双击 `FlowSeq.lnk` 一键启动，自动安装依赖并打开浏览器
+- **导出功能**：支持将管线信息导出为 Markdown 或 JSON 格式
 
 ### Tech Stack
 
@@ -257,16 +255,6 @@ npm run preview
 The current implementation exposes tools through a local Python registry. The architecture is adapter-friendly and can be extended to MCP, REST APIs, or other agent protocols without changing the knowledge layer.
 
 ---
-
-## Changelog · 更新日志
-
-### 2026-08-03
-
-- **修复 9 个 omics 管线 JSON 的 category 字段**：从平级值（如 `microbiome`）改为点号子分类格式（如 `microbiome.meta`），使子分类筛选正确匹配管线
-- **清理构建配置**：移除 `build-pipelines.ts` 中 `.trae-cn` 个人副本的结构变异管线 ID（`sv-annotation`/`manta-sv`/`gcnv`/`annovar-annotation`），恢复为 GitHub 原始 14 管线集合
-- **修复启动脚本**：`start_flowseq.bat` 增加端口清理逻辑（启动前自动杀掉旧进程）+ 轮询等待编译完成后再打开浏览器，避免端口冲突和空白页
-- **修复 category-overrides.json**：清空或删除，恢复全部分类可见
-- **前端筛选逻辑分析**：确认 `HomePage.tsx` 子分类筛选要求管线 `category` 为点号格式，已统一数据层
 
 ## License
 
