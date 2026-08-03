@@ -251,9 +251,9 @@ npm run preview
 
 ---
 
-## Agent & RAG Implementation
+### Agent & RAG Integration
 
-The current implementation exposes tools through a local Python registry. The architecture is adapter-friendly and can be extended to MCP, REST APIs, or other agent protocols without changing the knowledge layer.
+The current implementation exposes bioinformatics capabilities through a local Python tool registry, enabling agent-based workflow orchestration. Its modular architecture is transport-agnostic and can be seamlessly extended to MCP, REST APIs, or other agent protocols without modifying the underlying knowledge layer. Semantic retrieval (RAG) can be integrated as a retrieval backend while preserving the repository's knowledge-constrained workflow generation paradigm.
 
 ---
 
