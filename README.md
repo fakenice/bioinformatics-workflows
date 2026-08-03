@@ -1,8 +1,8 @@
-# bioinformatics-workflows
+[中文](README_zh.md)
+
+# FlowSeq — Interactive Bioinformatics Pipeline Navigator
 
 **A knowledge-constrained AI Skill for standardized, traceable and reproducible bioinformatics workflow generation.**
-
-一个知识约束型 AI Skill，面向标准化、可溯源、可复现的生物信息学工作流生成。
 
 ---
 
@@ -85,7 +85,7 @@ This repository also hosts **FlowSeq** — an interactive pipeline browser + Ski
 
 ## Skill Capabilities
 
-### Pipeline Knowledge Base · 管线知识库
+### Pipeline Knowledge Base
 
 | Category | Pipeline | ID |
 |----------|----------|----|
@@ -104,7 +104,7 @@ This repository also hosts **FlowSeq** — an interactive pipeline browser + Ski
 | Microbiome | 16S rRNA | `16s` |
 | Genetic Epi | Mendelian Randomization | `mendelian-randomization` |
 
-### Reference Knowledge · 参考知识
+### Reference Knowledge
 
 | File | Content |
 |------|---------|
@@ -113,26 +113,26 @@ This repository also hosts **FlowSeq** — an interactive pipeline browser + Ski
 | `references/sharp_edges.md` | Known pitfalls, edge cases, and avoidance strategies |
 | `references/validations.md` | Output quality validation rules and checklists |
 
-### Semantic Search · 语义检索
+### Semantic Search
 
-A lightweight retrieval-augmented layer over the knowledge base. 55 document chunks (41 from references + 14 pipeline JSONs) are embedded and indexed, enabling natural-language queries like "如何处理批次效应" or "哪些管线需要 IDR" with sub-millisecond retrieval latency and full source traceability (`source_file:L123-L456`).
+A lightweight retrieval-augmented layer over the knowledge base. 55 document chunks (41 from references + 14 pipeline JSONs) are embedded and indexed, enabling natural-language queries like "how to handle batch effects" or "which pipelines need IDR" with sub-millisecond retrieval latency and full source traceability (`source_file:L123-L456`).
 
 Implementation: `python/vector_store/` — NumPy + sklearn, zero extra dependencies.
 
-### Evaluation · 质量评估
+### Evaluation
 
-5 个确定性指标对 Skill 输出做自动化评估，零 API 调用，一键运行：
+5 deterministic metrics for automated Skill output evaluation, zero API calls, one command:
 
 | Metric | Score | Method |
 |--------|-------|--------|
-| Pipeline Selection Accuracy | 100% | 预期 pipeline_id 匹配 |
-| Knowledge Grounding Rate | 100% | 工具/DOI/URL 知识库差集扫描 |
-| Parameter Correctness | 100% | 参数阈值域校验 |
-| Reference Coverage | 95% | DOI/URL 正则提取 |
-| Schema Validity | 100% | JSON 结构校验 |
+| Pipeline Selection Accuracy | 100% | Expected pipeline_id matching |
+| Knowledge Grounding Rate | 100% | Tool/DOI/URL diff against knowledge base |
+| Parameter Correctness | 100% | Parameter threshold domain check |
+| Reference Coverage | 95% | DOI/URL regex extraction |
+| Schema Validity | 100% | JSON structure validation |
 | **Overall** | **99%** | |
 
-**Baseline 对比**（Prompt Only vs Prompt + Skill）：
+**Baseline comparison** (Prompt Only vs Prompt + Skill):
 
 | Metric | Prompt Only | + Skill | Δ |
 |--------|------------|---------|---|
@@ -148,7 +148,7 @@ python runner.py results/outputs.json -b results/baseline_outputs.json  # baseli
 
 Implementation: `python/evaluation/` — 20 test cases × 5 deterministic metrics, no external API, no manual annotation.
 
-### Agentic Workflow · Agent 工作流
+### Agentic Workflow
 
 The Skill exposes a **Planning → Tool Calling → Execution** loop through 4 tools:
 
@@ -161,29 +161,29 @@ The Skill exposes a **Planning → Tool Calling → Execution** loop through 4 t
 
 Implementation: `python/agent/`
 
-### Self-Updating · 自更新
+### Self-Updating
 
 The Skill automatically writes newly discovered pipeline information back into the repository (Step 5 in SKILL.md): new `references/` sections, new `src/data/pipelines/*.json` files, and index registration.
 
-### Build System · 构建系统
+### Build System
 
 `scripts/build-pipelines.ts` generates 5 study-design pipeline JSONs from structured templates on each build. 9 standard omics pipelines are hand-curated JSON. All 14 are unified into `index.ts` and `versions.json` for the FlowSeq frontend.
 
 ---
 
-## FlowSeq — Pipeline Browser & Skill Docs
+## FlowSeq — Pipeline Browser & Site
 
 An interactive web frontend for browsing and validating all Skill content.
 
 ### Features
 
-- **分类导航**：支持 DNA 分析、RNA 分析、表观遗传、微生物组四大领域，每个领域下设细分方向子分类（如 DNA → 种系变异 / 体细胞变异 / 关联分析，微生物组 → 宏基因组 / 16S 扩增子等），支持按分类筛选管线
-- **智能搜索**：`Ctrl+K` 快捷键唤起搜索框，支持管线名称模糊搜索
-- **管线详情**：每个管线展示标准化分析步骤链、推荐工具及版本、参考权威文献（含 DOI 可点击跳转）
-- **中英文切换**：右上角 `EN` / `中` 按钮，支持界面语言即时切换
-- **管线对比**：选中多条管线进行工具链对比分析
-- **本地启动**：双击 `FlowSeq.lnk` 一键启动，自动安装依赖并打开浏览器
-- **导出功能**：支持将管线信息导出为 Markdown 或 JSON 格式
+- **Category Navigation**: Supports four major domains — DNA Analysis, RNA Analysis, Epigenetics, Microbiome — each with fine-grained subcategories (e.g. DNA → Germline / Somatic / Association, Microbiome → Metagenomics / 16S Amplicon), filter pipelines by category
+- **Smart Search**: `Ctrl+K` shortcut opens search overlay with fuzzy pipeline name matching
+- **Pipeline Details**: Each pipeline displays standardized analysis step chains, recommended tools with versions, and authoritative references with clickable DOIs
+- **i18n**: Toggle between English / Chinese via `EN` / `中` button in the top-right corner for instant UI language switching
+- **Pipeline Compare**: Select multiple pipelines for side-by-side toolchain comparison
+- **Local Launch**: Double-click `FlowSeq.lnk` for one-click startup — auto-installs dependencies and opens the browser
+- **Export**: Export pipeline info as Markdown or JSON
 
 ### Tech Stack
 
@@ -222,7 +222,8 @@ npm run preview
 
 ```
 ├── SKILL.md                      # Skill instruction file
-├── README.md                     # This file
+├── README.md                     # English documentation
+├── README_zh.md                  # Chinese documentation
 ├── references/                   # Knowledge base documents
 │   ├── study_designs.md
 │   ├── patterns.md
