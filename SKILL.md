@@ -102,6 +102,8 @@ web_search: "<核心工具名> parameters best practices <年份>"
 - 官方来源用表格列出，标注类型
 - 开头一句话概述流程目标和适用场景
 - 简洁原则：不展示 docker 镜像名、position 坐标等程序化字段
+- **接地约束（最高优先级）**：输出中引用的每个工具名、版本、参数、方法（含 log2FC 收缩 apeglm/ashr、归一化 TMM 等）必须能在 `src/data/pipelines/*.json`、`references/*.md` 或本文件快速参考表中找到依据；引用知识库未覆盖的内容时必须显式标注「外部补充（KB 未收录）」
+- **参考来源约束（最高优先级）**：输出末尾必须列出参考来源，每条含来源名称 + 链接（官方文档 / nf-core / ENCODE / 核心文献），并标注来源类型（official / nf-core / encode / paper / community）。无参考来源视为输出不完整；禁止编造不存在的链接，无法确认的链接标注「待核实」
 - 当用户明确要求 JSON 时，输出 FlowSeq JSON（见"输出格式"段落）
 
 ### Step 5: 知识积累（仅针对 Step 2b 未覆盖流程）

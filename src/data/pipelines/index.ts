@@ -103,24 +103,6 @@ export const categoryTree: Record<string, CategoryNode> = {
       "rna.bulk": { label: "Bulk RNA-seq", labelZH: "常规转录组" },
       "rna.singlecell": { label: "Single-cell", labelZH: "单细胞" }
     },
-  },
-  epigenetics: {
-    label: "Epigenetics",
-    labelZH: "表观遗传",
-    accent: "var(--color-node-epi)",
-    children: {
-      "epigenetics.chip": { label: "ChIP-seq / CUT&RUN", labelZH: "ChIP-seq" },
-      "epigenetics.methyl": { label: "Methylation", labelZH: "甲基化" }
-    },
-  },
-  microbiome: {
-    label: "Microbiome",
-    labelZH: "微生物组",
-    accent: "var(--color-node-micro)",
-    children: {
-      "microbiome.meta": { label: "Metagenomics", labelZH: "宏基因组" },
-      "microbiome.amplicon": { label: "16S / Amplicon", labelZH: "扩增子" }
-    },
   }
 };
 

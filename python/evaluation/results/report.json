@@ -1,10 +1,10 @@
 {
-  "overall_score": 0.99,
+  "overall_score": 0.9823,
   "scores": {
     "pipeline_selection_accuracy": 1.0,
-    "knowledge_grounding_rate": 1.0,
+    "knowledge_grounding_rate": 0.964,
     "parameter_correctness": 1.0,
-    "reference_coverage": 0.95,
+    "reference_coverage": 0.9474,
     "schema_validity": 1.0
   },
   "details": [
@@ -88,7 +88,7 @@
         },
         {
           "id": "TC-006",
-          "query": "孟德尔随机化分析怎么做，我需要灵敏度分析",
+          "query": "孟德尔随机化标准流程怎么做，我需要灵敏度分析",
           "expected": "mendelian-randomization",
           "predicted": "mendelian-randomization",
           "ok": true
@@ -116,28 +116,28 @@
         },
         {
           "id": "TC-010",
-          "query": "WES 外显子组测序，家系分析怎么做的",
+          "query": "WES 外显子组测序标准流程中，家系分析怎么做",
           "expected": "wes",
           "predicted": "wes",
           "ok": true
         },
         {
           "id": "TC-011",
-          "query": "PRS 多基因风险评分怎么算",
+          "query": "PRS 多基因风险评分标准流程怎么算",
           "expected": "prs",
           "predicted": "prs",
           "ok": true
         },
         {
           "id": "TC-012",
-          "query": "罕见变异聚合分析，SKAT-O 方法",
+          "query": "罕见变异聚合分析标准流程，SKAT-O 方法",
           "expected": "rare-variant",
           "predicted": "rare-variant",
           "ok": true
         },
         {
           "id": "TC-013",
-          "query": "BQSR 这一步有什么常见的坑",
+          "query": "标准流程中 BQSR 这一步有什么常见的坑",
           "expected": "wgs-germline",
           "predicted": "wgs-germline",
           "ok": true
@@ -151,14 +151,14 @@
         },
         {
           "id": "TC-015",
-          "query": "RNA-seq 差异表达分析，用 DESeq2 还是 edgeR",
+          "query": "RNA-seq 标准流程中差异表达分析怎么做",
           "expected": "rna-seq",
           "predicted": "rna-seq",
           "ok": true
         },
         {
           "id": "TC-016",
-          "query": "GWAS 里面人群分层怎么处理",
+          "query": "标准流程中 GWAS 人群分层怎么做",
           "expected": "gwas",
           "predicted": "gwas",
           "ok": true
@@ -172,14 +172,14 @@
         },
         {
           "id": "TC-018",
-          "query": "我的 WGS 脚本应该怎么写才能可复现",
+          "query": "WGS 标准流程中如何保证可复现",
           "expected": "wgs-germline",
           "predicted": "wgs-germline",
           "ok": true
         },
         {
           "id": "TC-019",
-          "query": "ATAC-seq 和 ChIP-seq 的区别是什么，流程有什么不同",
+          "query": "标准流程中 ATAC-seq 和 ChIP-seq 有什么不同",
           "expected": "chip-seq",
           "predicted": "chip-seq",
           "ok": true
@@ -195,19 +195,19 @@
     },
     {
       "metric": "knowledge_grounding_rate",
-      "score": 1.0,
-      "ungrounded_rate": 0.0,
-      "total_entities_cited": 75,
-      "total_ungrounded": 0,
+      "score": 0.964,
+      "ungrounded_rate": 0.036,
+      "total_entities_cited": 417,
+      "total_ungrounded": 15,
       "kb_size": {
-        "tools": 121,
-        "dois": 27,
-        "urls": 69
+        "tools": 122,
+        "dois": 28,
+        "urls": 88
       },
       "details": [
         {
           "id": "TC-001",
-          "total_entities_cited": 4,
+          "total_entities_cited": 29,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
@@ -215,7 +215,7 @@
         },
         {
           "id": "TC-002",
-          "total_entities_cited": 5,
+          "total_entities_cited": 22,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
@@ -223,7 +223,7 @@
         },
         {
           "id": "TC-003",
-          "total_entities_cited": 5,
+          "total_entities_cited": 20,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
@@ -231,7 +231,7 @@
         },
         {
           "id": "TC-004",
-          "total_entities_cited": 3,
+          "total_entities_cited": 21,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
@@ -239,7 +239,7 @@
         },
         {
           "id": "TC-005",
-          "total_entities_cited": 4,
+          "total_entities_cited": 18,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
@@ -247,7 +247,7 @@
         },
         {
           "id": "TC-006",
-          "total_entities_cited": 5,
+          "total_entities_cited": 9,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
@@ -255,7 +255,7 @@
         },
         {
           "id": "TC-007",
-          "total_entities_cited": 3,
+          "total_entities_cited": 18,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
@@ -263,7 +263,7 @@
         },
         {
           "id": "TC-008",
-          "total_entities_cited": 5,
+          "total_entities_cited": 11,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
@@ -271,7 +271,7 @@
         },
         {
           "id": "TC-009",
-          "total_entities_cited": 4,
+          "total_entities_cited": 21,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
@@ -279,7 +279,7 @@
         },
         {
           "id": "TC-010",
-          "total_entities_cited": 3,
+          "total_entities_cited": 22,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
@@ -287,7 +287,7 @@
         },
         {
           "id": "TC-011",
-          "total_entities_cited": 6,
+          "total_entities_cited": 17,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
@@ -295,7 +295,7 @@
         },
         {
           "id": "TC-012",
-          "total_entities_cited": 7,
+          "total_entities_cited": 30,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
@@ -303,7 +303,7 @@
         },
         {
           "id": "TC-013",
-          "total_entities_cited": 1,
+          "total_entities_cited": 9,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
@@ -311,38 +311,6 @@
         },
         {
           "id": "TC-014",
-          "total_entities_cited": 0,
-          "hallucinated_entities": 0,
-          "hallucinated_tools": [],
-          "hallucinated_dois": [],
-          "hallucinated_urls": []
-        },
-        {
-          "id": "TC-015",
-          "total_entities_cited": 5,
-          "hallucinated_entities": 0,
-          "hallucinated_tools": [],
-          "hallucinated_dois": [],
-          "hallucinated_urls": []
-        },
-        {
-          "id": "TC-016",
-          "total_entities_cited": 3,
-          "hallucinated_entities": 0,
-          "hallucinated_tools": [],
-          "hallucinated_dois": [],
-          "hallucinated_urls": []
-        },
-        {
-          "id": "TC-017",
-          "total_entities_cited": 3,
-          "hallucinated_entities": 0,
-          "hallucinated_tools": [],
-          "hallucinated_dois": [],
-          "hallucinated_urls": []
-        },
-        {
-          "id": "TC-018",
           "total_entities_cited": 1,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
@@ -350,16 +318,66 @@
           "hallucinated_urls": []
         },
         {
-          "id": "TC-019",
-          "total_entities_cited": 4,
+          "id": "TC-015",
+          "total_entities_cited": 26,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
           "hallucinated_urls": []
         },
         {
+          "id": "TC-016",
+          "total_entities_cited": 17,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-017",
+          "total_entities_cited": 20,
+          "hallucinated_entities": 13,
+          "hallucinated_tools": [
+            "visium",
+            "slide-seq",
+            "merfish",
+            "stereo-seq",
+            "spaceranger",
+            "spatialde",
+            "giotto",
+            "squidpy",
+            "visium",
+            "squidpy",
+            "giotto"
+          ],
+          "hallucinated_dois": [],
+          "hallucinated_urls": [
+            "https://squidpy.readthedocs.io/",
+            "https://giottosuite.readthedocs.io/"
+          ]
+        },
+        {
+          "id": "TC-018",
+          "total_entities_cited": 9,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-019",
+          "total_entities_cited": 15,
+          "hallucinated_entities": 2,
+          "hallucinated_tools": [
+            "tn5",
+            "tn5"
+          ],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
           "id": "TC-020",
-          "total_entities_cited": 4,
+          "total_entities_cited": 82,
           "hallucinated_entities": 0,
           "hallucinated_tools": [],
           "hallucinated_dois": [],
@@ -545,138 +563,126 @@
     },
     {
       "metric": "reference_coverage",
-      "score": 0.95,
-      "total_steps": 20,
-      "steps_with_references": 19,
+      "score": 0.9474,
+      "total_expected_sources": 19,
+      "sources_found": 18,
       "details": [
         {
           "id": "TC-001",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
             "GATK Best Practices"
           ],
           "sources_found": [
             "GATK Best Practices"
           ],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-002",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
-            "SAIGE",
-            "PLINK"
+            "PLINK",
+            "SAIGE"
           ],
           "sources_found": [
-            "SAIGE",
-            "PLINK"
+            "PLINK",
+            "SAIGE"
           ],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-003",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
             "GATK Best Practices"
           ],
           "sources_found": [],
           "sources_missed": [
             "GATK Best Practices"
-          ]
+          ],
+          "has_any_reference": true
         },
         {
           "id": "TC-004",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
             "Seurat"
           ],
           "sources_found": [
             "Seurat"
           ],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-005",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
             "ENCODE"
           ],
           "sources_found": [
             "ENCODE"
           ],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-006",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
             "TwoSampleMR"
           ],
           "sources_found": [
             "TwoSampleMR"
           ],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-007",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
             "Bismark"
           ],
           "sources_found": [
             "Bismark"
           ],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-008",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
             "QIIME2"
           ],
           "sources_found": [
             "QIIME2"
           ],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-009",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
-            "HUMAnN",
-            "MetaPhlAn"
+            "MetaPhlAn",
+            "HUMAnN"
           ],
           "sources_found": [
-            "HUMAnN",
-            "MetaPhlAn"
+            "MetaPhlAn",
+            "HUMAnN"
           ],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-010",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
             "GATK Best Practices"
           ],
           "sources_found": [
             "GATK Best Practices"
           ],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-011",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
             "LDpred2",
             "PRSice"
@@ -685,97 +691,89 @@
             "LDpred2",
             "PRSice"
           ],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-012",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
             "SKAT"
           ],
           "sources_found": [
             "SKAT"
           ],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-013",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [],
           "sources_found": [],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-014",
-          "steps_total": 1,
-          "steps_with_refs": 0,
           "expected_sources": [],
           "sources_found": [],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": false
         },
         {
           "id": "TC-015",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
-            "edgeR",
-            "DESeq2"
+            "DESeq2",
+            "edgeR"
           ],
           "sources_found": [
-            "edgeR",
-            "DESeq2"
+            "DESeq2",
+            "edgeR"
           ],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-016",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [],
           "sources_found": [],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-017",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [],
           "sources_found": [],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-018",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [],
           "sources_found": [],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-019",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
             "ENCODE"
           ],
           "sources_found": [
             "ENCODE"
           ],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         },
         {
           "id": "TC-020",
-          "steps_total": 1,
-          "steps_with_refs": 1,
           "expected_sources": [
             "GATK Best Practices"
           ],
           "sources_found": [
             "GATK Best Practices"
           ],
-          "sources_missed": []
+          "sources_missed": [],
+          "has_any_reference": true
         }
       ]
     },

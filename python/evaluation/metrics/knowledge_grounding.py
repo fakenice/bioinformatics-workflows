@@ -8,6 +8,7 @@ import json
 import re
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
 SKILL_ROOT = Path(__file__).resolve().parent.parent.parent.parent
@@ -16,10 +17,36 @@ PIPELINES_DIR = SKILL_ROOT / "src" / "data" / "pipelines"
 REFERENCES_DIR = SKILL_ROOT / "references"
 SKILL_MD = SKILL_ROOT / "SKILL.md"
 
+# 权威来源域白名单：公认的文献/工具/文档来源域。
+# URL 判定时，host 命中 KB 域名或本白名单即视为 grounded（引用真实权威来源不算幻觉）。
+# 注意：host 比较前会去掉 "www." 前缀。
+AUTHORITY_HOSTS = {
+    "nature.com", "ncbi.nlm.nih.gov", "nextflow.io", "readthedocs.io",
+    "qiime2.org", "10xgenomics.com", "arb-silva.de", "docker.com",
+    "mrcieu.ac.uk", "saige.org", "popgen.dk", "bowtie2.github.io",
+    "humann.readthedocs.io", "kraken2.readthedocs.io", "nf-core.org",
+    "mrcieub.github.io", "wwwprsice.org", "mr-tool.org", "mrbase.org",
+    "mrpresso.org", "support.10xgenomics.com",
+}
+
+
+def _host_of(url: str) -> str:
+    """提取 URL 的 host（小写）"""
+    try:
+        return urlparse(url).netloc.lower()
+    except Exception:
+        return ""
+
+
+def _norm_host(host: str) -> str:
+    """去掉 www. 前缀，便于域名级比较"""
+    return host[4:] if host.startswith("www.") else host
+
 # 从知识库预提取的已知实体（懒加载）
 _KB_TOOLS: set[str] | None = None
 _KB_DOIS: set[str] | None = None
 _KB_URLS: set[str] | None = None
+_KB_HOSTS: set[str] | None = None
 
 
 def _build_kb() -> tuple[set[str], set[str], set[str]]:
@@ -89,13 +116,6 @@ def _build_kb() -> tuple[set[str], set[str], set[str]]:
         # 从 pipeline 表格提取
         urls.update(set(re.findall(r'https?://[^\s"\'<>\[\]()]+', text)))
 
-    # 4. 补充已知真实资源 URL（跨领域空间转录组等）
-    urls.update({
-        "https://squidpy.readthedocs.io/",
-        "https://giottosuite.readthedocs.io/",
-        "https://www.10xgenomics.com/spatial-transcriptomics",
-    })
-
     return tools, dois, urls
 
 
@@ -106,10 +126,66 @@ def _get_kb():
     return _KB_TOOLS, _KB_DOIS, _KB_URLS
 
 
-def compute(outputs: dict[str, str]) -> dict[str, Any]:
+def _get_kb_hosts() -> set[str]:
+    """KB 中所有 URL 的 host 集合（规范化：小写、去 www.），用于域名级匹配"""
+    global _KB_HOSTS
+    if _KB_HOSTS is None:
+        _, _, kb_urls = _get_kb()
+        hosts: set[str] = set()
+        for u in kb_urls:
+            try:
+                hosts.add(_norm_host(urlparse(u).netloc))
+            except Exception:
+                pass
+        _KB_HOSTS = hosts
+    return _KB_HOSTS
+
+
+def _url_grounded(u: str, kb_urls: set[str], extra_urls: set[str] | None = None) -> bool:
+    """URL 是否 grounded：精确匹配 KB URL / 检索来源白名单，或 host 在 KB 域名 / 权威来源域中"""
+    if u in kb_urls:
+        return True
+    if extra_urls and u in extra_urls:
+        return True
+    try:
+        h = _norm_host(urlparse(u).netloc)
+    except Exception:
+        return False
+    return h in _get_kb_hosts() or h in AUTHORITY_HOSTS
+
+
+_KB_CORPUS: str | None = None
+
+
+def _get_corpus() -> str:
+    """KB 全文语料（小写），用于工具名 grounded 判定（覆盖 name/docker 之外的 description/notes/references 字段）"""
+    global _KB_CORPUS
+    if _KB_CORPUS is None:
+        parts: list[str] = []
+        if PIPELINES_DIR.exists():
+            for f in PIPELINES_DIR.rglob("*.json"):
+                if f.name in ("index.ts", "versions.json"):
+                    continue
+                try:
+                    parts.append(f.read_text(encoding="utf-8"))
+                except (UnicodeDecodeError, OSError):
+                    pass
+        if REFERENCES_DIR.exists():
+            for f in REFERENCES_DIR.rglob("*.md"):
+                parts.append(f.read_text(encoding="utf-8", errors="ignore"))
+        if SKILL_MD.exists():
+            parts.append(SKILL_MD.read_text(encoding="utf-8", errors="ignore"))
+        _KB_CORPUS = " ".join(parts).lower()
+    return _KB_CORPUS
+
+
+def compute(outputs: dict[str, str], extra_urls: set[str] | None = None,
+            extra_dois: set[str] | None = None) -> dict[str, Any]:
     """
     Args:
         outputs: {case_id: Skill 输出的文本}
+        extra_urls: 额外 grounded URL 白名单（如联网检索注入的真实来源）
+        extra_dois: 额外 grounded DOI 白名单（如联网检索注入的真实来源）
     Returns:
         幻觉检测报告
     """
@@ -123,43 +199,79 @@ def compute(outputs: dict[str, str]) -> dict[str, Any]:
     hallucinated_urls = 0
     per_case: list[dict] = []
 
-    # 仅匹配反引号包裹的工具名（可靠度最高）
-    tool_pattern = re.compile(r'`([A-Za-z][A-Za-z0-9 ._-]{2,40})`')
+    # 工具名提取改为 KB 词典词边界匹配（替代反引号正则，反引号会漏掉无反引号工具名）
+    def _norm(t: str) -> str:
+        t = t.strip()
+        t = re.sub(r'\s*\((R|R/Bioconductor|R包|bigsnpr|v[\d.]+)[^)]*\)', '', t)
+        return t.strip()
 
-    common_terms = {
-        "PCR", "GWAS", "SNP", "INDEL", "DNA", "RNA", "mRNA", "lncRNA", "miRNA",
-        "WGS", "WES", "WGBS", "PRS", "DMR", "MAG", "ASV", "MR", "LD", "QC",
-        "MAF", "HWE", "UMAP", "PCA", "PCoA", "NMDS", "GVCF", "BAM", "VCF", "FASTQ",
-        "BCL", "TSS", "NFR", "UTR", "DOI", "OpenAI", "NovaSeq", "GRCh38", "hg19",
-        "findMotifsGenome.pl", "plotFingerprint", "plotProfile",
-        "bismark_methylation_extractor", "deduplicate_bismark",
-        "mkfastq", "count", "feature-classifier",
-        # QIIME2 子命令
-        "tools import", "diversity core-metrics-phylogenetic",
-        "dada2 denoise-paired", "phylogeny align-to-tree-mafft-fasttree",
-        "qiime demux summarize",
-        # SAIGE / bash / nextflow 非工具型片段
-        "step1 fitNULLGLMM", "step2 stepwise", "set -euo pipefail",
-        "nextflow run main.nf -resume", "nextflow run",
+    def _split(t: str) -> list[str]:
+        return [p.strip() for p in re.split(r'\s*/\s*|\s*\+\s*', t) if p.strip()]
+
+    # KB 规范化工具词典（小写）
+    kb_tools_norm: set[str] = set()
+    for _t in kb_tools:
+        for _p in _split(_norm(_t)):
+            _p = _p.lower()
+            if _p and ':' not in _p and len(_p) >= 3:
+                kb_tools_norm.add(_p)
+                if _p.startswith('gatk '):
+                    kb_tools_norm.add(_p[5:].strip())
+                if _p.startswith('ensembl '):
+                    kb_tools_norm.add(_p[8:].strip())
+
+    # 额外检测词典：KB 外但输出中可能出现的工具名（用于提取以便统计未接地）
+    extra_tools = {
+        "apeglm", "ashr", "ihw", "tmm", "squidpy", "giotto", "spaceranger",
+        "spatialde", "visium", "tn5", "merfish", "slide-seq", "stereo-seq",
+        "slingshot", "nichenet", "pyscenic", "mr-base", "bwa-meth", "bs-seeker2",
+        "bolt-lmm", "gsea", "qqman", "checkm", "snakemake", "conda-lock",
+        "bigwig", "cadd", "loftee", "revel", "acat", "kegg", "reactome",
+        "mafft", "fasttree", "silva", "trimmomatic", "collecthsmetrics",
+        "dss", "methylkit", "annotatr", "gviz", "edger", "desnq2", "diffbind",
+        "chipseeker", "homer", "meme-chip", "deeptools", "macs2", "macs3",
+        "fastp", "picard", "bigsnpr", "qctool", "prsice-2", "prs-cs",
+        "ldpred2", "ldsc", "gcta", "regenie", "saige", "skat", "skat-o",
+        "dragmap", "multiqc", "fastqc", "bowtie2", "samtools",
     }
 
+    detect_list = sorted(kb_tools_norm | extra_tools, key=len, reverse=True)
+
+    def _match(text: str) -> list[str]:
+        tl = text.lower()
+        found: list[tuple[str, int, int]] = []
+        for tok in detect_list:
+            if ' ' in tok:
+                pat = (r'(?<![a-z0-9])'
+                       + r'\s+'.join(re.escape(w) for w in tok.split())
+                       + r'(?![a-z0-9])')
+            else:
+                pat = r'(?<![a-z0-9._-])' + re.escape(tok) + r'(?![a-z0-9._-])'
+            for m in re.finditer(pat, tl):
+                if any(not (m.end() <= s or m.start() >= e) for (_, s, e) in found):
+                    continue
+                found.append((tok, m.start(), m.end()))
+        found.sort(key=lambda x: x[1])
+        return [t for t, _, _ in found]
+
+    kb_corpus = _get_corpus()
+
+    def _in_corpus(tok: str) -> bool:
+        if ' ' in tok:
+            pat = (r'(?<![a-z0-9])' + r'\s+'.join(re.escape(w) for w in tok.split())
+                   + r'(?![a-z0-9])')
+        else:
+            pat = r'(?<![a-z0-9._-])' + re.escape(tok) + r'(?![a-z0-9._-])'
+        return re.search(pat, kb_corpus) is not None
+
     for cid, text in outputs.items():
-        tools_found = tool_pattern.findall(text)
-        # 过滤常见术语、命令型片段（含 flag/空格过多）
-        tools_found = [t for t in set(tools_found) if t not in common_terms
-                       and not t.startswith("http") and not t.endswith("http")
-                       and not re.match(r'^\d', t)
-                       and not re.search(r'\s{3,}', t)
-                       and not re.search(r'\s--\w', t)  # 命令含 --flag
-                       and not re.search(r'\.pl', t)
-                       and not re.search(r'^\w+ run\b', t)  # nextflow run ...
-                       and not re.search(r'\bpipefail\b', t)]  # set -euo pipefail
+        tools_found = _match(text)
         dois_found: list[str] = re.findall(r'10\.\d{4,}/[^\s"\'<>\[\]()；;]+', text)
         urls_found: list[str] = re.findall(r'https?://[^\s"\'<>\[\]()；;]+', text)
 
-        h_tools = [t for t in tools_found if t not in kb_tools]
-        h_dois = [d for d in set(dois_found) if d not in kb_dois]
-        h_urls = [u for u in set(urls_found) if u not in kb_urls]
+        h_tools = [t for t in tools_found if not _in_corpus(t)]
+        h_dois = [d for d in set(dois_found) if d not in kb_dois and not (extra_dois and d in extra_dois)]
+        h_urls = [u for u in set(urls_found) if not _url_grounded(u, kb_urls, extra_urls)]
 
         case_hallucinations = len(h_tools) + len(h_dois) + len(h_urls)
         case_total = len(tools_found) + len(set(dois_found)) + len(set(urls_found))

@@ -10,6 +10,15 @@ import json
 import sys
 from pathlib import Path
 
+# Windows consoles default to GBK and crash on progress-bar glyphs (█░─).
+# Force UTF-8 output so the runner works cross-platform.
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 ROOT = Path(__file__).resolve().parent
 METRICS_DIR = ROOT / "metrics"
 RESULTS_DIR = ROOT / "results"

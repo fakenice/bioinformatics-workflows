@@ -121,32 +121,30 @@ Implementation: `python/vector_store/` — NumPy + sklearn, zero extra dependenc
 
 ### Evaluation
 
-5 deterministic metrics for automated Skill output evaluation, zero API calls, one command:
+6 deterministic metrics for automated Skill output evaluation, zero API calls, one command. Evaluated with **qwen3:14b** (local Ollama, `think=False`, `temperature=0.3`) on 20 test cases (14 pipelines + 6 cross-cutting/edge cases), with an ablation comparison of **Prompt + Skill** (SKILL.md as system prompt) vs **Prompt Only** (neutral system prompt) on the no-internet baseline — isolating the pure textual contribution of SKILL.md, so the difference between the two groups comes solely from the Skill instructions (cleaner controlled comparison).
 
-| Metric | Score | Method |
-|--------|-------|--------|
-| Pipeline Selection Accuracy | 100% | Expected pipeline_id matching |
-| Knowledge Grounding Rate | 100% | Tool/DOI/URL diff against knowledge base |
-| Parameter Correctness | 100% | Parameter threshold domain check |
-| Reference Coverage | 95% | DOI/URL regex extraction |
-| Schema Validity | 100% | JSON structure validation |
-| **Overall** | **99%** | |
+**Ablation results** (Prompt + Skill vs Prompt Only, no-internet baseline):
 
-**Baseline comparison** (Prompt Only vs Prompt + Skill):
-
-| Metric | Prompt Only | + Skill | Δ |
-|--------|------------|---------|---|
-| Pipeline Selection Accuracy | 95% | 100% | +5% |
-| Parameter Correctness | 33% | 100% | +200% |
-| Reference Coverage | 0% | 95% | +∞ |
+| Metric | + Skill | Prompt Only | Δ |
+|--------|---------|-------------|---|
+| Pipeline Selection Accuracy | 90.0% | 85.0% | +5.0% |
+| Knowledge Grounding Rate | 96.8% | 94.0% | +2.9% |
+| Parameter Correctness | 100% | 100% | 0 |
+| Reference Coverage | 89.5% | 68.4% | +21.1% |
+| Schema Validity | 100% | 100% | 0 |
+| **Overall (5 metrics)** | **95.3%** | **89.5%** | **+5.8%** |
+| Workflow Completeness | 75.6% | 72.0% | +3.7% |
 
 ```bash
 cd python/evaluation
-python runner.py                     # 5-metric evaluation
-python runner.py results/outputs.json -b results/baseline_outputs.json  # baseline comparison
+python runner.py                     # 5-metric evaluation on results/outputs.json
+python runner.py results/outputs_qwen3_14b.json -o results/report_qwen3_14b_baseline.json
+python runner.py results/outputs_qwen3_14b_noskill.json -o results/report_qwen3_14b_noskill.json
 ```
 
-Implementation: `python/evaluation/` — 20 test cases × 5 deterministic metrics, no external API, no manual annotation.
+Workflow Completeness (6th metric) is evaluated separately via `metrics/workflow_completeness.py` — 18 pipeline cases × standard step coverage (82 standard steps in total).
+
+Implementation: `python/evaluation/` — 20 test cases × 6 deterministic metrics, no external API, no manual annotation.
 
 ### Agentic Workflow
 
@@ -228,25 +226,29 @@ npm run preview
 │   ├── study_designs.md
 │   ├── patterns.md
 │   ├── sharp_edges.md
-│   └── validations.md
+│   ├── validations.md
+│   ├── schema.md
+│   ├── search_strategies.md
+│   ├── qc_standards.md
+│   ├── category_tree.md
+│   └── architecture.md
 ├── python/                       # Python modules (RAG + Agent)
 │   ├── vector_store/             # Semantic search (chunker + embedder + vector store)
 │   ├── agent/                    # Agent workflow (tools + research agent)
 │   └── evaluation/               # Evaluation framework (benchmarks + metrics)
 ├── scripts/
 │   └── build-pipelines.ts        # Build-time pipeline JSON generation
-├── app/                          # FlowSeq frontend
-│   ├── src/
-│   │   ├── i18n/                 # Internationalization (en / zh)
-│   │   ├── components/           # PipelineMarkdown, SourceSwitcher, SearchOverlay, etc.
-│   │   ├── pages/                # HomePage, PipelinePage, DocsPage, ComparePage
-│   │   ├── data/pipelines/       # 14 pipeline JSON + index.ts + versions.json
-│   │   ├── store/                # Zustand state management
-│   │   └── types/                # TypeScript type definitions
-│   ├── .github/workflows/
-│   │   └── deploy.yml            # Auto deploy to GitHub Pages
-│   └── public/
-└── start.bat                     # One-click dev server launcher
+├── src/                          # FlowSeq frontend
+│   ├── i18n/                     # Internationalization (en / zh)
+│   ├── components/               # PipelineMarkdown, SourceSwitcher, SearchOverlay, etc.
+│   ├── pages/                    # HomePage, PipelinePage, DocsPage, ComparePage
+│   ├── data/pipelines/           # 14 pipeline JSON + index.ts + versions.json
+│   ├── store/                    # Zustand state management
+│   └── types/                    # TypeScript type definitions
+├── .github/workflows/
+│   └── deploy.yml                # Auto deploy to GitHub Pages
+├── public/
+└── start_flowseq.bat             # One-click dev server launcher (Windows)
 ```
 
 ---

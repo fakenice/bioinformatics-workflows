@@ -94,9 +94,15 @@
               "version": "1.44",
               "params": "design = ~ condition",
               "docker": "bioconductor/bioconductor_docker"
+            },
+            {
+              "name": "edgeR (R/Bioconductor)",
+              "version": "4.2",
+              "params": "normalization = TMM",
+              "docker": "bioconductor/bioconductor_docker"
             }
           ],
-          "notes": "需要生物学重复（每个条件≥3）。log2FC > 1 且 padj < 0.05 作为显著阈值。可视化：MA plot、火山图、样本间距离热图。",
+          "notes": "需要生物学重复（每个条件≥3）。log2FC > 1 且 padj < 0.05 作为显著阈值。DESeq2 的 log2FC 收缩可选 apeglm/ashr 方法，多重检验校正可选 IHW 加权；edgeR 使用 TMM 归一化。可视化：MA plot、火山图、样本间距离热图。",
           "position": {
             "x": 0,
             "y": 360

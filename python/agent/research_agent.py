@@ -9,15 +9,28 @@ as a specialized tool for bioinformatics pipeline tasks.
 from dataclasses import dataclass, field
 from typing import Optional
 
-from tools import (
-    PipelineDefinition,
-    SharpEdge,
-    ValidationResult,
-    search_pipeline,
-    check_traps,
-    validate_script,
-    export_workflow,
-)
+# Support both direct script execution (python agent/research_agent.py)
+# and package import (from python.agent.research_agent import ResearchAgent).
+try:
+    from .tools import (
+        PipelineDefinition,
+        SharpEdge,
+        ValidationResult,
+        search_pipeline,
+        check_traps,
+        validate_script,
+        export_workflow,
+    )
+except ImportError:
+    from tools import (
+        PipelineDefinition,
+        SharpEdge,
+        ValidationResult,
+        search_pipeline,
+        check_traps,
+        validate_script,
+        export_workflow,
+    )
 
 
 @dataclass

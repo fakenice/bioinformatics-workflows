@@ -99,7 +99,7 @@ SCENARIO_KEYWORD_MAP: dict[str, list[str]] = {
     "wgs-somatic": ["somatic", "体细胞", "tumor", "肿瘤", "mutect", "配对", "tumor-normal", "cancer"],
     "wes": ["wes", "外显子", "exome", "捕获", "capture", "acmg", "致病性分级"],
     "rna-seq": ["rna-seq", "转录组", "transcriptome", "差异表达", "differential expression", "deseq2", "edger", "go", "kegg"],
-    "scrna-seq": ["单细胞", "single cell", "scRNA", "scrna-seq", "seurat", "cell ranger", "聚类", "umap", "细胞注释", "cell type"],
+    "scrna-seq": ["单细胞转录组", "单细胞测序", "单细胞分析", "单细胞", "single cell", "single-cell", "scRNA", "scrna-seq", "seurat", "cell ranger", "聚类", "umap", "细胞注释", "cell type"],
     "chip-seq": ["chip-seq", "chip", "转录因子", "tf", "histone", "组蛋白", "macs2", "motif", "homer", "peak"],
     "wgbs": ["wgbs", "甲基化", "methylation", "bismark", "bisulfite", "亚硫酸盐", "dna methylation", "dss", "methylkit"],
     "metagenomics": ["宏基因组", "metagenomic", "肠道菌群", "gut microbiome", "metaphlan", "humann", "kneaddata"],
@@ -107,22 +107,28 @@ SCENARIO_KEYWORD_MAP: dict[str, list[str]] = {
 }
 
 # Pipeline-to-traps mapping (pipeline_id → sharp edge IDs from sharp_edges.md)
+# Only reference edge IDs that actually exist in references/sharp_edges.md.
+# Universal traps (non-resumable-pipeline, unstable-sort-order) are appended
+# automatically by check_traps() and need not be listed here.
 PIPELINE_TRAP_MAP: dict[str, list[str]] = {
-    "family-trio-wgs": ["non-resumable-pipeline", "unstable-sort-order", "symlink-container-failure", "vqsr-trap"],
-    "gwas": ["non-resumable-pipeline", "unstable-sort-order", "population-stratification"],
-    "wgs-germline": ["non-resumable-pipeline", "unstable-sort-order", "symlink-container-failure", "vqsr-trap"],
-    "wgs-somatic": ["non-resumable-pipeline", "unstable-sort-order", "mutect2-pon"],
-    "wes": ["non-resumable-pipeline", "unstable-sort-order", "symlink-container-failure", "wes-interval-trap"],
-    "rna-seq": ["non-resumable-pipeline", "unstable-sort-order", "rna-seq strand-specificity"],
-    "scrna-seq": ["non-resumable-pipeline", "scrna-normalization"],
-    "chip-seq": ["non-resumable-pipeline", "unstable-sort-order", "chip-seq-replicate", "symlink-container-failure"],
-    "wgbs": ["non-resumable-pipeline", "unstable-sort-order", "wgbs-alignment-strategy"],
-    "metagenomics": ["non-resumable-pipeline", "unstable-sort-order", "metagenomics-host-removal"],
-    "16s": ["non-resumable-pipeline", "unstable-sort-order", "16s-depth-truncation"],
-    "mendelian-randomization": ["non-resumable-pipeline", "mr-weak-instruments"],
-    "prs": ["non-resumable-pipeline", "unstable-sort-order", "prs-ld-confounding"],
-    "rare-variant": ["non-resumable-pipeline", "unstable-sort-order", "skat-weight-selection"],
+    "family-trio-wgs": ["symlink-container-failure", "vqsr-chain-vs-parallel", "gatk-bqsr-wrong-sites", "gatk-gvcf-mode-misuse", "bqsr-incomplete-known-sites", "reference-genome-mismatch"],
+    "gwas": ["reference-genome-mismatch", "sample-contamination"],
+    "wgs-germline": ["symlink-container-failure", "vqsr-chain-vs-parallel", "gatk-bqsr-wrong-sites", "gatk-gvcf-mode-misuse", "bqsr-incomplete-known-sites", "reference-genome-mismatch", "gcnv-inconsistent-counts", "gcnv-scaffold-contamination"],
+    "wgs-somatic": ["reference-genome-mismatch", "sample-contamination", "manta-missing-pass-filter"],
+    "wes": ["symlink-container-failure", "gatk-bqsr-wrong-sites", "reference-genome-mismatch"],
+    "rna-seq": [],
+    "scrna-seq": [],
+    "chip-seq": ["symlink-container-failure"],
+    "wgbs": ["reference-genome-mismatch"],
+    "metagenomics": [],
+    "16s": [],
+    "mendelian-randomization": [],
+    "prs": ["reference-genome-mismatch"],
+    "rare-variant": [],
 }
+
+# Traps that apply to every pipeline (edge IDs present in sharp_edges.md)
+UNIVERSAL_EDGE_IDS = ["non-resumable-pipeline", "unstable-sort-order"]
 
 # Validation rules (from validations.md)
 VALIDATION_RULES: list[dict] = [
@@ -156,10 +162,13 @@ def search_pipeline(scenario: str, knowledge_base_dir: Optional[str] = None) -> 
     """
     scenario_lower = scenario.lower()
 
-    # Score each pipeline by keyword match count
-    scores: dict[str, int] = {}
+    # Score each pipeline by keyword matches, weighted by keyword length so
+    # specific terms ("single cell", "单细胞") outweigh generic ones
+    # ("转录组", "rna-seq"). Ties are broken by specificity instead of
+    # dict insertion order.
+    scores: dict[str, float] = {}
     for pipeline_id, keywords in SCENARIO_KEYWORD_MAP.items():
-        score = sum(1 for kw in keywords if kw.lower() in scenario_lower)
+        score = sum(len(kw) for kw in keywords if kw.lower() in scenario_lower)
         if score > 0:
             scores[pipeline_id] = score
 
@@ -242,6 +251,79 @@ def search_pipeline(scenario: str, knowledge_base_dir: Optional[str] = None) -> 
 # ──────────────────────────────────────────────────────────────
 
 
+# Cache for parsed sharp edges: edge_id → SharpEdge
+_SHARP_EDGE_CACHE: Optional[dict[str, "SharpEdge"]] = None
+
+
+def _sharp_edges_path() -> Path:
+    return Path(__file__).resolve().parent.parent.parent / "references" / "sharp_edges.md"
+
+
+def _load_sharp_edges() -> dict[str, "SharpEdge"]:
+    """Parse references/sharp_edges.md into SharpEdge objects.
+
+    Expected markdown format per entry:
+        ## <Title>
+        ### **Id**
+        <edge-id>
+        ### **Severity**
+        <critical|high|medium|low>
+        ### **Summary**
+        <one line>
+        ### **Symptoms**
+        - bullet list
+        ... (Why / Gotcha sections ignored)
+        ### **Solution**
+        <text>
+    """
+    global _SHARP_EDGE_CACHE
+    if _SHARP_EDGE_CACHE is not None:
+        return _SHARP_EDGE_CACHE
+
+    edges: dict[str, "SharpEdge"] = {}
+    md_path = _sharp_edges_path()
+    if not md_path.exists():
+        _SHARP_EDGE_CACHE = edges
+        return edges
+
+    import re
+    text = md_path.read_text(encoding="utf-8")
+    # Split into entry blocks at level-2 headings
+    blocks = re.split(r"^## ", text, flags=re.MULTILINE)[1:]
+
+    def _section(block: str, name: str) -> str:
+        m = re.search(
+            r"^### \*{0,2}" + re.escape(name) + r"\*{0,2}\s*\n(.*?)(?=^### |\Z)",
+            block, flags=re.MULTILINE | re.DOTALL,
+        )
+        return m.group(1).strip() if m else ""
+
+    for block in blocks:
+        edge_id = _section(block, "Id")
+        if not edge_id:
+            continue
+        edge_id = edge_id.splitlines()[0].strip()
+        severity = _section(block, "Severity").splitlines()[0].strip().lower() if _section(block, "Severity") else "medium"
+        summary = _section(block, "Summary").splitlines()[0].strip()
+        symptoms = [
+            line.lstrip("- ").strip()
+            for line in _section(block, "Symptoms").splitlines()
+            if line.strip().startswith("-")
+        ]
+        solution = _section(block, "Solution")
+        edges[edge_id] = SharpEdge(
+            edge_id=edge_id,
+            severity=severity,
+            summary=summary,
+            symptoms=symptoms,
+            solution=solution,
+            pipeline_ids=["all"],
+        )
+
+    _SHARP_EDGE_CACHE = edges
+    return edges
+
+
 def check_traps(pipeline_id: str) -> list[SharpEdge]:
     """
     Retrieve known pitfalls for a given pipeline.
@@ -250,38 +332,16 @@ def check_traps(pipeline_id: str) -> list[SharpEdge]:
         pipeline_id: Pipeline identifier (e.g., "rna-seq", "gwas").
 
     Returns:
-        List of SharpEdge objects relevant to this pipeline.
+        Universal traps plus the pipeline-specific SharpEdges defined in
+        references/sharp_edges.md.
     """
-    edge_ids = PIPELINE_TRAP_MAP.get(pipeline_id, ["non-resumable-pipeline"])
+    edges = _load_sharp_edges()
+    edge_ids = list(UNIVERSAL_EDGE_IDS)
+    for eid in PIPELINE_TRAP_MAP.get(pipeline_id, []):
+        if eid not in edge_ids:
+            edge_ids.append(eid)
 
-    # Minimal stub — in production, this would load from sharp_edges.md
-    trap_database = {
-        "non-resumable-pipeline": SharpEdge(
-            edge_id="non-resumable-pipeline",
-            severity="critical",
-            summary="Pipeline not resumable after failure — restart wastes hours/days of compute",
-            symptoms=[
-                "Cluster job times out, entire pipeline restarts",
-                "One sample fails, all samples re-run",
-                "Intermediate files deleted before completion",
-            ],
-            solution="Use 'nextflow run main.nf -resume'. Do not mark intermediates as temp() until pipeline completes.",
-            pipeline_ids=["all"],
-        ),
-        "unstable-sort-order": SharpEdge(
-            edge_id="unstable-sort-order",
-            severity="high",
-            summary="Glob patterns produce different order on different runs",
-            symptoms=[
-                "Same inputs, different checksum on outputs",
-                "Merged VCFs have samples in random order",
-            ],
-            solution="Sort channels explicitly: Channel.fromFilePairs(...).toSortedList { it[0] }.flatMap()",
-            pipeline_ids=["all"],
-        ),
-    }
-
-    return [trap_database[eid] for eid in edge_ids if eid in trap_database]
+    return [edges[eid] for eid in edge_ids if eid in edges]
 
 
 # ──────────────────────────────────────────────────────────────

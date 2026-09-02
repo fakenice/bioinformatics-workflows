@@ -121,32 +121,30 @@
 
 ### 质量评估
 
-5 个确定性指标对 Skill 输出做自动化评估，零 API 调用，一键运行：
+6 个确定性指标对 Skill 输出做自动化评估，零 API 调用，一键运行。评测模型为 **qwen3:14b**（本地 Ollama，`think=False`，`temperature=0.3`），共 20 个测试用例（14 条管线 + 6 个跨域/边界用例），在无联网基线上做 **Prompt + Skill**（SKILL.md 作 system prompt）vs **纯 Prompt**（中性 system prompt）消融对比——隔离 SKILL.md 纯文本贡献，无联网时两组差异纯粹来自 skill 指令本身，控制变量更干净。
 
-| 指标 | 得分 | 方法 |
-|--------|-------|--------|
-| 管线选择准确率 | 100% | 预期 pipeline_id 匹配 |
-| 知识落地率 | 100% | 工具/DOI/URL 知识库差集扫描 |
-| 参数正确率 | 100% | 参数阈值域校验 |
-| 参考文献覆盖率 | 95% | DOI/URL 正则提取 |
-| Schema 有效性 | 100% | JSON 结构校验 |
-| **综合** | **99%** | |
+**消融结果**（Prompt + Skill vs 纯 Prompt，无联网基线）：
 
-**基线对比**（纯 Prompt vs Prompt + Skill）：
-
-| 指标 | 纯 Prompt | + Skill | 提升 |
-|--------|------------|---------|---|
-| 管线选择准确率 | 95% | 100% | +5% |
-| 参数正确率 | 33% | 100% | +200% |
-| 参考文献覆盖率 | 0% | 95% | +∞ |
+| 指标 | + Skill | 纯 Prompt | 提升 |
+|--------|---------|-------------|---|
+| 管线选择准确率 | 90.0% | 85.0% | +5.0% |
+| 知识落地率 | 96.8% | 94.0% | +2.9% |
+| 参数正确率 | 100% | 100% | 0 |
+| 参考文献覆盖率 | 89.5% | 68.4% | +21.1% |
+| Schema 有效性 | 100% | 100% | 0 |
+| **综合（5 项）** | **95.3%** | **89.5%** | **+5.8%** |
+| 流程完整性 | 75.6% | 72.0% | +3.7% |
 
 ```bash
 cd python/evaluation
-python runner.py                     # 5 项指标评估
-python runner.py results/outputs.json -b results/baseline_outputs.json  # 基线对比
+python runner.py                     # 5 项指标评估（results/outputs.json）
+python runner.py results/outputs_qwen3_14b.json -o results/report_qwen3_14b_baseline.json
+python runner.py results/outputs_qwen3_14b_noskill.json -o results/report_qwen3_14b_noskill.json
 ```
 
-实现：`python/evaluation/` — 20 个测试用例 × 5 项确定性指标，无外部 API，无需人工标注。
+流程完整性（第 6 项指标）通过 `metrics/workflow_completeness.py` 单独评估——18 个管线用例 × 标准步骤覆盖率（共 82 个标准步骤）。
+
+实现：`python/evaluation/` — 20 个测试用例 × 6 项确定性指标，无外部 API，无需人工标注。
 
 ### Agent 工作流
 
@@ -228,25 +226,29 @@ npm run preview
 │   ├── study_designs.md
 │   ├── patterns.md
 │   ├── sharp_edges.md
-│   └── validations.md
+│   ├── validations.md
+│   ├── schema.md
+│   ├── search_strategies.md
+│   ├── qc_standards.md
+│   ├── category_tree.md
+│   └── architecture.md
 ├── python/                       # Python 模块 (RAG + Agent)
 │   ├── vector_store/             # 语义搜索（切片器 + 嵌入器 + 向量存储）
 │   ├── agent/                    # Agent 工作流（工具 + 研究 agent）
 │   └── evaluation/               # 评估框架（基准 + 指标）
 ├── scripts/
 │   └── build-pipelines.ts        # 构建时管线 JSON 生成
-├── app/                          # FlowSeq 前端
-│   ├── src/
-│   │   ├── i18n/                 # 国际化 (en / zh)
-│   │   ├── components/           # PipelineMarkdown, SourceSwitcher, SearchOverlay 等
-│   │   ├── pages/                # HomePage, PipelinePage, DocsPage, ComparePage
-│   │   ├── data/pipelines/       # 14 个管线 JSON + index.ts + versions.json
-│   │   ├── store/                # Zustand 状态管理
-│   │   └── types/                # TypeScript 类型定义
-│   ├── .github/workflows/
-│   │   └── deploy.yml            # 自动部署到 GitHub Pages
-│   └── public/
-└── start.bat                     # 一键开发服务器启动器
+├── src/                          # FlowSeq 前端
+│   ├── i18n/                     # 国际化 (en / zh)
+│   ├── components/               # PipelineMarkdown, SourceSwitcher, SearchOverlay 等
+│   ├── pages/                    # HomePage, PipelinePage, DocsPage, ComparePage
+│   ├── data/pipelines/           # 14 个管线 JSON + index.ts + versions.json
+│   ├── store/                    # Zustand 状态管理
+│   └── types/                    # TypeScript 类型定义
+├── .github/workflows/
+│   └── deploy.yml                # 自动部署到 GitHub Pages
+├── public/
+└── start_flowseq.bat             # 一键开发服务器启动器 (Windows)
 ```
 
 ---
