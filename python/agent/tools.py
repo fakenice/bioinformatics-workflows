@@ -243,6 +243,79 @@ def predict_pipeline(scenario: str) -> str:
     return best if scores.get(best, 0) > 0 else ""
 
 
+# ──────────────────────────────────────────────────────────────
+# Step 2b (README): generic web-search fallback for uncovered domains
+# ──────────────────────────────────────────────────────────────
+
+@dataclass
+class WebSearchRound:
+    """One round of the generic 3-round web search (README Step 2b)."""
+    round_no: int
+    goal: str      # e.g. 'find authoritative source'
+    query: str     # ready-to-use search query
+
+
+@dataclass
+class WebFallbackPlan:
+    """3-round web-search plan produced when the local KB misses a query."""
+    reason: str
+    rounds: list[WebSearchRound]
+
+    def __str__(self) -> str:
+        lines = [f"[Step 2b] {self.reason}"]
+        for r in self.rounds:
+            lines.append(f"  Round {r.round_no} ({r.goal}): {r.query}")
+        return "\n".join(lines)
+
+
+def web_search_fallback(
+    query: str,
+    omics_type: str = "",
+    study_design: str = "",
+) -> WebFallbackPlan:
+    """Build README Step 2b generic 3-round web-search plan.
+
+    Round 1: locate an authoritative source (official docs / best practices).
+    Round 2: drill into the best source found (tools, versions, params).
+    Round 3: supplement QC metrics / thresholds.
+
+    NOTE: the plan is *executed by the calling LLM agent* — per SKILL.md, the
+    Skill itself runs web_search (Step 2b), while this Python layer only
+    materializes the structured plan + grounded-context contract, and makes no
+    network call. Fires only when both keyword and semantic search miss.
+    """
+    s = query.strip()
+    anchor = " ".join(x for x in (study_design, omics_type) if x).strip()
+    if not anchor:
+        anchor = s.split()[0] if s else "the workflow"
+
+    rounds = [
+        WebSearchRound(
+            round_no=1,
+            goal="find authoritative source",
+            query=f"{s} {anchor} pipeline workflow official docs best practices",
+        ),
+        WebSearchRound(
+            round_no=2,
+            goal="drill into best source",
+            query=f"{anchor} pipeline tools versions parameters best matching source",
+        ),
+        WebSearchRound(
+            round_no=3,
+            goal="supplement QC metrics",
+            query=f"{anchor} pipeline QC thresholds validation rules",
+        ),
+    ]
+    return WebFallbackPlan(
+        reason=(
+            f"query '{s}' hit no local pipeline "
+            f"(keyword={bool(predict_pipeline(s))}, semantic=missed); "
+            f"falling back to Step 2b generic web search"
+        ),
+        rounds=rounds,
+    )
+
+
 def search_pipeline(scenario: str, knowledge_base_dir: Optional[str] = None) -> Optional[PipelineDefinition]:
     """
     Match a user scenario to the best pipeline in the knowledge base.

@@ -21,6 +21,7 @@ try:
         validate_script,
         export_workflow,
         predict_pipeline,
+        web_search_fallback,
     )
 except ImportError:
     from tools import (
@@ -32,6 +33,7 @@ except ImportError:
         validate_script,
         export_workflow,
         predict_pipeline,
+        web_search_fallback,
     )
 
 
@@ -55,6 +57,9 @@ class AgentPlan:
     recommended_pipeline_id: str = field(default="")
     semantic_pipeline_id: str = field(default="")
     semantic_hits: list[str] = field(default_factory=list)
+    # True when BOTH keyword and semantic search miss: triggers Step 2b
+    # (README) generic web-search fallback in run().
+    uncovered_domain: bool = field(default=False)
 
 
 @dataclass
@@ -66,6 +71,8 @@ class AgentResult:
     nextflow_script: str = ""
     plan: Optional[AgentPlan] = None
     errors: list[str] = field(default_factory=list)
+    # Step 2b fallback: populated when the local KB misses the query.
+    web_fallback: Optional[object] = None
 
     @property
     def success(self) -> bool:
@@ -73,6 +80,14 @@ class AgentResult:
 
 
 _SEMANTIC_SEARCHER_CACHE: Optional[object] = None
+
+# Minimum aggregated similarity for a semantic hit to drive the pipeline
+# recommendation. Scores below this are treated as "KB does not cover this
+# query" → triggers the README Step 2b web-search fallback instead of blindly
+# forcing the least-dissimilar pipeline.
+# Calibrated on real queries (2026-09):
+#   true hits >= 0.660, blind-spot fallback >= 0.536, off-topic ~0.401.
+SEMANTIC_MIN_SCORE = 0.45
 
 
 def _semantic_searcher():
@@ -159,7 +174,14 @@ class ResearchAgent:
                     for pid in (h.pipeline_ids or []):
                         agg[pid] = max(agg.get(pid, 0.0), float(h.score))
                 if agg:
-                    semantic_pipeline = max(agg, key=agg.get)
+                    best_pid = max(agg, key=agg.get)
+                    # Confidence gate: below SEMANTIC_MIN_SCORE the "hit" is
+                    # just the least-dissimilar pipeline and carries no signal.
+                    if agg[best_pid] >= SEMANTIC_MIN_SCORE:
+                        semantic_pipeline = best_pid
+                    else:
+                        print(f"[plan] 语义最高分 {agg[best_pid]:.3f} < {SEMANTIC_MIN_SCORE}，"
+                              f"视为未覆盖")
                 semantic_hits_desc = [f"{h.score:.3f}  {h.section_title}" for h in res.hits[:3]]
                 print(f"[plan] 语义命中 {len(res.hits)} 块, 推荐管线: {semantic_pipeline or '(无)'}")
             except Exception as exc:  # pragma: no cover
@@ -180,6 +202,11 @@ class ResearchAgent:
                       f"采用关键词（分歧已记录）")
         else:
             recommended_pipeline = semantic_pipeline
+
+        # Step 2b (README): both keyword and semantic missed → flag uncovered
+        # so run() can materialize the generic 3-round web-search plan instead
+        # of silently failing.
+        uncovered_domain = not recommended_pipeline
 
         # Build sub-task sequence
         match_desc = "在知识库中匹配最佳分析管线"
@@ -206,6 +233,7 @@ class ResearchAgent:
             recommended_pipeline_id=recommended_pipeline,
             semantic_pipeline_id=semantic_pipeline_id,
             semantic_hits=semantic_hits_desc,
+            uncovered_domain=uncovered_domain,
         )
 
     def run(self, user_query: str, knowledge_base_dir: Optional[str] = None) -> AgentResult:
@@ -244,7 +272,17 @@ class ResearchAgent:
                 target = result.plan.recommended_pipeline_id
             pipeline = search_pipeline(target, knowledge_base_dir)
             if pipeline is None:
-                errors.append("No matching pipeline found in knowledge base.")
+                # Step 2b (README): local KB missed (keyword + semantic both
+                # empty) → materialize the generic 3-round web-search plan for
+                # the calling LLM agent to execute; surface it instead of a
+                # bare failure.
+                omics = getattr(result.plan, "omics_type", "") if result.plan else ""
+                design = getattr(result.plan, "study_design", "") if result.plan else ""
+                result.web_fallback = web_search_fallback(user_query, omics, design)
+                errors.append(
+                    "No matching pipeline found in knowledge base; "
+                    "Step 2b generic web-search fallback planned."
+                )
                 result.errors = errors
                 return result
             result.pipeline = pipeline
@@ -331,7 +369,17 @@ class ResearchAgent:
                 icon = "PASS" if vr.passed else "FAIL"
                 lines.append(f"- [{icon}] [{vr.severity}] {vr.message}")
 
-        if result.errors:
+        if result.web_fallback is not None:
+            wf = result.web_fallback
+            uncovered = getattr(result.plan, "uncovered_domain", False)
+            lines.append("\n## 未覆盖领域 — Step 2b 联网兜底\n")
+            lines.append(f"- 双轨落空: **{'是' if uncovered else '否'}**（本地知识库未命中）")
+            lines.append(f"- 原因: {wf.reason}\n")
+            for r in wf.rounds:
+                lines.append(f"- **Round {r.round_no}**（{r.goal}）: `{r.query}`")
+            lines.append("\n由上层 Agent 依 SKILL.md 执行上述 web_search（3 轮），"
+                         "命中结果按 Step 5 回写知识库，缩小盲区。")
+        elif result.errors:
             lines.append("\n## 错误\n")
             for err in result.errors:
                 lines.append(f"- {err}")
