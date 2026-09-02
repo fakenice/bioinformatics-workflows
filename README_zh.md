@@ -115,9 +115,13 @@
 
 ### 语义搜索
 
-知识库之上的轻量级检索增强层。55 个文档切片（41 个来自 references + 14 个管线 JSON）已完成嵌入和索引，支持自然语言查询如"如何处理批次效应"或"哪些管线需要 IDR"，检索延迟亚毫秒级，并带有完整溯源（`source_file:L123-L456`）。
+知识库之上的轻量级检索增强层。79 个文档切片（65 个来自 references + 14 个管线 JSON）已完成嵌入和索引，支持自然语言查询如"如何处理批次效应"或"哪些管线需要 IDR"，检索延迟亚毫秒级，并带有完整溯源（`source_file:L123-L456`）。
 
-实现：`python/vector_store/` — NumPy + sklearn，零额外依赖。
+**真实语义向量**：嵌入由 `BAAI/bge-small-zh-v1.5`（512 维，中文优化）经 `fastembed` 本地 ONNX 推理生成，无需 GPU 与 API key。首次运行会经 HF 镜像下载模型（`HF_ENDPOINT=https://hf-mirror.com` + `HF_HUB_DISABLE_XET=1`）至 `python/.hf_cache`，之后离线可用。`SemanticSearcher` 默认即使用该嵌入器，仅在未安装 `fastembed` 时回退到哈希向量（仅测试用）。
+
+实现：`python/vector_store/` —— `chunker.py` + `embedder.py` + `chroma_client.py`（NumPy + sklearn 余弦）+ `fastembed_provider.py`。依赖：`fastembed`、`numpy`、`scikit-learn`。
+
+重建索引：`python python/vector_store/build_semantic_index.py --build`。
 
 ### 质量评估
 

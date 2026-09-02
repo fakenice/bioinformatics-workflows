@@ -8,3 +8,4 @@ __pycache__/
 *.pyc
 
 python/evaluation/results/*.json
+python/.hf_cache/

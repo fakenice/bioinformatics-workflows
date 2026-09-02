@@ -54,7 +54,7 @@
 │  patterns       — reusable code      │
 │  sharp_edges    — known pitfalls     │
 │  validations    — QC rules           │
-│  + Semantic Search (55-chunk index)  │
+│  + Semantic Search (79-chunk bge-zh) │
 └────┬─────────────────────────────────┘
      │  Constrained context window
      ▼
@@ -115,9 +115,13 @@ This repository also hosts **FlowSeq** — an interactive pipeline browser + Ski
 
 ### Semantic Search
 
-A lightweight retrieval-augmented layer over the knowledge base. 55 document chunks (41 from references + 14 pipeline JSONs) are embedded and indexed, enabling natural-language queries like "how to handle batch effects" or "which pipelines need IDR" with sub-millisecond retrieval latency and full source traceability (`source_file:L123-L456`).
+A lightweight retrieval-augmented layer over the knowledge base. 79 document chunks (65 from references + 14 pipeline JSONs) are embedded and indexed, enabling natural-language queries like "how to handle batch effects" or "which pipelines need IDR" with sub-millisecond retrieval latency and full source traceability (`source_file:L123-L456`).
 
-Implementation: `python/vector_store/` — NumPy + sklearn, zero extra dependencies.
+**True semantic vectors**: embeddings come from `BAAI/bge-small-zh-v1.5` (512-dim, Chinese-optimized) run locally via `fastembed` (ONNX, no GPU / no API key). The first run downloads the model through the HF mirror (`HF_ENDPOINT=https://hf-mirror.com` with `HF_HUB_DISABLE_XET=1`) into `python/.hf_cache`; afterwards it works offline. `SemanticSearcher` uses this embedder by default, falling back to a deterministic hash embedder (test-only) only when `fastembed` is not installed.
+
+Implementation: `python/vector_store/` — `chunker.py` + `embedder.py` + `chroma_client.py` (NumPy + sklearn cosine) + `fastembed_provider.py`. Dependencies: `fastembed`, `numpy`, `scikit-learn`.
+
+Rebuild the index: `python python/vector_store/build_semantic_index.py --build`.
 
 ### Evaluation
 

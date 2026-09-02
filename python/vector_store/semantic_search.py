@@ -12,6 +12,21 @@ from vector_store.chroma_client import SearchHit, SearchResult, VectorStore
 from vector_store.embedder import DummyEmbedder, EmbedderProvider, OpenAIEmbedder
 
 
+def _default_embedder() -> EmbedderProvider:
+    """默认真语义 embedder（fastembed + bge-small-zh-v1.5 本地 ONNX）。
+
+    未安装 fastembed 时自动降级为 DummyEmbedder（哈希伪向量，仅测试语义），
+    并打印警告。调用方可显式传入 embedder 覆盖。
+    """
+    try:
+        from vector_store.fastembed_provider import FastEmbedProvider
+
+        return FastEmbedProvider()
+    except Exception as exc:  # pragma: no cover
+        print(f"[warn] fastembed 不可用 ({exc.__class__.__name__})，回退 DummyEmbedder")
+        return DummyEmbedder(dim=128)
+
+
 class SemanticSearcher:
     """
     High-level semantic search over the FlowSeq knowledge base.
@@ -30,7 +45,7 @@ class SemanticSearcher:
     ):
         workspace = Path(__file__).parent.parent.parent
         self.index_dir = index_dir or str(workspace / "python" / "vector_data")
-        self.embedder = embedder or DummyEmbedder(dim=128)
+        self.embedder = embedder or _default_embedder()
         self._store = VectorStore(persist_dir=self.index_dir)
 
     @property

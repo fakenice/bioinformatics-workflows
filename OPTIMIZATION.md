@@ -42,7 +42,7 @@
 | 4 | `package.json` version 仍为 `0.0.0`，与已有 `CHANGELOG.md` 脱节 | 升为 `0.1.0` 并打 GitHub Release |
 | 5 | 依赖 `reactflow@11` 是已停更的旧包名，官方已迁移至 `@xyflow/react` | 评估迁移（API 基本兼容） |
 | 6 | `research_agent.plan()` 为硬编码关键词匹配 + 固定五步子任务序列，"Planning" 阶段名不副实 | 用 `vector_store` 语义检索驱动规划 |
-| 7 | 语义检索仅 55 chunks、sklearn TF-IDF 级实现，与 "semantic search" 定位有差距 | 引入真实 embedding 或扩充索引覆盖 |
+| 7 | 语义检索仅 55 chunks、sklearn TF-IDF 级实现，与 "semantic search" 定位有差距 | ✅ 已解决（2026-09）：79 chunks + `BAAI/bge-small-zh-v1.5`（fastembed, 512-dim）真语义，`SemanticSearcher` 默认启用 |
 | 8 | **覆盖缺口**：SKILL.md 快速参考表中的 ATAC-seq、长读长、免疫组库、结构变异**没有对应管线 JSON**；空间转录组、Hi-C 等热门方向未覆盖 | 按 Step 5 回写流程补齐 |
 | 9 | 工具版本（FastQC 0.12.1 等）手工维护，无上游版本跟踪机制，会静默过期 | GitHub Action 定期抓取 Bioconda / nf-core 容器 tag |
 | 10 | 评估仅 20 cases × 单模型（qwen3:14b），消融对照样本偏小；生成的 `.nf` 无 `nextflow lint` 端到端验证 | 扩充用例与模型矩阵；CI 加 lint |
@@ -89,7 +89,7 @@
 ### P2 — 技术深度
 
 - [ ] Agent Planning 阶段改用 `vector_store` 语义匹配，替代硬编码关键词
-- [ ] 引入真实语义 embedding，扩充 chunk 覆盖至全部 references
+- [x] 引入真实语义 embedding（`BAAI/bge-small-zh-v1.5` via fastembed，79 chunks：65 references + 14 pipeline JSON），`SemanticSearcher` 默认启用
 - [ ] 补齐管线：ATAC-seq、空间转录组、Hi-C、长读长（先补 SKILL.md 表中已承诺的 4 条）
 - [ ] 工具版本自动跟踪（Bioconda / nf-core 定时同步 + 自动 PR）
 - [ ] 消除短关键词误报（词边界匹配或语义化）
