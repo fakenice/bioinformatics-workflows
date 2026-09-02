@@ -379,6 +379,10 @@ class ResearchAgent:
                 lines.append(f"- **Round {r.round_no}**（{r.goal}）: `{r.query}`")
             lines.append("\n由上层 Agent 依 SKILL.md 执行上述 web_search（3 轮），"
                          "命中结果按 Step 5 回写知识库，缩小盲区。")
+            lines.append("\n**零结果保护（SKILL.md 最高优先级）**：若 3 轮仍未检索到权威/官方来源"
+                         "（无官方文档、无 nf-core、无核心文献），禁止编造工具/参数/步骤——"
+                         "改为诚实返回「未找到官方标准流程」，列出社区/博客等非权威来源链接，"
+                         "并在 overview 标注「暂无官方标准化流程」。")
         elif result.errors:
             lines.append("\n## 错误\n")
             for err in result.errors:
