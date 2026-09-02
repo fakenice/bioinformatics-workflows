@@ -123,6 +123,8 @@
 
 重建索引：`python python/vector_store/build_semantic_index.py --build`。
 
+**检索质量**（bge-small-zh-v1.5 索引评测）：MR 工具变量多词查询 TOP1/TOP2 命中 0.714/0.694；家系三人家系 *de novo* 查询正确命中 `wgs-germline/trio`；Mutect2 查询命中 `wgs-somatic`（0.715）。残余偏差主要为知识覆盖缺口（如 `qc_standards.md` 过薄），非 embedding 问题。
+
 ### 质量评估
 
 6 个确定性指标对 Skill 输出做自动化评估，零 API 调用，一键运行。评测模型为 **qwen3:14b**（本地 Ollama，`think=False`，`temperature=0.3`），共 20 个测试用例（14 条管线 + 6 个跨域/边界用例），在无联网基线上做 **Prompt + Skill**（SKILL.md 作 system prompt）vs **纯 Prompt**（中性 system prompt）消融对比——隔离 SKILL.md 纯文本贡献，无联网时两组差异纯粹来自 skill 指令本身，控制变量更干净。

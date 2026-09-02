@@ -123,6 +123,8 @@ Implementation: `python/vector_store/` — `chunker.py` + `embedder.py` + `chrom
 
 Rebuild the index: `python python/vector_store/build_semantic_index.py --build`.
 
+**Retrieval quality** (evaluated with the bge-small-zh-v1.5 index): MR tool-variable multi-word query hits TOP1/TOP2 at 0.714/0.694; family trio *de novo* query correctly resolves to `wgs-germline/trio`; Mutect2 resolves to `wgs-somatic` (0.715). Residual misses are mostly knowledge-coverage gaps (e.g. thin `qc_standards.md`), not embedding issues.
+
 ### Evaluation
 
 6 deterministic metrics for automated Skill output evaluation, zero API calls, one command. Evaluated with **qwen3:14b** (local Ollama, `think=False`, `temperature=0.3`) on 20 test cases (14 pipelines + 6 cross-cutting/edge cases), with an ablation comparison of **Prompt + Skill** (SKILL.md as system prompt) vs **Prompt Only** (neutral system prompt) on the no-internet baseline — isolating the pure textual contribution of SKILL.md, so the difference between the two groups comes solely from the Skill instructions (cleaner controlled comparison).
