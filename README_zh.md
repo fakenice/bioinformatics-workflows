@@ -123,6 +123,8 @@
 
 重建索引：`python python/vector_store/build_semantic_index.py --build`。
 
+**已接入 Agent（OPTIMIZATION #6）**：`ResearchAgent.plan()` 现在会查询语义知识库并记录推荐管线与 Top-3 语义命中；`run()` 将推荐结果传入 `search_pipeline()`（新增按 ID 直载路径 `_load_pipeline`），使检索真正驱动业务调用。决策规则为"关键词优先 + 语义兜底"：关键词有稳定命中时以其为准（规避共享切片上 `pipeline_ids` 标签噪声，如 rare-variant 块被标成 `family-trio-wgs`）；仅当关键词漏检（新说法 / 新增管线）时由语义推荐驱动，分歧会在 `format_result()` 中显式呈现。Python 3.11 兼容：`export_workflow` 中含反斜杠的 f-string 表达式已改为预绑定默认值（PEP 701 为 3.12+ 语法）。
+
 **检索质量**（bge-small-zh-v1.5 索引评测）：MR 工具变量多词查询 TOP1/TOP2 命中 0.714/0.694；家系三人家系 *de novo* 查询正确命中 `wgs-germline/trio`；Mutect2 查询命中 `wgs-somatic`（0.715）。残余偏差主要为知识覆盖缺口（如 `qc_standards.md` 过薄），非 embedding 问题。
 
 ### 质量评估

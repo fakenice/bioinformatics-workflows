@@ -149,35 +149,17 @@ VALIDATION_RULES: list[dict] = [
 # ──────────────────────────────────────────────────────────────
 
 
-def search_pipeline(scenario: str, knowledge_base_dir: Optional[str] = None) -> Optional[PipelineDefinition]:
+def _is_known_pipeline_id(candidate: str) -> bool:
+    """True if candidate is an exact known pipeline ID (semantic-search path)."""
+    return candidate in SCENARIO_KEYWORD_MAP
+
+
+def _load_pipeline(best_id: str, knowledge_base_dir: Optional[str] = None) -> Optional[PipelineDefinition]:
+    """Load a pipeline JSON by its ID and convert to a PipelineDefinition.
+
+    Used both by the keyword-matched search_pipeline() and the semantic-search
+    direct-ID path (research_agent.plan() -> recommended_pipeline_id).
     """
-    Match a user scenario to the best pipeline in the knowledge base.
-
-    Args:
-        scenario: Natural language description of the analysis need.
-        knowledge_base_dir: Path to src/data/pipelines/ (auto-detected if None).
-
-    Returns:
-        Matching PipelineDefinition or None if no match found.
-    """
-    scenario_lower = scenario.lower()
-
-    # Score each pipeline by keyword matches, weighted by keyword length so
-    # specific terms ("single cell", "单细胞") outweigh generic ones
-    # ("转录组", "rna-seq"). Ties are broken by specificity instead of
-    # dict insertion order.
-    scores: dict[str, float] = {}
-    for pipeline_id, keywords in SCENARIO_KEYWORD_MAP.items():
-        score = sum(len(kw) for kw in keywords if kw.lower() in scenario_lower)
-        if score > 0:
-            scores[pipeline_id] = score
-
-    if not scores:
-        return None
-
-    # Return the highest-scoring pipeline
-    best_id = max(scores, key=scores.get)  # type: ignore[arg-type]
-
     # Load pipeline JSON for full definition
     if knowledge_base_dir is None:
         knowledge_base_dir = str(
@@ -244,6 +226,59 @@ def search_pipeline(scenario: str, knowledge_base_dir: Optional[str] = None) -> 
         version=data.get("version", "1.0.0"),
         sources=sources,
     )
+
+
+def predict_pipeline(scenario: str) -> str:
+    """Best pipeline ID for a scenario by keyword scoring; '' if none matched.
+
+    Lightweight, no pipeline loading. Used by ResearchAgent.plan() as the
+    keyword-default against the semantic recommendation.
+    """
+    s = scenario.lower()
+    scores = {
+        pid: sum(len(kw) for kw in kws if kw.lower() in s)
+        for pid, kws in SCENARIO_KEYWORD_MAP.items()
+    }
+    best = max(scores, key=scores.get) if any(sc != 0 for sc in scores.values()) else ""
+    return best if scores.get(best, 0) > 0 else ""
+
+
+def search_pipeline(scenario: str, knowledge_base_dir: Optional[str] = None) -> Optional[PipelineDefinition]:
+    """
+    Match a user scenario to the best pipeline in the knowledge base.
+
+    Args:
+        scenario: Natural language description of the analysis need.
+        knowledge_base_dir: Path to src/data/pipelines/ (auto-detected if None).
+
+    Returns:
+        Matching PipelineDefinition or None if no match found.
+    """
+    scenario_lower = scenario.lower()
+
+    # Semantic-search driven path: research_agent.plan() may recommend an exact
+    # pipeline ID (semantic hit -> pipeline_ids). Load it directly instead of
+    # re-running keyword scoring.
+    if _is_known_pipeline_id(scenario.strip()):
+        return _load_pipeline(scenario.strip(), knowledge_base_dir)
+
+    # Score each pipeline by keyword matches, weighted by keyword length so
+    # specific terms ("single cell", "单细胞") outweigh generic ones
+    # ("转录组", "rna-seq"). Ties are broken by specificity instead of
+    # dict insertion order.
+    scores: dict[str, float] = {}
+    for pipeline_id, keywords in SCENARIO_KEYWORD_MAP.items():
+        score = sum(len(kw) for kw in keywords if kw.lower() in scenario_lower)
+        if score > 0:
+            scores[pipeline_id] = score
+
+    if not scores:
+        return None
+
+    # Return the highest-scoring pipeline
+    best_id = max(scores, key=scores.get)  # type: ignore[arg-type]
+
+    return _load_pipeline(best_id, knowledge_base_dir)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -417,9 +452,12 @@ def export_workflow(
 
     # Default params
     lines.append("params {")
-    lines.append(f"    reads = '{params.get('reads', '\"data/*_{1,2}.fastq.gz\"')}'")
-    lines.append(f"    outdir = '{params.get('outdir', '\"results\"')}'")
-    lines.append(f"    genome = '{params.get('genome', '\"GRCh38\"')}'")
+    _default_reads = '"data/*_{1,2}.fastq.gz"'
+    _default_outdir = '"results"'
+    _default_genome = '"GRCh38"'
+    lines.append(f"    reads = '{params.get('reads', _default_reads)}'")
+    lines.append(f"    outdir = '{params.get('outdir', _default_outdir)}'")
+    lines.append(f"    genome = '{params.get('genome', _default_genome)}'")
     lines.append("}")
     lines.append("")
 

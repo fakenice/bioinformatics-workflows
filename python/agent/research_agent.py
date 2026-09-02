@@ -20,6 +20,7 @@ try:
         check_traps,
         validate_script,
         export_workflow,
+        predict_pipeline,
     )
 except ImportError:
     from tools import (
@@ -30,6 +31,7 @@ except ImportError:
         check_traps,
         validate_script,
         export_workflow,
+        predict_pipeline,
     )
 
 
@@ -49,6 +51,10 @@ class AgentPlan:
     omics_type: str = ""
     study_design: str = ""
     sub_tasks: list[SubTask] = field(default_factory=list)
+    # OPTIMIZATION #6: semantic-search driver fields (filled by plan()).
+    recommended_pipeline_id: str = field(default="")
+    semantic_pipeline_id: str = field(default="")
+    semantic_hits: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -64,6 +70,32 @@ class AgentResult:
     @property
     def success(self) -> bool:
         return self.pipeline is not None and len(self.errors) == 0
+
+
+_SEMANTIC_SEARCHER_CACHE: Optional[object] = None
+
+
+def _semantic_searcher():
+    """Lazily build a cached SemanticSearcher; None if unavailable.
+
+    Caches the real (non-Dummy) searcher across plan() calls so the bge
+    embedding model is loaded only once per process. Any failure or the
+    Dummy fallback degrades plan() back to pure keyword planning.
+    """
+    global _SEMANTIC_SEARCHER_CACHE
+    if _SEMANTIC_SEARCHER_CACHE is not None:
+        return _SEMANTIC_SEARCHER_CACHE
+    try:
+        from vector_store.semantic_search import SemanticSearcher
+        searcher = SemanticSearcher()
+        if type(searcher.embedder).__name__ == "DummyEmbedder":
+            print("[plan] 语义 embedder 降级为 Dummy，回退关键词规划")
+            return None
+        _SEMANTIC_SEARCHER_CACHE = searcher
+        return searcher
+    except Exception as exc:  # pragma: no cover
+        print(f"[plan] 语义检索不可用（{exc.__class__.__name__}），回退关键词规划")
+        return None
 
 
 class ResearchAgent:
@@ -112,12 +144,52 @@ class ResearchAgent:
         elif any(kw in query_lower for kw in ["罕见", "rare variant", "skat"]):
             study_design = "Rare Variant Aggregation"
 
+        # ── Semantic layer (OPTIMIZATION #6) ─────────────────────────────
+        # Query the local embedding KB for the best pipeline. The semantic
+        # recommendation drives the downstream search_pipeline() call in run().
+        # Falls back to pure keyword planning when semantic search is absent.
+        semantic_pipeline = ""
+        semantic_hits_desc: list[str] = []
+        searcher = _semantic_searcher()
+        if searcher is not None:
+            try:
+                res = searcher.search(user_query, n_results=5)
+                agg: dict[str, float] = {}
+                for h in res.hits:
+                    for pid in (h.pipeline_ids or []):
+                        agg[pid] = max(agg.get(pid, 0.0), float(h.score))
+                if agg:
+                    semantic_pipeline = max(agg, key=agg.get)
+                semantic_hits_desc = [f"{h.score:.3f}  {h.section_title}" for h in res.hits[:3]]
+                print(f"[plan] 语义命中 {len(res.hits)} 块, 推荐管线: {semantic_pipeline or '(无)'}")
+            except Exception as exc:  # pragma: no cover
+                print(f"[plan] 语义检索执行失败（{exc.__class__.__name__}），回退关键词规划")
+
+        keyword_pipeline = predict_pipeline(user_query)
+        # Hybrid decision: keyword-authoritative + semantic fallback.
+        #  - A stable keyword hit wins: it avoids pipeline_ids tag noise in the
+        #    chunk labels (e.g. rare-variant blocks tagged family-trio-wgs).
+        #  - The semantic recommendation only drives when keywords miss, which
+        #    is the real OPT #6 increment (novel wording / new pipelines).
+        # Divergence is recorded and surfaced in format_result for transparency.
+        semantic_pipeline_id = semantic_pipeline
+        if keyword_pipeline:
+            recommended_pipeline = keyword_pipeline
+            if semantic_pipeline and semantic_pipeline != keyword_pipeline:
+                print(f"[plan] 语义推荐={semantic_pipeline} vs 关键词={keyword_pipeline}，"
+                      f"采用关键词（分歧已记录）")
+        else:
+            recommended_pipeline = semantic_pipeline
+
         # Build sub-task sequence
+        match_desc = "在知识库中匹配最佳分析管线"
+        if recommended_pipeline:
+            match_desc += f"（推荐: {recommended_pipeline}）"
         sub_tasks = [
             SubTask(step_id=1, name="需求解析", tool="plan",
                     description=f"识别组学类型={omics_type}, 研究设计={study_design}"),
             SubTask(step_id=2, name="管线匹配", tool="search_pipeline",
-                    description="在知识库中匹配最佳分析管线"),
+                    description=match_desc),
             SubTask(step_id=3, name="陷阱检查", tool="check_traps",
                     description="检索该管线的已知 pitfalls"),
             SubTask(step_id=4, name="脚本生成", tool="export_workflow",
@@ -131,6 +203,9 @@ class ResearchAgent:
             omics_type=omics_type,
             study_design=study_design,
             sub_tasks=sub_tasks,
+            recommended_pipeline_id=recommended_pipeline,
+            semantic_pipeline_id=semantic_pipeline_id,
+            semantic_hits=semantic_hits_desc,
         )
 
     def run(self, user_query: str, knowledge_base_dir: Optional[str] = None) -> AgentResult:
@@ -160,8 +235,14 @@ class ResearchAgent:
         pipeline_id = ""
 
         try:
-            # Tool 1: search_pipeline
-            pipeline = search_pipeline(user_query, knowledge_base_dir)
+            # Tool 1: search_pipeline — the semantic recommendation (from plan)
+            # is authoritative: pass the recommended pipeline ID so it loads the
+            # exact pipeline (search_pipeline's direct-ID path). Falls back to
+            # keyword matching on the raw query when no recommendation exists.
+            target = user_query
+            if result.plan and getattr(result.plan, "recommended_pipeline_id", ""):
+                target = result.plan.recommended_pipeline_id
+            pipeline = search_pipeline(target, knowledge_base_dir)
             if pipeline is None:
                 errors.append("No matching pipeline found in knowledge base.")
                 result.errors = errors
@@ -203,6 +284,17 @@ class ResearchAgent:
         if result.plan:
             lines.append(f"**分析类型**: {result.plan.omics_type or '未识别'}")
             lines.append(f"**研究设计**: {result.plan.study_design or '未识别'}")
+            if getattr(result.plan, "recommended_pipeline_id", ""):
+                sem_id = getattr(result.plan, "semantic_pipeline_id", "")
+                note = ""
+                if sem_id and sem_id != result.plan.recommended_pipeline_id:
+                    note = f"（语义推荐 `{sem_id}`，分歧以关键词为准）"
+                lines.append(f"**推荐管线 ID**: `{result.plan.recommended_pipeline_id}`{note}"
+                             f"（关键词默认: `{predict_pipeline(result.plan.user_query)}`）")
+            if getattr(result.plan, "semantic_hits", None):
+                lines.append("\n**语义检索命中 Top-3**")
+                for hit in result.plan.semantic_hits:
+                    lines.append(f"- {hit}")
             lines.append("")
 
         if result.pipeline:
