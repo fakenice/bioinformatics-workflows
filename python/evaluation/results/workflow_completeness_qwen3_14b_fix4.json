@@ -1,0 +1,376 @@
+{
+  "metric": "workflow_completeness",
+  "score": 0.7561,
+  "total_standard_steps": 82,
+  "total_covered_steps": 62,
+  "cases_evaluated": 18,
+  "details": [
+    {
+      "case_id": "TC-001",
+      "pipeline_id": "trio_wgs",
+      "score": 1.0,
+      "standard_steps": [
+        "Quality Control",
+        "Read Alignment",
+        "Variant Calling",
+        "Variant Annotation",
+        "Variant Filtering"
+      ],
+      "matched": [
+        "Quality Control",
+        "Read Alignment",
+        "Variant Calling",
+        "Variant Annotation",
+        "Variant Filtering"
+      ],
+      "missing": []
+    },
+    {
+      "case_id": "TC-002",
+      "pipeline_id": "gwas",
+      "score": 0.75,
+      "standard_steps": [
+        "Quality Control",
+        "Association Testing",
+        "Visualization",
+        "Annotation"
+      ],
+      "matched": [
+        "Quality Control",
+        "Association Testing",
+        "Annotation"
+      ],
+      "missing": [
+        "Visualization"
+      ]
+    },
+    {
+      "case_id": "TC-003",
+      "pipeline_id": "somatic_wgs",
+      "score": 1.0,
+      "standard_steps": [
+        "Quality Control",
+        "Read Alignment",
+        "Somatic Variant Calling",
+        "Variant Annotation",
+        "Variant Filtering"
+      ],
+      "matched": [
+        "Quality Control",
+        "Read Alignment",
+        "Somatic Variant Calling",
+        "Variant Annotation",
+        "Variant Filtering"
+      ],
+      "missing": []
+    },
+    {
+      "case_id": "TC-004",
+      "pipeline_id": "scrna_seq",
+      "score": 0.6,
+      "standard_steps": [
+        "Quality Control",
+        "Normalization",
+        "Dimensionality Reduction",
+        "Clustering",
+        "Differential Expression Analysis"
+      ],
+      "matched": [
+        "Quality Control",
+        "Normalization",
+        "Dimensionality Reduction"
+      ],
+      "missing": [
+        "Clustering",
+        "Differential Expression Analysis"
+      ]
+    },
+    {
+      "case_id": "TC-005",
+      "pipeline_id": "chip_seq",
+      "score": 0.8,
+      "standard_steps": [
+        "Quality Control",
+        "Read Alignment",
+        "Peak Calling",
+        "Peak Annotation",
+        "Motif Discovery"
+      ],
+      "matched": [
+        "Quality Control",
+        "Read Alignment",
+        "Peak Calling",
+        "Peak Annotation"
+      ],
+      "missing": [
+        "Motif Discovery"
+      ]
+    },
+    {
+      "case_id": "TC-006",
+      "pipeline_id": "mendelian_randomization",
+      "score": 0.6,
+      "standard_steps": [
+        "Instrument Selection",
+        "Harmonization",
+        "MR Estimation",
+        "Sensitivity Analysis",
+        "Multivariable MR"
+      ],
+      "matched": [
+        "Instrument Selection",
+        "MR Estimation",
+        "Sensitivity Analysis"
+      ],
+      "missing": [
+        "Harmonization",
+        "Multivariable MR"
+      ]
+    },
+    {
+      "case_id": "TC-007",
+      "pipeline_id": "wgb",
+      "score": 1.0,
+      "standard_steps": [
+        "Quality Control",
+        "Read Alignment",
+        "Methylation Calling",
+        "Differential Methylation Analysis"
+      ],
+      "matched": [
+        "Quality Control",
+        "Read Alignment",
+        "Methylation Calling",
+        "Differential Methylation Analysis"
+      ],
+      "missing": []
+    },
+    {
+      "case_id": "TC-008",
+      "pipeline_id": "amplicon_16s",
+      "score": 0.5,
+      "standard_steps": [
+        "Data Import",
+        "Denoising & ASV Inference",
+        "Taxonomic Classification",
+        "Phylogenetic Tree Construction",
+        "Diversity Analysis",
+        "Differential Abundance Analysis"
+      ],
+      "matched": [
+        "Denoising & ASV Inference",
+        "Taxonomic Classification",
+        "Diversity Analysis"
+      ],
+      "missing": [
+        "Data Import",
+        "Phylogenetic Tree Construction",
+        "Differential Abundance Analysis"
+      ]
+    },
+    {
+      "case_id": "TC-009",
+      "pipeline_id": "metagenomics",
+      "score": 0.8,
+      "standard_steps": [
+        "Quality Control & Host Removal",
+        "Taxonomic Annotation",
+        "Functional Annotation",
+        "Assembly & Binning",
+        "Statistical Analysis & Visualization"
+      ],
+      "matched": [
+        "Quality Control & Host Removal",
+        "Taxonomic Annotation",
+        "Functional Annotation",
+        "Statistical Analysis & Visualization"
+      ],
+      "missing": [
+        "Assembly & Binning"
+      ]
+    },
+    {
+      "case_id": "TC-010",
+      "pipeline_id": "small_variant_wes",
+      "score": 1.0,
+      "standard_steps": [
+        "Quality Control",
+        "Read Alignment",
+        "Variant Calling",
+        "Variant Annotation"
+      ],
+      "matched": [
+        "Quality Control",
+        "Read Alignment",
+        "Variant Calling",
+        "Variant Annotation"
+      ],
+      "missing": []
+    },
+    {
+      "case_id": "TC-011",
+      "pipeline_id": "prs",
+      "score": 0.75,
+      "standard_steps": [
+        "Data Preparation",
+        "Quality Control",
+        "PRS Calculation",
+        "Model Evaluation"
+      ],
+      "matched": [
+        "Data Preparation",
+        "Quality Control",
+        "PRS Calculation"
+      ],
+      "missing": [
+        "Model Evaluation"
+      ]
+    },
+    {
+      "case_id": "TC-012",
+      "pipeline_id": "rare_variant",
+      "score": 0.5,
+      "standard_steps": [
+        "Variant QC",
+        "Functional Annotation",
+        "Null Model Fitting",
+        "Aggregation Test",
+        "Multiple Testing Correction",
+        "ACAT"
+      ],
+      "matched": [
+        "Variant QC",
+        "Functional Annotation",
+        "Aggregation Test"
+      ],
+      "missing": [
+        "Null Model Fitting",
+        "Multiple Testing Correction",
+        "ACAT"
+      ]
+    },
+    {
+      "case_id": "TC-013",
+      "pipeline_id": "small_variant_wgs",
+      "score": 0.3333,
+      "standard_steps": [
+        "Quality Control",
+        "Read Alignment",
+        "Variant Calling"
+      ],
+      "matched": [
+        "Quality Control"
+      ],
+      "missing": [
+        "Read Alignment",
+        "Variant Calling"
+      ]
+    },
+    {
+      "case_id": "TC-014",
+      "pipeline_id": null,
+      "score": null,
+      "note": "no standard steps defined"
+    },
+    {
+      "case_id": "TC-015",
+      "pipeline_id": "rna_seq",
+      "score": 1.0,
+      "standard_steps": [
+        "Quality Control",
+        "Read Alignment",
+        "Expression Quantification",
+        "Differential Expression Analysis"
+      ],
+      "matched": [
+        "Quality Control",
+        "Read Alignment",
+        "Expression Quantification",
+        "Differential Expression Analysis"
+      ],
+      "missing": []
+    },
+    {
+      "case_id": "TC-016",
+      "pipeline_id": "gwas",
+      "score": 0.5,
+      "standard_steps": [
+        "Quality Control",
+        "Association Testing",
+        "Visualization",
+        "Annotation"
+      ],
+      "matched": [
+        "Association Testing",
+        "Visualization"
+      ],
+      "missing": [
+        "Quality Control",
+        "Annotation"
+      ]
+    },
+    {
+      "case_id": "TC-017",
+      "pipeline_id": null,
+      "score": null,
+      "note": "no standard steps defined"
+    },
+    {
+      "case_id": "TC-018",
+      "pipeline_id": "small_variant_wgs",
+      "score": 1.0,
+      "standard_steps": [
+        "Quality Control",
+        "Read Alignment",
+        "Variant Calling"
+      ],
+      "matched": [
+        "Quality Control",
+        "Read Alignment",
+        "Variant Calling"
+      ],
+      "missing": []
+    },
+    {
+      "case_id": "TC-019",
+      "pipeline_id": "chip_seq",
+      "score": 0.6,
+      "standard_steps": [
+        "Quality Control",
+        "Read Alignment",
+        "Peak Calling",
+        "Peak Annotation",
+        "Motif Discovery"
+      ],
+      "matched": [
+        "Quality Control",
+        "Read Alignment",
+        "Peak Calling"
+      ],
+      "missing": [
+        "Peak Annotation",
+        "Motif Discovery"
+      ]
+    },
+    {
+      "case_id": "TC-020",
+      "pipeline_id": "trio_wgs",
+      "score": 1.0,
+      "standard_steps": [
+        "Quality Control",
+        "Read Alignment",
+        "Variant Calling",
+        "Variant Annotation",
+        "Variant Filtering"
+      ],
+      "matched": [
+        "Quality Control",
+        "Read Alignment",
+        "Variant Calling",
+        "Variant Annotation",
+        "Variant Filtering"
+      ],
+      "missing": []
+    }
+  ]
+}

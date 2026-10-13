@@ -154,6 +154,19 @@ python runner.py results/outputs_qwen3_14b_noskill.json -o results/report_qwen3_
 
 Workflow Completeness (6th metric) is evaluated separately via `metrics/workflow_completeness.py` — 18 pipeline cases × standard step coverage (82 standard steps in total).
 
+**Provenance of the table above** — every number traces to a committed file under `python/evaluation/results/`:
+
+| Table column | Raw model outputs | Report file | Verified values |
+|---|---|---|---|
+| + Skill | `outputs_qwen3_14b.json` | `report_qwen3_14b_baseline.json` | 0.90 / 0.9684 / 1.0 / 0.8947 / 1.0 → overall **0.9526** |
+| Prompt Only | `outputs_qwen3_14b_noskill.json` | `report_qwen3_14b_noskill.json` | 0.85 / 0.9395 / 1.0 / 0.6842 / 1.0 → overall **0.8947** |
+| Workflow Completeness (+ Skill) | — | `workflow_completeness_qwen3_14b_fix4.json` | 62 / 82 standard steps = **0.7561** |
+| Workflow Completeness (Prompt Only) | — | `workflow_completeness_qwen3_14b_noskill_fix4.json` | 59 / 82 = **0.7195** |
+
+Metric order in each row: pipeline selection / knowledge grounding / parameter correctness / reference coverage / schema validity.
+
+Other files in `results/` are **different runs and should not be mixed with the table above**: `report.json` (overall 0.9823) and `comparison_report_final.json` are earlier comparisons whose input outputs are not recorded inside the report files themselves. The table quoted here is the citable one because it is the strictest controlled setting — same model, no-internet baseline, SKILL.md being the only difference.
+
 Implementation: `python/evaluation/` — 20 test cases × 6 deterministic metrics, no external API, no manual annotation.
 
 ### Agentic Workflow

@@ -154,6 +154,19 @@ python runner.py results/outputs_qwen3_14b_noskill.json -o results/report_qwen3_
 
 流程完整性（第 6 项指标）通过 `metrics/workflow_completeness.py` 单独评估——18 个管线用例 × 标准步骤覆盖率（共 82 个标准步骤）。
 
+**上表数据来源**——每个数字都能对应到 `python/evaluation/results/` 下已提交的文件：
+
+| 表中列 | 模型原始输出 | 报告文件 | 实测值 |
+|---|---|---|---|
+| + Skill | `outputs_qwen3_14b.json` | `report_qwen3_14b_baseline.json` | 0.90 / 0.9684 / 1.0 / 0.8947 / 1.0 → 综合 **0.9526** |
+| 纯 Prompt | `outputs_qwen3_14b_noskill.json` | `report_qwen3_14b_noskill.json` | 0.85 / 0.9395 / 1.0 / 0.6842 / 1.0 → 综合 **0.8947** |
+| 流程完整性（+ Skill） | — | `workflow_completeness_qwen3_14b_fix4.json` | 62 / 82 标准步骤 = **0.7561** |
+| 流程完整性（纯 Prompt） | — | `workflow_completeness_qwen3_14b_noskill_fix4.json` | 59 / 82 = **0.7195** |
+
+每行的指标顺序：管线选择准确率 / 知识落地率 / 参数正确性 / 参考文献覆盖率 / 结构有效性。
+
+`results/` 目录下的其他文件属于**另外的运行，不要与上表混用**：`report.json`（综合 0.9823）与 `comparison_report_final.json` 是更早的对比运行，且报告文件内部没有记录各自的输入 outputs。本文引用上表作为对外结论，因为它是控制最严格的设定——同一模型、无联网基线、唯一变量是 SKILL.md。
+
 实现：`python/evaluation/` — 20 个测试用例 × 6 项确定性指标，无外部 API，无需人工标注。
 
 ### Agent 工作流
