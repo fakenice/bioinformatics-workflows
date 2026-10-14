@@ -165,6 +165,10 @@ python runner.py results/outputs_qwen3_14b_noskill.json -o results/report_qwen3_
 
 每行的指标顺序：管线选择准确率 / 知识落地率 / 参数正确性 / 参考文献覆盖率 / 结构有效性。
 
+**已渲染的报告**：`evaluation/results/v1.0.0_report.md` 由 `python evaluation/metrics/render_report_from_results.py` 从上述文件生成（无 GPU、无网络）。它逐项记录分子与分母，并标出上表显示不出的退化项：**结构有效性本轮是 0/0**（没有任何结构化 JSON 产出，故按"无待检项"存成 100%）、**参数正确性只有 15 与 3 个可抽取参数**、**管线选择准确率的两组只差 1 个用例**（两组都错在 TC-009 与 TC-017）。分母可比的只有参考文献覆盖率（17/19 vs 13/19）与知识落地率（368/380 vs 326/347）——引用综合分时请带上这条口径。
+
+**不要直接运行 `evaluation/metrics/report.py`**：它只是格式化器，`__main__` 里还留着示例占位数字（0.60 / 0.95 等，来自任何真实运行之外的演示值），一旦调用就会把 `results/v1.0.0_report.md` 覆写成占位内容。请使用上面那个渲染脚本。
+
 `results/` 目录下的其他文件属于**另外的运行，不要与上表混用**：`report.json`（综合 0.9823）与 `comparison_report_final.json` 是更早的对比运行，且报告文件内部没有记录各自的输入 outputs。本文引用上表作为对外结论，因为它是控制最严格的设定——同一模型、无联网基线、唯一变量是 SKILL.md。
 
 实现：`python/evaluation/` — 20 个测试用例 × 6 项确定性指标，无外部 API，无需人工标注。

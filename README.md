@@ -165,6 +165,10 @@ Workflow Completeness (6th metric) is evaluated separately via `metrics/workflow
 
 Metric order in each row: pipeline selection / knowledge grounding / parameter correctness / reference coverage / schema validity.
 
+**Rendered report**: `evaluation/results/v1.0.0_report.md` is generated from those files by `python evaluation/metrics/render_report_from_results.py` (no GPU, no network). It records the numerator and denominator of every cell and flags the degenerate rows, which the table above can't show: **Schema Validity is 0/0 on this run** (stored as 100% because there was nothing to check), **Parameter Correctness rests on 15 vs 3 extractable parameters**, and **Pipeline Selection Accuracy differs by a single case out of 20** (both arms miss TC-009 and TC-017). The rows with comparable denominators — Reference Coverage 17/19 vs 13/19 and Knowledge Grounding 368/380 vs 326/347 — are the defensible ones. Quote the Overall number together with that caveat.
+
+**Do not run `evaluation/metrics/report.py`**: it is a formatter whose `__main__` block still carries illustrative placeholder numbers (0.60 / 0.95 / …) that no run produced, and calling it overwrites `results/v1.0.0_report.md` with them. Use the renderer above.
+
 Other files in `results/` are **different runs and should not be mixed with the table above**: `report.json` (overall 0.9823) and `comparison_report_final.json` are earlier comparisons whose input outputs are not recorded inside the report files themselves. The table quoted here is the citable one because it is the strictest controlled setting — same model, no-internet baseline, SKILL.md being the only difference.
 
 Implementation: `python/evaluation/` — 20 test cases × 6 deterministic metrics, no external API, no manual annotation.
