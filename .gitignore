@@ -8,4 +8,8 @@ __pycache__/
 *.pyc
 
 python/evaluation/results/*.json
+# v1.1.0 corrected run artifacts are published with the report
+!python/evaluation/results/report_qwen3_14b_v1_1.json
+!python/evaluation/results/report_qwen3_14b_noskill_v1_1.json
+!python/evaluation/results/comparison_report_v1_1.json
 python/.hf_cache/

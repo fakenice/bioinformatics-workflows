@@ -300,7 +300,7 @@ def compute(outputs: dict[str, str], extra_urls: set[str] | None = None,
 
     return {
         "metric": "knowledge_grounding_rate",
-        "score": round(1.0 - rate, 4),
+        "score": round(1.0 - rate, 4) if total_entities > 0 else None,
         "ungrounded_rate": round(rate, 4),
         "total_entities_cited": total_entities,
         "total_ungrounded": total_ungrounded,

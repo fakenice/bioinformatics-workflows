@@ -1,5 +1,12 @@
 # FlowSeq Evaluation Framework
 
+> **v1.1.0 correction (2026-11-02)**: the scored pipeline accuracy now uses the 18 cases with an
+> expected pipeline; out-of-scope cases are scored separately, a missing prediction is `unparsed`
+> (not a correct abstention), and zero-denominator metrics are excluded from the overall. The
+> current numbers and caveats are in [`results/v1.1.0_report.md`](results/v1.1.0_report.md);
+> `results/v1.0.0_report.md` is kept unchanged for provenance. Regenerate the documentation copy of
+> the cases with `python evaluation/metrics/sync_doc_cases.py`, never by hand.
+
 ## Why Evaluation Matters
 
 A Skill is not a demo. It is a **claim**.
@@ -79,8 +86,11 @@ Blind review protocol: 2–3 bioinformatics practitioners receive anonymized out
 
 Each test case includes:
 - Realistic scenario description (as a user would phrase it)
-- Expected pipeline ID (ground truth)
-- Expected tools, versions, Docker images, QC thresholds
+- Expected pipeline ID, or `null` for a cross-domain/edge case that should be declined
+- Expected tools, parameters, traps, and validations used by the deterministic metrics
+
+The documentation copy is generated from the scored copy by
+`evaluation/metrics/sync_doc_cases.py`; the two files used to disagree on 17 of 20 labels.
 
 ## Usage
 
@@ -100,7 +110,7 @@ python evaluation/metrics/report.py
 1. **Real data only**: All test cases map to actual pipeline JSONs. No synthetic scenarios.
 2. **Blind comparison**: Expert evaluation is double-blind. System A/B labels are randomized per evaluator.
 3. **Reproducible**: Every metric is a deterministic Python script, not a prompt-based judgment.
-4. **Minimal but sufficient**: 20 cases is enough for statistical significance, small enough for expert review.
+4. **Minimal but honest**: 20 cases can only detect large effects. v1.1.0 reports Wilson intervals, an exact McNemar test, and the minimum detectable difference instead of treating a one-case gap as an effect.
 
 ## Roadmap
 

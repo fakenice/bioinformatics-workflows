@@ -26,7 +26,8 @@ RESULTS_DIR = ROOT / "results"
 sys.path.insert(0, str(ROOT.parent))  # python/
 
 from evaluation.metrics import workflow_accuracy, knowledge_grounding, parameter_correctness
-from evaluation.metrics import reference_coverage, schema_validity
+from evaluation.metrics import reference_coverage, schema_validity, statistics
+from evaluation.metrics.workflow_accuracy import ABSTAIN
 
 
 def load_outputs(path: Path) -> dict[str, str]:
@@ -62,12 +63,14 @@ def run(outputs_path: Path | None = None, report_path: Path | None = None):
     results.append(reference_coverage.compute(outputs))
     results.append(schema_validity.compute(outputs))
 
-    # 汇总
-    scores = [r["score"] for r in results]
-    overall = round(sum(scores) / len(scores), 4) if scores else 0.0
+    # 汇总：0 分母指标记 None，不进入 overall
+    agg = aggregate_scores(results)
+    overall = agg["overall_score"]
 
     report = {
         "overall_score": overall,
+        "valid_metric_count": agg["valid_metric_count"],
+        "excluded_metrics": agg["excluded_metrics"],
         "scores": {r["metric"]: r["score"] for r in results},
         "details": results,
     }
@@ -83,15 +86,36 @@ def run(outputs_path: Path | None = None, report_path: Path | None = None):
     print("  Evaluation Complete")
     print(f"{'='*50}")
     for r in results:
-        bar = "█" * int(r["score"] * 20) + "░" * (20 - int(r["score"] * 20))
-        print(f"  {r['metric']:<28} {r['score']:.2%}  {bar}")
+        score = r["score"]
+        if score is None:
+            print(f"  {r['metric']:<28} N/A (0 denominator, excluded from overall)")
+        else:
+            bar = "█" * int(score * 20) + "░" * (20 - int(score * 20))
+            print(f"  {r['metric']:<28} {score:.2%}  {bar}")
     print(f"  {'─'*48}")
-    print(f"  {'Overall':<28} {overall:.2%}")
+    print(f"  {'Overall':<28} {overall:.2%}" if overall is not None else f"  {'Overall':<28} N/A")
     print(f"{'='*50}")
     print(f"  Report: {report_path}")
     print()
 
     return report
+
+
+def aggregate_scores(results: list[dict]) -> dict:
+    """Average only metrics with a real denominator.
+
+    A metric whose denominator is zero (0/0 schema checks, 0/0 parameters) has no
+    defined score. Treating it as 100% inflates the overall mean; it is reported
+    as N/A and excluded instead.
+    """
+    valid = [r for r in results if r.get("score") is not None]
+    excluded = [r["metric"] for r in results if r.get("score") is None]
+    overall = round(sum(r["score"] for r in valid) / len(valid), 4) if valid else None
+    return {
+        "overall_score": overall,
+        "valid_metric_count": len(valid),
+        "excluded_metrics": excluded,
+    }
 
 
 def _to_predictions(outputs: dict[str, str]) -> dict[str, str | None]:
@@ -133,11 +157,11 @@ def _to_predictions(outputs: dict[str, str]) -> dict[str, str | None]:
         if m:
             preds[cid] = m.group(1)
             continue
-        # 3.5 首段异常声明检测：回答开头明确说"not covered" → 直接标记 None
+        # 3.5 首段异常声明检测：回答开头明确说"not covered" → 直接标记 ABSTAIN
         if cid not in preds:
             first_paragraph = text.split("\n\n")[0] if "\n\n" in text else text[:200]
             if re.search(r'(?:not (?:currently )?cover|不在.*范围|暂不.*支持|不在当前知识库)', first_paragraph, re.IGNORECASE):
-                preds[cid] = None
+                preds[cid] = ABSTAIN
                 continue
         # 4. 关键词回退匹配（按 specificity 从高到低）
         if cid not in preds:
@@ -151,7 +175,7 @@ def _to_predictions(outputs: dict[str, str]) -> dict[str, str | None]:
         # 5. 兜底：关键词无匹配 + 文本声明"not covered" → None（与 expected=None 对齐）
         if cid not in preds:
             if re.search(r'(?:not (?:currently )?cover|不在.*范围|暂不.*支持|不在当前知识库)', text, re.IGNORECASE):
-                preds[cid] = None
+                preds[cid] = ABSTAIN
     # 后处理：ID 别名归一化
     alias_map = {"trio-wgs-denovo": "family-trio-wgs"}
     for cid in preds:
@@ -171,27 +195,56 @@ def compare(skill_path: Path, baseline_path: Path, report_path: Path | None = No
     baseline_outputs = load_outputs(baseline_path)
 
     # 共同指标：pipeline_selection_accuracy, parameter_correctness, reference_coverage
-    def _eval_compare(outputs: dict[str, str]) -> dict[str, float]:
-        preds = _to_predictions(outputs)
-        return {
-            "pipeline_selection_accuracy": workflow_accuracy.compute(preds)["score"],
-            "parameter_correctness": parameter_correctness.compute(outputs)["score"],
-            "reference_coverage": reference_coverage.compute(outputs)["score"],
-        }
+    skill_pipe = workflow_accuracy.compute(_to_predictions(skill_outputs))
+    base_pipe = workflow_accuracy.compute(_to_predictions(baseline_outputs))
 
-    skill_scores = _eval_compare(skill_outputs)
-    baseline_scores = _eval_compare(baseline_outputs)
+    skill_scores = {
+        "pipeline_selection_accuracy": skill_pipe["score"],
+        "parameter_correctness": parameter_correctness.compute(skill_outputs)["score"],
+        "reference_coverage": reference_coverage.compute(skill_outputs)["score"],
+    }
+    baseline_scores = {
+        "pipeline_selection_accuracy": base_pipe["score"],
+        "parameter_correctness": parameter_correctness.compute(baseline_outputs)["score"],
+        "reference_coverage": reference_coverage.compute(baseline_outputs)["score"],
+    }
+
+    # Paired comparison on the pipeline cases: the only difference that can be
+    # tested case-by-case. A one-case gap on 18 cases is not an effect.
+    skill_correct = {d["id"] for d in skill_pipe["details"] if d["ok"]}
+    base_correct = {d["id"] for d in base_pipe["details"] if d["ok"]}
+    skill_only = sorted(skill_correct - base_correct)
+    base_only = sorted(base_correct - skill_correct)
+    n_cases = min(skill_pipe["total"], base_pipe["total"])
+    baseline_p = base_pipe["score"] if base_pipe["score"] is not None else 0.5
+    pipeline_stats = {
+        "n_pipeline_cases": n_cases,
+        "skill_correct": len(skill_correct),
+        "baseline_correct": len(base_correct),
+        "skill_only": skill_only,
+        "baseline_only": base_only,
+        "mcnemar_exact_p": round(statistics.mcnemar_exact(len(skill_only), len(base_only)), 6),
+        "skill_wilson_95": skill_pipe["wilson_95"],
+        "baseline_wilson_95": base_pipe["wilson_95"],
+        "minimum_detectable_difference": (
+            round(statistics.minimum_detectable_difference(n_cases, p=baseline_p), 4)
+            if n_cases else None
+        ),
+        "mde_note": "Two independent proportions, normal approximation, alpha=0.05, power=0.8; "
+                    "a floor for what n cases could detect, not a paired-test power.",
+    }
 
     # 构建对比报告
     rows = []
     for metric in skill_scores:
         s = skill_scores[metric]
         b = baseline_scores[metric]
-        delta = round(s - b, 4)
-        if b > 0:
-            delta_pct = f"{round((s - b) / b * 100, 1):+.1f}%"
+        if s is None or b is None:
+            delta = None
+            delta_pct = "N/A"
         else:
-            delta_pct = "N/A" if s == 0 else "+∞"
+            delta = round(s - b, 4)
+            delta_pct = f"{round((s - b) / b * 100, 1):+.1f}%" if b > 0 else ("N/A" if s == 0 else "+∞")
         rows.append({
             "metric": metric,
             "prompt_only": b,
@@ -204,6 +257,7 @@ def compare(skill_path: Path, baseline_path: Path, report_path: Path | None = No
         "description": "Prompt Only vs Prompt + Skill 对比",
         "baseline_file": str(baseline_path),
         "skill_file": str(skill_path),
+        "pipeline_stats": pipeline_stats,
         "comparison": rows,
     }
 
@@ -222,7 +276,9 @@ def compare(skill_path: Path, baseline_path: Path, report_path: Path | None = No
         b = r["prompt_only"]
         s = r["prompt_plus_skill"]
         d = r["delta_pct"]
-        print(f"  {r['metric']:<30} {b:>11.2%} {s:>11.2%} {d:>12}")
+        b_txt = f"{b:>11.2%}" if b is not None else f"{'N/A':>11}"
+        s_txt = f"{s:>11.2%}" if s is not None else f"{'N/A':>11}"
+        print(f"  {r['metric']:<30} {b_txt} {s_txt} {d:>12}")
     print(f"{'='*70}")
     print(f"  Report: {report_path}")
     print()

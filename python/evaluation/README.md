@@ -15,7 +15,7 @@ python evaluation/runner.py
 
 | 指标 | 测量内容 | 类型 | 满分含义 |
 |------|----------|------|----------|
-| `workflow_accuracy` | 管线匹配是否选对 | 规则匹配 | 20/20 用例预期一致 |
+| `workflow_accuracy` | 管线匹配是否选对 | 规则匹配 | 18 道有预期管线的题全部一致；2 道跨域题单独统计拒答 |
 | `hallucination_rate` | 引用的工具/DOI/URL 是否在 KB 中 | KB 对照 | 所有引用均存在于知识库 |
 | `parameter_correctness` | 参数值是否在合理范围内 | 值域校验 | 所有参数均通过阈值检查 |
 | `reference_coverage` | 每个步骤是否有引用来源 | 正则扫描 | 所有步骤均附带参考文献 |
@@ -55,9 +55,24 @@ evaluation/
 
 3. 运行 `python evaluation/runner.py` 生成 `report.json`
 
+## 口径（v1.1.0）
+
+- 只有 `expected_pipeline_id` 非空的用例进入管线准确率分母；
+- 缺少预测 = `unparsed`，显式 `__uncovered__` = `abstained`，两者都不算对；
+- 预期为空的跨域题单独统计拒答，不混入管线分母；
+- 0 分母指标 `score=None`，由 runner 从 overall 剔除，不再按 100% 计入；
+- Wilson 区间、McNemar 精确检验与最小可检测差异直接写在报告里。
+
+## 测试
+
+```bash
+cd python
+python -m unittest discover -s evaluation/tests -v
+```
+
 ## 设计原则
 
 - **易执行**：一行命令，零配置
 - **零成本**：不需要 API Key、不需要 GPU、不需要人工专家
 - **确定性**：所有指标都是确定性规则检查，可复现
-- **JD 对齐**：每条指标直接对应罗氏生物医学数据与大模型实习生 JD 要求
+- **不夸大**：20 例只能测大效应，报告区间与 MDE，不把 1 例差异写成能力提升

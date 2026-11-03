@@ -93,11 +93,11 @@ def compute(outputs: dict[str, str]) -> dict[str, Any]:
             "violation_count": len(violations),
         })
 
-    correctness = 1.0 - (invalid_params / total_params) if total_params > 0 else 1.0
+    correctness = 1.0 - (invalid_params / total_params) if total_params > 0 else None
 
     return {
         "metric": "parameter_correctness",
-        "score": round(correctness, 4),
+        "score": round(correctness, 4) if correctness is not None else None,
         "total_params_checked": total_params,
         "invalid_params": invalid_params,
         "details": per_case,

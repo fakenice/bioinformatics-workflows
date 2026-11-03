@@ -57,11 +57,11 @@ def compute(outputs: dict[str, str]) -> dict[str, Any]:
             "has_any_reference": has_any_ref,
         })
 
-    coverage = total_found / total_expected if total_expected > 0 else 0.0
+    coverage = total_found / total_expected if total_expected > 0 else None
 
     return {
         "metric": "reference_coverage",
-        "score": round(coverage, 4),
+        "score": round(coverage, 4) if coverage is not None else None,
         "total_expected_sources": total_expected,
         "sources_found": total_found,
         "details": per_case,

@@ -137,13 +137,15 @@ Rebuild the index: `python python/vector_store/build_semantic_index.py --build`.
 
 | Metric | + Skill | Prompt Only | Δ |
 |--------|---------|-------------|---|
-| Pipeline Selection Accuracy | 90.0% | 85.0% | +5.0% |
-| Knowledge Grounding Rate | 96.8% | 94.0% | +2.9% |
-| Parameter Correctness | 100% | 100% | 0 |
-| Reference Coverage | 89.5% | 68.4% | +21.1% |
-| Schema Validity | 100% | 100% | 0 |
-| **Overall (5 metrics)** | **95.3%** | **89.5%** | **+5.8%** |
-| Workflow Completeness | 75.6% | 72.0% | +3.7% |
+| Pipeline Selection Accuracy (18 pipeline cases) | 94.4% (17/18) | 88.9% (16/18) | +5.5 pt |
+| Knowledge Grounding Rate | 96.8% | 94.0% | +2.9 pt |
+| Parameter Correctness | 100% (15 params) | 100% (3 params) | 0 |
+| Reference Coverage | 89.5% (17/19) | 68.4% (13/19) | +21.1 pt |
+| Schema Validity | N/A (0/0) | N/A (0/0) | — |
+| **Overall (4 valid metrics)** | **95.2%** | **87.8%** | **+7.4 pt** |
+| Workflow Completeness | 75.6% | 72.0% | +3.7 pt |
+
+The pipeline denominator is 18, not 20: TC-014 and TC-017 have no expected pipeline and are scored separately as out-of-scope abstention. Schema validity is 0/0 on this run and is excluded from the overall. The one-case pipeline difference is **not significant** (exact McNemar p = 1.0; Wilson 95% CI 74.2–99.0% vs 67.2–96.9%); see [`evaluation/results/v1.1.0_report.md`](evaluation/results/v1.1.0_report.md) for the corrected semantics and the MDE floor.
 
 ```bash
 cd python/evaluation

@@ -126,11 +126,11 @@ def compute(outputs: dict[str, str]) -> dict[str, Any]:
             "errors": case_errors,
         })
 
-    score = valid_jsons / total_json_outputs if total_json_outputs > 0 else 1.0
+    score = valid_jsons / total_json_outputs if total_json_outputs > 0 else None
 
     return {
         "metric": "schema_validity",
-        "score": round(score, 4),
+        "score": round(score, 4) if score is not None else None,
         "total_json_outputs": total_json_outputs,
         "valid_jsons": valid_jsons,
         "details": per_case,

@@ -1,0 +1,48 @@
+{
+  "description": "Prompt Only vs Prompt + Skill 对比",
+  "baseline_file": "evaluation\\results\\outputs_qwen3_14b_noskill.json",
+  "skill_file": "evaluation\\results\\outputs_qwen3_14b.json",
+  "pipeline_stats": {
+    "n_pipeline_cases": 18,
+    "skill_correct": 17,
+    "baseline_correct": 16,
+    "skill_only": [
+      "TC-002"
+    ],
+    "baseline_only": [],
+    "mcnemar_exact_p": 1.0,
+    "skill_wilson_95": [
+      0.7424220019799247,
+      0.9901250641690756
+    ],
+    "baseline_wilson_95": [
+      0.6719975513339578,
+      0.9689811315464172
+    ],
+    "minimum_detectable_difference": 0.2935,
+    "mde_note": "Two independent proportions, normal approximation, alpha=0.05, power=0.8; a floor for what n cases could detect, not a paired-test power."
+  },
+  "comparison": [
+    {
+      "metric": "pipeline_selection_accuracy",
+      "prompt_only": 0.8889,
+      "prompt_plus_skill": 0.9444,
+      "delta": 0.0555,
+      "delta_pct": "+6.2%"
+    },
+    {
+      "metric": "parameter_correctness",
+      "prompt_only": 1.0,
+      "prompt_plus_skill": 1.0,
+      "delta": 0.0,
+      "delta_pct": "+0.0%"
+    },
+    {
+      "metric": "reference_coverage",
+      "prompt_only": 0.6842,
+      "prompt_plus_skill": 0.8947,
+      "delta": 0.2105,
+      "delta_pct": "+30.8%"
+    }
+  ]
+}
