@@ -11,6 +11,9 @@ folded into one entry per phase.
   reported for the pipeline-selection metric)
 - Planned: thicken `references/qc_standards.md`, flagged as the main retrieval
   coverage gap in the evaluation report
+- 2026-11-18 Added `docs/DECISIONS.md`: retrieval-threshold, scoring and
+  evaluation-protocol decisions logged only where the repo carries written
+  evidence (commit dates cited)
 
 ## [v1.0] - 2026-11-18
 
