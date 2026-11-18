@@ -288,6 +288,17 @@ The current implementation exposes bioinformatics capabilities through a local P
 
 ---
 
+## External baselines
+
+`docs/external_baselines.md` collects published numbers we can be compared
+against, each re-checked against the source on 2026-11-18 with its citation and
+table, plus an explicit list of what is *not* comparable (task domain, outcome
+metric, denominator, significance correction). It also records two negative
+results: there is no published quantitative skill-ablation baseline in
+bioinformatics yet, and several citation leads we went in to verify
+(an nf-core "mass deployment" paper, two named reproduction tools) turned out
+to have no publication record at all, so they are listed as do-not-cite.
+
 ## How to cite
 
 Machine-readable metadata lives in `CITATION.cff` at the repo root (GitHub renders it in the

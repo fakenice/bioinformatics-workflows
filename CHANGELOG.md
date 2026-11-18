@@ -6,6 +6,12 @@ folded into one entry per phase.
 
 ## [Unreleased]
 
+- 2026-11-18 Added `docs/external_baselines.md`: published skill/knowledge-injection
+  gains re-checked against sources (Moll 2026 +4.3 pt, Yan 2026 +0.43, Phuong 2026
+  +6.28 pt mostly non-significant, SWE-bench oracle 1.96→4.8 %), registry
+  reproducibility baselines (Grayson ACM REP'23 51 %/88 % crash-free), nf-core
+  citation corrected to Langer 2025 / Ewels 2020, and three unverifiable leads
+  logged as do-not-cite; README gained an External-baselines section
 - Planned: expand the evaluation benchmark beyond 20 test cases and re-run the
   skill-vs-prompt ablation with per-metric uncertainty (McNemar/Wilson already
   reported for the pipeline-selection metric)
