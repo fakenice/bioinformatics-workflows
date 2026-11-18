@@ -288,6 +288,22 @@ The current implementation exposes bioinformatics capabilities through a local P
 
 ---
 
+## How to cite
+
+Machine-readable metadata lives in `CITATION.cff` at the repo root (GitHub renders it in the
+sidebar). If you reuse the pipeline knowledge base, please also credit the upstream
+pipelines it indexes.
+
+```bibtex
+@software{wu2026flowseq,
+  author  = {Wu, Yiting},
+  title   = {FlowSeq: A knowledge-constrained AI skill for standardized, traceable and reproducible bioinformatics workflow generation},
+  url     = {https://github.com/fakenice/bioinformatics-workflows}
+}
+```
+
+---
+
 ## License
 
 MIT

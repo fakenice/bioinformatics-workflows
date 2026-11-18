@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: >-
+  If you use FlowSeq (this repository) or the pipeline knowledge base it ships,
+  please cite it using the metadata below (a BibTeX entry is also provided in
+  the README).
+title: "FlowSeq: A knowledge-constrained AI skill for standardized, traceable and reproducible bioinformatics workflow generation"
+authors:
+  - family-names: Wu
+    given-names: Yiting
+repository-code: "https://github.com/fakenice/bioinformatics-workflows"
+url: "https://github.com/fakenice/bioinformatics-workflows"
+license: MIT

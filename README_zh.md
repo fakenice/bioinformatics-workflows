@@ -288,6 +288,20 @@ npm run preview
 
 ---
 
+## 引用方式
+
+机器可读引用元数据见仓库根目录 `CITATION.cff`（GitHub 会在侧栏自动展示引用建议）。若复用本仓库的流程知识库，请同时注明所索引的上游管线项目的出处与许可。
+
+```bibtex
+@software{wu2026flowseq,
+  author  = {Wu, Yiting},
+  title   = {FlowSeq: A knowledge-constrained AI skill for standardized, traceable and reproducible bioinformatics workflow generation},
+  url     = {https://github.com/fakenice/bioinformatics-workflows}
+}
+```
+
+---
+
 ## 许可协议
 
 MIT
