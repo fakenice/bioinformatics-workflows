@@ -12,9 +12,40 @@ folded into one entry per phase.
   reproducibility baselines (Grayson ACM REP'23 51 %/88 % crash-free), nf-core
   citation corrected to Langer 2025 / Ewels 2020, and three unverifiable leads
   logged as do-not-cite; README gained an External-baselines section
-- Planned: expand the evaluation benchmark beyond 20 test cases and re-run the
-  skill-vs-prompt ablation with per-metric uncertainty (McNemar/Wilson already
-  reported for the pipeline-selection metric)
+- 2026-11-19/20 Benchmark extended from 20 to 30 cases (TC-021…TC-030: RNA-seq
+  batch effect, tumour-only somatic WGS without a matched normal, low-biomass 16S
+  with a contaminated extraction blank, hg19 BAMs joint-genotyped with hg38
+  samples, single-sample `-ERC GVCF`, cross-ancestry PRS from European summary
+  statistics, single-replicate ChIP-seq and IDR, 10x Multiome and PacBio HiFi SV
+  as uncovered questions, 3,000/30,000 case-control GWAS) and the skill-vs-prompt
+  ablation re-run on both arms with local `qwen3:14b` — answers generated
+  2026-11-19 by `python/evaluation/generate_outputs.py` (now committed; it writes
+  a per-arm meta file with the system-prompt sha256), scored 2026-11-20. Added
+  `python/evaluation/analyze_ext30.py` (paired statistics, reuses
+  `runner._to_predictions` and the metric modules instead of re-scoring),
+  `evaluation/metrics/render_ext30_report.py` →
+  `evaluation/results/ext30_report.md` (renders the 30-case report from the
+  committed JSONs only, MISSING line instead of an invented value,
+  byte-reproducible; `test_ext30_stats.py` locks its numbers to the stats
+  artifact), `tests/test_ext30_stats.py` (14 tests, 28 in the evaluation suite),
+  and `results/report_ext30_stats.json`; `.gitignore` now carries `!` exceptions
+  for every ext30 artifact the README quotes. **The outcome is negative in both
+  directions**: the runner's 73.08% vs 80.77% is an extractor asymmetry (19/22 vs
+  19/22 on the 22 cases both arms resolve), no pipeline-selection difference is
+  resolvable at this size (2/4/3 discordant cases → a unanimous split still gives
+  p = 0.5/0.125/0.25), neither arm abstains on the 4
+  uncovered cases (0/4 credit in both), and `must_flag_traps` /
+  `must_apply_validations` are declared on all 30 cases but scored by no metric.
+  Fixed on the way: the first resolution helper passed the smaller discordant
+  count as the binomial total, which returned p = 0.0 and invented "minimum
+  detectable splits" — it now delegates to `statistics.mcnemar_exact`. README and
+  README_zh gained the "Extended 30-case run / 30 例扩展运行" section; the
+  `evaluation/benchmarks/test_cases.json` mirror was regenerated from the scored
+  file and its hardcoded `generated` stamp corrected (2026-11-02 → 2026-11-19,
+  with a comment to bump it when the case set changes). `OPTIMIZATION.md` known-issues
+  table gained rows 15–17 for the defects this run exposed (unscored declared case
+  fields, runner percentages computed on arm-specific denominators, dead
+  `PIPELINES_DIR`) and row 10 is marked partially resolved
 - Planned: thicken `references/qc_standards.md`, flagged as the main retrieval
   coverage gap in the evaluation report
 - 2026-11-18 Added `docs/DECISIONS.md`: retrieval-threshold, scoring and

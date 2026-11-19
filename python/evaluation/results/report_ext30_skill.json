@@ -1,0 +1,1431 @@
+{
+  "overall_score": 0.8355,
+  "valid_metric_count": 4,
+  "excluded_metrics": [
+    "schema_validity"
+  ],
+  "scores": {
+    "pipeline_selection_accuracy": 0.7308,
+    "knowledge_grounding_rate": 0.9681,
+    "parameter_correctness": 1.0,
+    "reference_coverage": 0.6429,
+    "schema_validity": null
+  },
+  "details": [
+    {
+      "metric": "pipeline_selection_accuracy",
+      "score": 0.7308,
+      "total": 26,
+      "correct": 19,
+      "unparsed": 4,
+      "abstained": 0,
+      "wilson_95": [
+        0.5391659658023868,
+        0.8629572447493261
+      ],
+      "out_of_scope": {
+        "total": 4,
+        "correct": 0,
+        "answered": 1,
+        "unparsed": 3,
+        "score": 0.0,
+        "details": [
+          {
+            "id": "TC-014",
+            "query": "Nextflow 管线里并行任务写同一个文件会有什么问题",
+            "expected": null,
+            "predicted": null,
+            "ok": false,
+            "status": "unparsed"
+          },
+          {
+            "id": "TC-017",
+            "query": "空间转录组分析流程，有什么标准推荐",
+            "expected": null,
+            "predicted": null,
+            "ok": false,
+            "status": "unparsed"
+          },
+          {
+            "id": "TC-028",
+            "query": "10x Multiome 的 GEX 加 ATAC 配对单细胞数据，有什么标准分析流程推荐",
+            "expected": null,
+            "predicted": "scrna-seq",
+            "ok": false,
+            "status": "answered"
+          },
+          {
+            "id": "TC-029",
+            "query": "PacBio HiFi 三代测序数据做结构变异检测，标准流程是哪个",
+            "expected": null,
+            "predicted": null,
+            "ok": false,
+            "status": "unparsed"
+          }
+        ]
+      },
+      "by_category": {
+        "dna": {
+          "total": 13,
+          "correct": 8,
+          "accuracy": 0.6154
+        },
+        "rna": {
+          "total": 3,
+          "correct": 2,
+          "accuracy": 0.6667
+        },
+        "epigenetics": {
+          "total": 4,
+          "correct": 4,
+          "accuracy": 1.0
+        },
+        "genetic_epi": {
+          "total": 2,
+          "correct": 2,
+          "accuracy": 1.0
+        },
+        "microbiome": {
+          "total": 3,
+          "correct": 2,
+          "accuracy": 0.6667
+        },
+        "cross_cutting": {
+          "total": 1,
+          "correct": 1,
+          "accuracy": 1.0
+        }
+      },
+      "details": [
+        {
+          "id": "TC-001",
+          "query": "我有 trio WGS 数据，想找 de novo 突变，给我标准流程",
+          "expected": "family-trio-wgs",
+          "predicted": "family-trio-wgs",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-002",
+          "query": "我想做全基因组关联分析，病例对照设计，用什么流程",
+          "expected": "gwas",
+          "predicted": "gwas",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-003",
+          "query": "肿瘤配对样本的体细胞突变检测标准流程",
+          "expected": "wgs-somatic",
+          "predicted": "wgs-somatic",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-004",
+          "query": "scRNA-seq 标准分析流程，从 fastq 到细胞注释",
+          "expected": "scrna-seq",
+          "predicted": "scrna-seq",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-005",
+          "query": "ChIP-seq 的标准流程是什么，怎么评估 peak 质量",
+          "expected": "chip-seq",
+          "predicted": "chip-seq",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-006",
+          "query": "孟德尔随机化标准流程怎么做，我需要灵敏度分析",
+          "expected": "mendelian-randomization",
+          "predicted": "mendelian-randomization",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-007",
+          "query": "WGBS 全基因组甲基化分析流程",
+          "expected": "wgbs",
+          "predicted": "wgbs",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-008",
+          "query": "16S rRNA 扩增子测序分析流程",
+          "expected": "16s",
+          "predicted": "16s",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-009",
+          "query": "宏基因组 shotgun 测序的标准分析流程",
+          "expected": "metagenomics",
+          "predicted": "16s",
+          "ok": false,
+          "status": "wrong"
+        },
+        {
+          "id": "TC-010",
+          "query": "WES 外显子组测序标准流程中，家系分析怎么做",
+          "expected": "wes",
+          "predicted": "family-trio-wgs",
+          "ok": false,
+          "status": "wrong"
+        },
+        {
+          "id": "TC-011",
+          "query": "PRS 多基因风险评分标准流程怎么算",
+          "expected": "prs",
+          "predicted": "prs",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-012",
+          "query": "罕见变异聚合分析标准流程，SKAT-O 方法",
+          "expected": "rare-variant",
+          "predicted": "rare-variant",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-013",
+          "query": "标准流程中 BQSR 这一步有什么常见的坑",
+          "expected": "wgs-germline",
+          "predicted": "wgs-germline",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-015",
+          "query": "RNA-seq 标准流程中差异表达分析怎么做",
+          "expected": "rna-seq",
+          "predicted": "rna-seq",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-016",
+          "query": "标准流程中 GWAS 人群分层怎么做",
+          "expected": "gwas",
+          "predicted": "gwas",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-018",
+          "query": "WGS 标准流程中如何保证可复现",
+          "expected": "wgs-germline",
+          "predicted": "wgs-germline",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-019",
+          "query": "标准流程中 ATAC-seq 和 ChIP-seq 有什么不同",
+          "expected": "chip-seq",
+          "predicted": "chip-seq",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-020",
+          "query": "帮我生成一个 trio WGS de novo 的 Nextflow 脚本",
+          "expected": "family-trio-wgs",
+          "predicted": null,
+          "ok": false,
+          "status": "unparsed"
+        },
+        {
+          "id": "TC-021",
+          "query": "我们做了三批 RNA-seq，batch1 八例、batch2 十例、batch3 九例，病例对照各半分布在每一批里。PCA 显示样本首先按测序批次分开，组间差异看不出来，DESeq2 的 design 应该怎么设？",
+          "expected": "rna-seq",
+          "predicted": null,
+          "ok": false,
+          "status": "unparsed"
+        },
+        {
+          "id": "TC-022",
+          "query": "只有肿瘤组织、没有配对外周血的 100x WGS，Mutect2 还能直接跑吗？胚系变异和克隆性造血怎么区分？",
+          "expected": "wgs-somatic",
+          "predicted": "wgs-somatic",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-023",
+          "query": "痰液 16S V3-V4 扩增子，阴性提取对照的读段数比临床样本还多，这种低生物量数据还能做组间差异分析吗",
+          "expected": "16s",
+          "predicted": "16s",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-024",
+          "query": "实验室十年前比对到 hg19 的 BAM，想和新测的 hg38 样本放一起做联合分型，可以直接 GenomicsDBImport 吗",
+          "expected": "wgs-germline",
+          "predicted": null,
+          "ok": false,
+          "status": "unparsed"
+        },
+        {
+          "id": "TC-025",
+          "query": "HaplotypeCaller 用 -ERC GVCF 跑完了单个样本就停下来，直接拿这个 GVCF 去注释变异有什么风险",
+          "expected": "wgs-germline",
+          "predicted": null,
+          "ok": false,
+          "status": "unparsed"
+        },
+        {
+          "id": "TC-026",
+          "query": "GWAS summary statistics 是欧洲人群的，我要在中国队列算多基因风险评分，直接丢给 PRSice-2 行不行",
+          "expected": "prs",
+          "predicted": "prs",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-027",
+          "query": "ChIP-seq 只做了一个生物学重复（输入对照齐全），peak calling 该注意什么，IDR 还能用吗",
+          "expected": "chip-seq",
+          "predicted": "chip-seq",
+          "ok": true,
+          "status": "correct"
+        },
+        {
+          "id": "TC-030",
+          "query": "病例 3000、对照 30000，用 PLINK 的卡方检验做 GWAS 会不会有问题？比例这么悬殊该用什么模型",
+          "expected": "gwas",
+          "predicted": "rare-variant",
+          "ok": false,
+          "status": "wrong"
+        }
+      ]
+    },
+    {
+      "metric": "knowledge_grounding_rate",
+      "score": 0.9681,
+      "ungrounded_rate": 0.0319,
+      "total_entities_cited": 658,
+      "total_ungrounded": 21,
+      "kb_size": {
+        "tools": 122,
+        "dois": 28,
+        "urls": 88
+      },
+      "details": [
+        {
+          "id": "TC-001",
+          "total_entities_cited": 33,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-002",
+          "total_entities_cited": 25,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-003",
+          "total_entities_cited": 70,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-004",
+          "total_entities_cited": 25,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-005",
+          "total_entities_cited": 13,
+          "hallucinated_entities": 1,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": [
+            "https://academic.oup.com/nar/article-abstract/37/14/e106/2484240"
+          ]
+        },
+        {
+          "id": "TC-006",
+          "total_entities_cited": 16,
+          "hallucinated_entities": 2,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": [
+            "https://pubmed.ncbi.nlm.nih.gov/25744766/",
+            "https://pubmed.ncbi.nlm.nih.gov/25344127/"
+          ]
+        },
+        {
+          "id": "TC-007",
+          "total_entities_cited": 19,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-008",
+          "total_entities_cited": 9,
+          "hallucinated_entities": 1,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": [
+            "https://www.ebi.ac.uk/metagenomics/"
+          ]
+        },
+        {
+          "id": "TC-009",
+          "total_entities_cited": 11,
+          "hallucinated_entities": 3,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": [
+            "https://ccb.jhu.edu/software/kraken2/",
+            "https://humann3.readthedocs.io/en/latest/",
+            "https://busco.ezlab.org/"
+          ]
+        },
+        {
+          "id": "TC-010",
+          "total_entities_cited": 27,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-011",
+          "total_entities_cited": 17,
+          "hallucinated_entities": 1,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": [
+            "https://wwwPRSice-2.org"
+          ]
+        },
+        {
+          "id": "TC-012",
+          "total_entities_cited": 24,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-013",
+          "total_entities_cited": 34,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-014",
+          "total_entities_cited": 0,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-015",
+          "total_entities_cited": 42,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-016",
+          "total_entities_cited": 32,
+          "hallucinated_entities": 1,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": [
+            "https://www.gcta.org/"
+          ]
+        },
+        {
+          "id": "TC-017",
+          "total_entities_cited": 16,
+          "hallucinated_entities": 4,
+          "hallucinated_tools": [
+            "spaceranger",
+            "spaceranger",
+            "spaceranger"
+          ],
+          "hallucinated_dois": [],
+          "hallucinated_urls": [
+            "https://david.ncifcrf.gov/"
+          ]
+        },
+        {
+          "id": "TC-018",
+          "total_entities_cited": 20,
+          "hallucinated_entities": 2,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": [
+            "https://www.htslib.org/",
+            "https://broadinstitute.github.io/picard/"
+          ]
+        },
+        {
+          "id": "TC-019",
+          "total_entities_cited": 42,
+          "hallucinated_entities": 2,
+          "hallucinated_tools": [
+            "tn5",
+            "tn5"
+          ],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-020",
+          "total_entities_cited": 20,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-021",
+          "total_entities_cited": 11,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-022",
+          "total_entities_cited": 26,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-023",
+          "total_entities_cited": 8,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-024",
+          "total_entities_cited": 25,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-025",
+          "total_entities_cited": 14,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-026",
+          "total_entities_cited": 28,
+          "hallucinated_entities": 3,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": [
+            "https://www.broadinstitute.org/mpg/prsice",
+            "https://wwwprsice2",
+            "https://www.broadinstitute.org/mpg/ldpred"
+          ]
+        },
+        {
+          "id": "TC-027",
+          "total_entities_cited": 10,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-028",
+          "total_entities_cited": 22,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        },
+        {
+          "id": "TC-029",
+          "total_entities_cited": 8,
+          "hallucinated_entities": 1,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": [
+            "https://www.pacb.com/wp-content/uploads/2022/06/PacBio-HiFi-Analysis-Guide.pdf"
+          ]
+        },
+        {
+          "id": "TC-030",
+          "total_entities_cited": 11,
+          "hallucinated_entities": 0,
+          "hallucinated_tools": [],
+          "hallucinated_dois": [],
+          "hallucinated_urls": []
+        }
+      ]
+    },
+    {
+      "metric": "parameter_correctness",
+      "score": 1.0,
+      "total_params_checked": 12,
+      "invalid_params": 0,
+      "details": [
+        {
+          "id": "TC-001",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-002",
+          "params_extracted": {
+            "MAF": [
+              0.01
+            ],
+            "HWE": [
+              1.0
+            ]
+          },
+          "violations": [],
+          "param_count": 2,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-003",
+          "params_extracted": {
+            "threads": [
+              8.0
+            ]
+          },
+          "violations": [],
+          "param_count": 1,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-004",
+          "params_extracted": {
+            "nCount_RNA": [
+              500.0
+            ]
+          },
+          "violations": [],
+          "param_count": 1,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-005",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-006",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-007",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-008",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-009",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-010",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-011",
+          "params_extracted": {
+            "MAF": [
+              0.01
+            ],
+            "HWE": [
+              1.0
+            ]
+          },
+          "violations": [],
+          "param_count": 2,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-012",
+          "params_extracted": {
+            "MAF": [
+              0.01
+            ]
+          },
+          "violations": [],
+          "param_count": 1,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-013",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-014",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-015",
+          "params_extracted": {
+            "log2FC": [
+              1.0
+            ]
+          },
+          "violations": [],
+          "param_count": 1,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-016",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-017",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-018",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-019",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-020",
+          "params_extracted": {
+            "threads": [
+              8.0
+            ]
+          },
+          "violations": [],
+          "param_count": 1,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-021",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-022",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-023",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-024",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-025",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-026",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-027",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-028",
+          "params_extracted": {
+            "resolution": [
+              0.5
+            ]
+          },
+          "violations": [],
+          "param_count": 1,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-029",
+          "params_extracted": {},
+          "violations": [],
+          "param_count": 0,
+          "violation_count": 0
+        },
+        {
+          "id": "TC-030",
+          "params_extracted": {
+            "MAF": [
+              0.01
+            ],
+            "threads": [
+              8.0
+            ]
+          },
+          "violations": [],
+          "param_count": 2,
+          "violation_count": 0
+        }
+      ]
+    },
+    {
+      "metric": "reference_coverage",
+      "score": 0.6429,
+      "total_expected_sources": 28,
+      "sources_found": 18,
+      "details": [
+        {
+          "id": "TC-001",
+          "expected_sources": [
+            "GATK Best Practices"
+          ],
+          "sources_found": [
+            "GATK Best Practices"
+          ],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-002",
+          "expected_sources": [
+            "SAIGE",
+            "PLINK"
+          ],
+          "sources_found": [
+            "SAIGE",
+            "PLINK"
+          ],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-003",
+          "expected_sources": [
+            "GATK Best Practices"
+          ],
+          "sources_found": [],
+          "sources_missed": [
+            "GATK Best Practices"
+          ],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-004",
+          "expected_sources": [
+            "Seurat"
+          ],
+          "sources_found": [
+            "Seurat"
+          ],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-005",
+          "expected_sources": [
+            "ENCODE"
+          ],
+          "sources_found": [
+            "ENCODE"
+          ],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-006",
+          "expected_sources": [
+            "TwoSampleMR"
+          ],
+          "sources_found": [
+            "TwoSampleMR"
+          ],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-007",
+          "expected_sources": [
+            "Bismark"
+          ],
+          "sources_found": [
+            "Bismark"
+          ],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-008",
+          "expected_sources": [
+            "QIIME2"
+          ],
+          "sources_found": [
+            "QIIME2"
+          ],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-009",
+          "expected_sources": [
+            "MetaPhlAn",
+            "HUMAnN"
+          ],
+          "sources_found": [
+            "HUMAnN"
+          ],
+          "sources_missed": [
+            "MetaPhlAn"
+          ],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-010",
+          "expected_sources": [
+            "GATK Best Practices"
+          ],
+          "sources_found": [
+            "GATK Best Practices"
+          ],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-011",
+          "expected_sources": [
+            "PRSice",
+            "LDpred2"
+          ],
+          "sources_found": [
+            "PRSice",
+            "LDpred2"
+          ],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-012",
+          "expected_sources": [
+            "SKAT"
+          ],
+          "sources_found": [
+            "SKAT"
+          ],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-013",
+          "expected_sources": [],
+          "sources_found": [],
+          "sources_missed": [],
+          "has_any_reference": false
+        },
+        {
+          "id": "TC-014",
+          "expected_sources": [],
+          "sources_found": [],
+          "sources_missed": [],
+          "has_any_reference": false
+        },
+        {
+          "id": "TC-015",
+          "expected_sources": [
+            "edgeR",
+            "DESeq2"
+          ],
+          "sources_found": [
+            "edgeR",
+            "DESeq2"
+          ],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-016",
+          "expected_sources": [],
+          "sources_found": [],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-017",
+          "expected_sources": [],
+          "sources_found": [],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-018",
+          "expected_sources": [],
+          "sources_found": [],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-019",
+          "expected_sources": [
+            "ENCODE"
+          ],
+          "sources_found": [
+            "ENCODE"
+          ],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-020",
+          "expected_sources": [
+            "GATK Best Practices"
+          ],
+          "sources_found": [],
+          "sources_missed": [
+            "GATK Best Practices"
+          ],
+          "has_any_reference": false
+        },
+        {
+          "id": "TC-021",
+          "expected_sources": [
+            "nf-core/rnaseq",
+            "DESeq2"
+          ],
+          "sources_found": [
+            "DESeq2"
+          ],
+          "sources_missed": [
+            "nf-core/rnaseq"
+          ],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-022",
+          "expected_sources": [
+            "GATK4 Somatic"
+          ],
+          "sources_found": [],
+          "sources_missed": [
+            "GATK4 Somatic"
+          ],
+          "has_any_reference": false
+        },
+        {
+          "id": "TC-023",
+          "expected_sources": [
+            "QIIME 2 + DADA2"
+          ],
+          "sources_found": [],
+          "sources_missed": [
+            "QIIME 2 + DADA2"
+          ],
+          "has_any_reference": false
+        },
+        {
+          "id": "TC-024",
+          "expected_sources": [
+            "GATK Best Practices"
+          ],
+          "sources_found": [],
+          "sources_missed": [
+            "GATK Best Practices"
+          ],
+          "has_any_reference": false
+        },
+        {
+          "id": "TC-025",
+          "expected_sources": [
+            "GATK Best Practices"
+          ],
+          "sources_found": [],
+          "sources_missed": [
+            "GATK Best Practices"
+          ],
+          "has_any_reference": false
+        },
+        {
+          "id": "TC-026",
+          "expected_sources": [
+            "PRSice-2"
+          ],
+          "sources_found": [
+            "PRSice-2"
+          ],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-027",
+          "expected_sources": [
+            "ENCODE"
+          ],
+          "sources_found": [],
+          "sources_missed": [
+            "ENCODE"
+          ],
+          "has_any_reference": false
+        },
+        {
+          "id": "TC-028",
+          "expected_sources": [],
+          "sources_found": [],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-029",
+          "expected_sources": [],
+          "sources_found": [],
+          "sources_missed": [],
+          "has_any_reference": true
+        },
+        {
+          "id": "TC-030",
+          "expected_sources": [
+            "SAIGE"
+          ],
+          "sources_found": [],
+          "sources_missed": [
+            "SAIGE"
+          ],
+          "has_any_reference": true
+        }
+      ]
+    },
+    {
+      "metric": "schema_validity",
+      "score": null,
+      "total_json_outputs": 0,
+      "valid_jsons": 0,
+      "details": [
+        {
+          "id": "TC-001",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-002",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-003",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-004",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-005",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-006",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-007",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-008",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-009",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-010",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-011",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-012",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-013",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-014",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-015",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-016",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-017",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-018",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-019",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-020",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-021",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-022",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-023",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-024",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-025",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-026",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-027",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-028",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-029",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        },
+        {
+          "id": "TC-030",
+          "has_json_output": false,
+          "valid": null,
+          "errors": [
+            "no JSON found in output"
+          ]
+        }
+      ]
+    }
+  ]
+}

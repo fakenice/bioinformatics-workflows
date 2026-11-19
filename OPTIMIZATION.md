@@ -45,11 +45,14 @@
 | 7 | 语义检索仅 55 chunks、sklearn TF-IDF 级实现，与 "semantic search" 定位有差距 | ✅ 已解决（2026-09）：79 chunks + `BAAI/bge-small-zh-v1.5`（fastembed, 512-dim）真语义，`SemanticSearcher` 默认启用 |
 | 8 | **覆盖缺口**：SKILL.md 快速参考表中的 ATAC-seq、长读长、免疫组库、结构变异**没有对应管线 JSON**；空间转录组、Hi-C 等热门方向未覆盖 | 按 Step 5 回写流程补齐 |
 | 9 | 工具版本（FastQC 0.12.1 等）手工维护，无上游版本跟踪机制，会静默过期 | GitHub Action 定期抓取 Bioconda / nf-core 容器 tag |
-| 10 | 评估仅 20 cases × 单模型（qwen3:14b），消融对照样本偏小；生成的 `.nf` 无 `nextflow lint` 端到端验证 | 扩充用例与模型矩阵；CI 加 lint |
+| 10 | 评估仅 20 cases × 单模型（qwen3:14b），消融对照样本偏小；生成的 `.nf` 无 `nextflow lint` 端到端验证 | 扩充用例与模型矩阵；CI 加 lint。**部分已解决（2026-11-19/20）**：用例扩至 30 例、两臂重跑并出配对统计（`python/evaluation/results/report_ext30_stats.json`、`evaluation/results/ext30_report.md`）；样本仍偏小（n=26 判不出管线选择差异），模型仍单一 |
 | 11 | 前端无单元测试；`PipelineManager.tsx` 26KB 单文件 | 引入 vitest；拆分组件 |
 | 12 | 关键词子串匹配存在误报风险（`mr`/`tf`/`go`/`chip` 等短词易误命中普通词汇） | 改为词边界/分词匹配，或由语义检索替代 |
 | 13 | **命名冲突双重撞名**：① 仓库名与 `GoekeLab/bioinformatics-workflows`（工作流管理器 PoC，教程文章多）撞名，搜索被淹没；② 产品名 "FlowSeq" 与 NLP 论文（Flow Matching 文本生成，arXiv 1909.02480）撞名，SEO 被稀释 | 见「P1 → 命名与可发现性」专项方案（短期零成本弥补，改名作为后备选项） |
 | 14 | **陈旧硬编码路径**：`start_flowseq.bat`/`update.bat` 写死 `E:\skills\bioinformatics-workflows`（当前工作区在 F 盘，脚本已失效）；`python/vector_data/documents.json` 中 15 处 `source_file` 指向 `E:\skills\...` | bat 改用 `%~dp0` 相对定位；documents.json 改存仓库相对路径 |
+| 15 | **用例声明的字段没人打分**（2026-11-19/20 复跑时发现）：`must_flag_traps`、`must_apply_validations` 在 30 例上都有、被 0 个指标模块引用；`must_include_params` 声明 37 条约束，但 `parameter_correctness.py` 只对自己硬编码的 13 个参数名做区间检查（本轮检出 12 与 17 处），未出现的声明参数不判错 | 要么把三类声明接进指标（新增"声明项覆盖率"打分），要么从用例 schema 里删掉不打算评的字段；在此之前 README 与 `ext30_report.md` 必须继续写明 100% 的真实含义（`test_ext30_stats.py::KnownMetricGaps` 锁定这条） |
+| 16 | **runner 的百分比相减不可比**：管线 id 抽取器在两臂各自解析出不同子集（+ Skill 4 个在域用例未解析、纯 Prompt 2 个），`runner.py --baseline` 因此把非配对的两个分母相减，报出 −9.5 pt | 短期：以 `analyze_ext30.py` 的三种配对口径为准；长期：`runner` 直接打印同一分母上的配对结果与 McNemar/Wilson，或在未解析时输出可审计的 `predicted=null` 计数 |
+| 17 | **死代码**：`python/evaluation/metrics/parameter_correctness.py:12` 的 `PIPELINES_DIR` 指向仓库里不存在的目录且从未被读取 | 删除该常量，或按 #15 用它去核对声明参数 |
 
 ---
 

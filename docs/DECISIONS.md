@@ -52,3 +52,30 @@
 
 12. **CHANGELOG 以 git 历史为准重写**：旧 changelog 带 AIGC frontmatter 且计数与
     git 历史矛盾，整体替换而非续写。
+
+## 2026-11-19/20（30 例扩展运行）
+
+13. **扩样本后结论一律改用配对口径重算，不沿用 runner 的百分比相减**：两臂各自的分母
+    会被抽取器左右（+ Skill 有 4 个在域用例没解析出管线 id、纯 Prompt 只有 2 个），
+    `runner.py --baseline` 因此报出 −9.5 pt；`analyze_ext30.py` 在两臂共同解析的 22 例上
+    给 19/22 vs 19/22，另附"未解析算错"与"正文出现预期 id"两种口径
+    （`python/evaluation/analyze_ext30.py`、`results/report_ext30_stats.json`）。
+14. **用配对灵敏度替代非配对 MDE 作为能否下结论的判据**：n = 26 时非配对下限是 38.9 pt，
+    只作量级参考；真正决定能不能说话的是不一致用例数——管线选择的三种口径分别是 2、4、3
+    例，全部偏向同一边也只有 p = 0.5、0.125、0.25，够不到 α = 0.05；参考文献覆盖率有 9 例
+    不一致，理论上判得出 8:1（p = 0.039），但实测 4:5 给 p = 1.0。所以对外口径是
+    "两个方向都测不出 skill 效应"，不是"skill 拖后腿"
+    （`python/evaluation/metrics/statistics.py` 的 `mcnemar_exact`；`test_ext30_stats.py`
+    逐条锁住这些数）。
+15. **未覆盖题的拒答分支仍未被真实输出验证，如实登记**：4 道无预期管线的题里 + Skill 答
+    1 道、纯 Prompt 答 3 道，两边拒答加分都是 0/4，`workflow_accuracy.py` 的
+    `__uncovered__` 路径不能声称已检验。
+16. **用例声明但没人评的字段不算成绩**：`must_flag_traps`、`must_apply_validations` 在 30
+    例上都有、被 0 个指标模块引用；`must_include_params` 声明 37 条约束，参数指标只对 13
+    个硬编码参数名做区间检查（本轮检出 12 与 17 处），其 `PIPELINES_DIR` 常量指向不存在
+    的目录。README 里的 100% 必须写成"抽出来的数都没越界"，并由
+    `test_unscored_case_fields_are_documented_as_gaps` 强制文档点名这些缺口。
+17. **可引用的运行产物用 `.gitignore` 例外入库，延续 v1.1.0 先例**：ext30 的
+    outputs/meta/report/comparison/stats 全部加 `!` 行；文档镜像
+    `evaluation/benchmarks/test_cases.json` 仍由 `sync_doc_cases.py` 生成、不手改，其
+    `generated` 保持常量，以便再生成逐字节可复现。

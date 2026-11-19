@@ -1,0 +1,13 @@
+{
+  "model": "qwen3:14b",
+  "arm": "noskill",
+  "system_prompt_sha256": "3851f8ec415a79d931f063d1372772a2fcacf89ee0093d9c8a995bd97a5085ef",
+  "system_prompt_chars": 158,
+  "temperature": 0.3,
+  "think": false,
+  "n_cases": 30,
+  "cases_file": "python\\evaluation\\benchmarks\\test_cases.json",
+  "generated_at": "2026-11-19T23:55:10",
+  "wall_seconds_total_this_invocation": 2208.8,
+  "endpoint": "http://localhost:11434/api/generate"
+}

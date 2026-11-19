@@ -372,5 +372,201 @@
     "must_apply_validations": [],
     "category": "dna",
     "difficulty": "medium"
+  },
+  {
+    "id": "TC-021",
+    "query": "我们做了三批 RNA-seq，batch1 八例、batch2 十例、batch3 九例，病例对照各半分布在每一批里。PCA 显示样本首先按测序批次分开，组间差异看不出来，DESeq2 的 design 应该怎么设？",
+    "expected_pipeline_id": "rna-seq",
+    "expected_sources": [
+      "nf-core/rnaseq",
+      "DESeq2"
+    ],
+    "must_include_tools": [
+      "DESeq2 (R/Bioconductor)",
+      "STAR"
+    ],
+    "must_include_params": [
+      "batch",
+      "adjusted p-value"
+    ],
+    "must_flag_traps": [],
+    "must_apply_validations": [],
+    "category": "rna",
+    "difficulty": "hard"
+  },
+  {
+    "id": "TC-022",
+    "query": "只有肿瘤组织、没有配对外周血的 100x WGS，Mutect2 还能直接跑吗？胚系变异和克隆性造血怎么区分？",
+    "expected_pipeline_id": "wgs-somatic",
+    "expected_sources": [
+      "GATK4 Somatic"
+    ],
+    "must_include_tools": [
+      "GATK Mutect2",
+      "GATK FilterMutectCalls"
+    ],
+    "must_include_params": [
+      "tumor_only",
+      "gnomAD"
+    ],
+    "must_flag_traps": [
+      "sample-contamination"
+    ],
+    "must_apply_validations": [],
+    "category": "dna",
+    "difficulty": "hard"
+  },
+  {
+    "id": "TC-023",
+    "query": "痰液 16S V3-V4 扩增子，阴性提取对照的读段数比临床样本还多，这种低生物量数据还能做组间差异分析吗",
+    "expected_pipeline_id": "16s",
+    "expected_sources": [
+      "QIIME 2 + DADA2"
+    ],
+    "must_include_tools": [
+      "QIIME 2 dada2 denoise-paired",
+      "ANCOM-BC / LEfSe"
+    ],
+    "must_include_params": [
+      "ASV"
+    ],
+    "must_flag_traps": [
+      "sample-contamination"
+    ],
+    "must_apply_validations": [],
+    "category": "microbiome",
+    "difficulty": "hard"
+  },
+  {
+    "id": "TC-024",
+    "query": "实验室十年前比对到 hg19 的 BAM，想和新测的 hg38 样本放一起做联合分型，可以直接 GenomicsDBImport 吗",
+    "expected_pipeline_id": "wgs-germline",
+    "expected_sources": [
+      "GATK Best Practices"
+    ],
+    "must_include_tools": [
+      "GATK GenomicsDBImport",
+      "GATK HaplotypeCaller"
+    ],
+    "must_include_params": [
+      "hg38"
+    ],
+    "must_flag_traps": [
+      "reference-genome-mismatch"
+    ],
+    "must_apply_validations": [
+      "mixing-reference-genome-builds"
+    ],
+    "category": "dna",
+    "difficulty": "hard"
+  },
+  {
+    "id": "TC-025",
+    "query": "HaplotypeCaller 用 -ERC GVCF 跑完了单个样本就停下来，直接拿这个 GVCF 去注释变异有什么风险",
+    "expected_pipeline_id": "wgs-germline",
+    "expected_sources": [
+      "GATK Best Practices"
+    ],
+    "must_include_tools": [
+      "GATK HaplotypeCaller",
+      "GATK GenotypeGVCFs"
+    ],
+    "must_include_params": [
+      "GVCF"
+    ],
+    "must_flag_traps": [
+      "gatk-gvcf-mode-misuse"
+    ],
+    "must_apply_validations": [
+      "gatk-gvcf-without-joint-genotyping"
+    ],
+    "category": "dna",
+    "difficulty": "medium"
+  },
+  {
+    "id": "TC-026",
+    "query": "GWAS summary statistics 是欧洲人群的，我要在中国队列算多基因风险评分，直接丢给 PRSice-2 行不行",
+    "expected_pipeline_id": "prs",
+    "expected_sources": [
+      "PRSice-2"
+    ],
+    "must_include_tools": [
+      "PRSice-2",
+      "LDpred2 (bigsnpr)"
+    ],
+    "must_include_params": [
+      "p-value",
+      "LD"
+    ],
+    "must_flag_traps": [],
+    "must_apply_validations": [],
+    "category": "genetic_epi",
+    "difficulty": "hard"
+  },
+  {
+    "id": "TC-027",
+    "query": "ChIP-seq 只做了一个生物学重复（输入对照齐全），peak calling 该注意什么，IDR 还能用吗",
+    "expected_pipeline_id": "chip-seq",
+    "expected_sources": [
+      "ENCODE"
+    ],
+    "must_include_tools": [
+      "MACS2 / MACS3",
+      "deepTools"
+    ],
+    "must_include_params": [
+      "FRiP",
+      "IDR"
+    ],
+    "must_flag_traps": [],
+    "must_apply_validations": [
+      "peak-calling-without-idr"
+    ],
+    "category": "epigenetics",
+    "difficulty": "hard"
+  },
+  {
+    "id": "TC-028",
+    "query": "10x Multiome 的 GEX 加 ATAC 配对单细胞数据，有什么标准分析流程推荐",
+    "expected_pipeline_id": null,
+    "expected_sources": [],
+    "must_include_tools": [],
+    "must_include_params": [],
+    "must_flag_traps": [],
+    "must_apply_validations": [],
+    "category": "uncovered",
+    "difficulty": "hard"
+  },
+  {
+    "id": "TC-029",
+    "query": "PacBio HiFi 三代测序数据做结构变异检测，标准流程是哪个",
+    "expected_pipeline_id": null,
+    "expected_sources": [],
+    "must_include_tools": [],
+    "must_include_params": [],
+    "must_flag_traps": [],
+    "must_apply_validations": [],
+    "category": "uncovered",
+    "difficulty": "medium"
+  },
+  {
+    "id": "TC-030",
+    "query": "病例 3000、对照 30000，用 PLINK 的卡方检验做 GWAS 会不会有问题？比例这么悬殊该用什么模型",
+    "expected_pipeline_id": "gwas",
+    "expected_sources": [
+      "SAIGE"
+    ],
+    "must_include_tools": [
+      "SAIGE",
+      "REGENIE",
+      "PLINK"
+    ],
+    "must_include_params": [
+      "MAF"
+    ],
+    "must_flag_traps": [],
+    "must_apply_validations": [],
+    "category": "dna",
+    "difficulty": "medium"
   }
 ]

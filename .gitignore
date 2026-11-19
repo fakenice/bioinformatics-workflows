@@ -12,4 +12,17 @@ python/evaluation/results/*.json
 !python/evaluation/results/report_qwen3_14b_v1_1.json
 !python/evaluation/results/report_qwen3_14b_noskill_v1_1.json
 !python/evaluation/results/comparison_report_v1_1.json
+# 30-case extended run: the README quotes these, so they must be citable files
+!python/evaluation/results/outputs_ext30_skill.json
+!python/evaluation/results/outputs_ext30_noskill.json
+!python/evaluation/results/outputs_ext30_skill_meta.json
+!python/evaluation/results/outputs_ext30_noskill_meta.json
+!python/evaluation/results/report_ext30_skill.json
+!python/evaluation/results/report_ext30_noskill.json
+!python/evaluation/results/report_ext30_comparison.json
+!python/evaluation/results/report_ext30_stats.json
 python/.hf_cache/
+
+# console transcripts of the ext30 generation runs; provenance lives in the
+# tracked outputs_ext30_*_meta.json sidecars instead (repo tracks no .log files)
+python/evaluation/results/*.log

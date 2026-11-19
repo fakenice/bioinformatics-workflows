@@ -38,7 +38,10 @@ def main() -> int:
     payload = {
         "meta": {
             "version": "1.1.0",
-            "generated": "2026-11-02",
+            # Bump this constant when the scored case set changes, so the mirror
+            # does not claim a date older than its own content. It stays a literal
+            # (never a runtime timestamp) so re-running the sync is byte-reproducible.
+            "generated": "2026-11-19",
             "description": (
                 "Generated mirror of python/evaluation/benchmarks/test_cases.json, "
                 "which is the file the runner scores. Do not edit by hand; run "

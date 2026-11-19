@@ -1,0 +1,208 @@
+{
+  "protocol": {
+    "cases_file": "E:\\Desktop\\projects\\bioinformatics-workflows\\python\\evaluation\\benchmarks\\test_cases.json",
+    "n_cases": 30,
+    "in_scope_cases": 26,
+    "out_of_scope_cases": [
+      "TC-014",
+      "TC-017",
+      "TC-028",
+      "TC-029"
+    ],
+    "scoring_path": "runner.load_outputs -> runner._to_predictions -> workflow_accuracy.compute; reference coverage read back from the committed per-case report details",
+    "modes": {
+      "strict_intersection": "only in-scope cases the extractor resolved in both arms",
+      "all_in_scope": "every in-scope case; unresolved counts as incorrect",
+      "lenient": "all in-scope, plus credit when the expected pipeline id (or its alias) appears as a standalone token anywhere in the answer text"
+    }
+  },
+  "pipeline_selection": {
+    "as_runner_prints_it": {
+      "skill": {
+        "correct": 19,
+        "denominator": 26
+      },
+      "noskill": {
+        "correct": 21,
+        "denominator": 26
+      },
+      "why_this_is_not_the_paired_test": "the two 26-case denominators are not the same 26 cases: the extractor resolved a different subset in each arm"
+    },
+    "strict_intersection": {
+      "mode": "strict",
+      "n": 22,
+      "skill_correct": 19,
+      "noskill_correct": 19,
+      "skill_rate": 0.8636,
+      "noskill_rate": 0.8636,
+      "delta_skill_minus_noskill_pt": 0.0,
+      "skill_wilson_95": [
+        0.6666,
+        0.9525
+      ],
+      "noskill_wilson_95": [
+        0.6666,
+        0.9525
+      ],
+      "discordant": {
+        "skill_only": 1,
+        "noskill_only": 1
+      },
+      "mcnemar_exact_two_sided_p": 1.0,
+      "paired_resolution": {
+        "n_discordant": 2,
+        "minimum_split": null,
+        "p_at_minimum_split": 0.5,
+        "note": "even a unanimous 2:0 split of the observed discordant pairs gives p=0.5; this run cannot detect any paired difference of this size at alpha=0.05"
+      }
+    },
+    "all_in_scope": {
+      "mode": "strict",
+      "n": 26,
+      "skill_correct": 19,
+      "noskill_correct": 21,
+      "skill_rate": 0.7308,
+      "noskill_rate": 0.8077,
+      "delta_skill_minus_noskill_pt": -7.69,
+      "skill_wilson_95": [
+        0.5392,
+        0.863
+      ],
+      "noskill_wilson_95": [
+        0.6212,
+        0.9149
+      ],
+      "discordant": {
+        "skill_only": 1,
+        "noskill_only": 3
+      },
+      "mcnemar_exact_two_sided_p": 0.625,
+      "paired_resolution": {
+        "n_discordant": 4,
+        "minimum_split": null,
+        "p_at_minimum_split": 0.125,
+        "note": "even a unanimous 4:0 split of the observed discordant pairs gives p=0.125; this run cannot detect any paired difference of this size at alpha=0.05"
+      }
+    },
+    "lenient": {
+      "mode": "lenient",
+      "n": 26,
+      "skill_correct": 19,
+      "noskill_correct": 22,
+      "skill_rate": 0.7308,
+      "noskill_rate": 0.8462,
+      "delta_skill_minus_noskill_pt": -11.54,
+      "skill_wilson_95": [
+        0.5392,
+        0.863
+      ],
+      "noskill_wilson_95": [
+        0.6647,
+        0.9385
+      ],
+      "discordant": {
+        "skill_only": 0,
+        "noskill_only": 3
+      },
+      "mcnemar_exact_two_sided_p": 0.25,
+      "paired_resolution": {
+        "n_discordant": 3,
+        "minimum_split": null,
+        "p_at_minimum_split": 0.25,
+        "note": "even a unanimous 3:0 split of the observed discordant pairs gives p=0.25; this run cannot detect any paired difference of this size at alpha=0.05"
+      }
+    }
+  },
+  "extractor_audit": {
+    "unparsed_in_scope": {
+      "skill": {
+        "TC-020": {
+          "status": "unparsed",
+          "predicted": null,
+          "expected": "family-trio-wgs",
+          "text_names_expected_id": false
+        },
+        "TC-021": {
+          "status": "unparsed",
+          "predicted": null,
+          "expected": "rna-seq",
+          "text_names_expected_id": false
+        },
+        "TC-024": {
+          "status": "unparsed",
+          "predicted": null,
+          "expected": "wgs-germline",
+          "text_names_expected_id": false
+        },
+        "TC-025": {
+          "status": "unparsed",
+          "predicted": null,
+          "expected": "wgs-germline",
+          "text_names_expected_id": false
+        }
+      },
+      "noskill": {
+        "TC-024": {
+          "status": "unparsed",
+          "predicted": null,
+          "expected": "wgs-germline",
+          "text_names_expected_id": false
+        },
+        "TC-025": {
+          "status": "unparsed",
+          "predicted": null,
+          "expected": "wgs-germline",
+          "text_names_expected_id": false
+        }
+      }
+    },
+    "unparsed_counts": {
+      "skill": 4,
+      "noskill": 2
+    },
+    "reading": "unparsed means the extractor could not pull a pipeline id out of the answer, not that generation failed; see text_names_expected_id for how many of those answers in fact name the expected pipeline"
+  },
+  "out_of_scope_abstention": {
+    "skill": {
+      "TC-014": "unparsed",
+      "TC-017": "unparsed",
+      "TC-028": "answered",
+      "TC-029": "unparsed"
+    },
+    "noskill": {
+      "TC-014": "unparsed",
+      "TC-017": "answered",
+      "TC-028": "answered",
+      "TC-029": "answered"
+    }
+  },
+  "reference_coverage": {
+    "n_cases_with_expected_sources": 23,
+    "skill_cases_with_any_hit": 17,
+    "noskill_cases_with_any_hit": 18,
+    "skill_wilson_95": [
+      0.5353,
+      0.8745
+    ],
+    "noskill_wilson_95": [
+      0.581,
+      0.9034
+    ],
+    "discordant": {
+      "skill_only": 4,
+      "noskill_only": 5
+    },
+    "mcnemar_exact_two_sided_p": 1.0,
+    "paired_resolution": {
+      "n_discordant": 9,
+      "minimum_split": "8:1",
+      "p_at_minimum_split": 0.039062
+    },
+    "note": "case-level any-source hit; the runner aggregate 18/28 vs 17/28 averages source-level recall inside cases and is not paired"
+  },
+  "independent_two_sample_mde": {
+    "n_per_arm": 26,
+    "at_p0.5_alpha0.05_power0.80": 0.3885,
+    "caveat": "unpaired sensitivity floor, kept only as a magnitude reference; the paired design's resolution is pipeline_selection.*.paired_resolution"
+  }
+}

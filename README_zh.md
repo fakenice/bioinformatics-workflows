@@ -131,7 +131,7 @@
 
 ### 质量评估
 
-6 个确定性指标对 Skill 输出做自动化评估，零 API 调用，一键运行。评测模型为 **qwen3:14b**（本地 Ollama，`think=False`，`temperature=0.3`），共 20 个测试用例（14 条管线 + 6 个跨域/边界用例），在无联网基线上做 **Prompt + Skill**（SKILL.md 作 system prompt）vs **纯 Prompt**（中性 system prompt）消融对比——隔离 SKILL.md 纯文本贡献，无联网时两组差异纯粹来自 skill 指令本身，控制变量更干净。
+6 个确定性指标对 Skill 输出做自动化评估，零 API 调用，一键运行。评测模型为 **qwen3:14b**（本地 Ollama，`think=False`，`temperature=0.3`），共 20 个测试用例（14 条管线 + 6 个跨域/边界用例；用例集现已扩至 30 例，扩展运行见下文单独一节），在无联网基线上做 **Prompt + Skill**（SKILL.md 作 system prompt）vs **纯 Prompt**（中性 system prompt）消融对比——隔离 SKILL.md 纯文本贡献，无联网时两组差异纯粹来自 skill 指令本身，控制变量更干净。
 
 **消融结果**（Prompt + Skill vs 纯 Prompt，无联网基线）：
 
@@ -152,6 +152,14 @@ cd python/evaluation
 python runner.py                     # 5 项指标评估（results/outputs.json）
 python runner.py results/outputs_qwen3_14b.json -o results/report_qwen3_14b_baseline.json
 python runner.py results/outputs_qwen3_14b_noskill.json -o results/report_qwen3_14b_noskill.json
+
+# 30 例扩展运行（见下文小节）：重生成回答、评分、配对统计与渲染报告
+python generate_outputs.py --cases benchmarks/test_cases.json --out results/outputs_ext30_skill.json --arm skill
+python generate_outputs.py --cases benchmarks/test_cases.json --out results/outputs_ext30_noskill.json --arm noskill
+python runner.py results/outputs_ext30_skill.json -o results/report_ext30_skill.json
+python runner.py results/outputs_ext30_noskill.json -o results/report_ext30_noskill.json
+python analyze_ext30.py              # 配对统计 -> results/report_ext30_stats.json
+python ../../evaluation/metrics/render_ext30_report.py   # -> evaluation/results/ext30_report.md
 ```
 
 流程完整性（第 6 项指标）通过 `metrics/workflow_completeness.py` 单独评估——18 个管线用例 × 标准步骤覆盖率（共 82 个标准步骤）。
@@ -173,7 +181,32 @@ python runner.py results/outputs_qwen3_14b_noskill.json -o results/report_qwen3_
 
 `results/` 目录下的其他文件属于**另外的运行，不要与上表混用**：`report.json`（综合 0.9823）与 `comparison_report_final.json` 是更早的对比运行，且报告文件内部没有记录各自的输入 outputs。本文引用上表作为对外结论，因为它是控制最严格的设定——同一模型、无联网基线、唯一变量是 SKILL.md。
 
-实现：`python/evaluation/` — 20 个测试用例 × 6 项确定性指标，无外部 API，无需人工标注。
+实现：`python/evaluation/` — 30 个测试用例 × 6 项确定性指标，无外部 API，无需人工标注。上表是已公开的 v1.1.0 运行（20 例）；2026-11-19 新增的 10 例（TC-021…TC-030）单独列在下面，因为它们改变了结论。这 10 例分别是：三批次 RNA-seq 的批次效应与 DESeq2 design 怎么设（TC-021）、只有肿瘤组织、没有配对外周血的体细胞 WGS（TC-022）、提取阴性对照读段数超过临床样本的低生物量 16S（TC-023）、十年前比对到 hg19 的 BAM 要和新测的 hg38 样本一起联合分型（TC-024）、单样本 `-ERC GVCF` 直接拿去注释的风险（TC-025）、用欧洲人群 summary statistics 在中国队列算多基因风险评分（TC-026）、只有一个生物学重复的 ChIP-seq 还能不能用 IDR（TC-027）、以及 10x Multiome 配对单细胞和 PacBio HiFi 结构变异这两道知识库未覆盖的题（TC-028—TC-029）、病例 3000/对照 30000 用 PLINK 卡方检验的 GWAS（TC-030）。
+
+#### 30 例扩展运行（回答生成于 2026-11-19，评分于 2026-11-20）：skill 的效应测不出来
+
+模型与设置与上表完全一致（本地 Ollama `qwen3:14b`，`think=False`，`temperature=0.3`）；两组唯一差别是 system prompt 用 SKILL.md（7,475 字符，`system_prompt_sha256` 33d105c1…）还是中性提示（158 字符，3851f8ec…）。生成耗时 2,353.3 秒（+ Skill）与 2,208.8 秒（纯 Prompt）。溯源文件：`results/outputs_ext30_*_meta.json`；两组各自的原始评分：`results/report_ext30_{skill,noskill}.json`；配对统计：`results/report_ext30_stats.json`，由 `python analyze_ext30.py` 重新生成——它复用 `runner._to_predictions` 和各指标模块，不重新打分。本节的渲染版一并入库：[`evaluation/results/ext30_report.md`](evaluation/results/ext30_report.md)（`python evaluation/metrics/render_ext30_report.py`）——它只读上述四个 JSON 与两份 meta，逐项打印分子分母，产物缺失时写 MISSING 而不填数，内部不含任何写死的结果数字，重跑逐字节一致。
+
+| 指标 | + Skill | 纯 Prompt | 配对检验说明 |
+|---|---|---|---|
+| 管线选择（runner 口径，各用自己的分母） | 73.08%（19/26） | 80.77%（21/26） | 不是配对比较，见下 |
+| 管线选择，两组都解析出答案的 22 例 | 19/22 | 19/22 | McNemar b/c = 1/1，p = 1.0 |
+| 管线选择，全部 26 例（未解析算错） | 19/26 | 21/26 | b/c = 1/3，p = 0.625 |
+| 管线选择，宽松口径（正文出现预期 id） | 19/26 | 22/26 | b/c = 0/3，p = 0.25 |
+| 参考文献覆盖率，按用例任一来源命中 | 17/23 | 18/23 | b/c = 4/5，p = 1.0 |
+| 知识落地率（实体级，不可配对） | 637/658 = 96.81% | 721/772 = 93.39% | 没有逐用例配对定义 |
+| 参数正确率 | 100%（检出 12 个） | 100%（检出 17 个） | 区分不了两组 |
+| Schema 有效性 | 0/0，已剔除 | 0/0，已剔除 | 提示词从未要求 JSON |
+| 综合（4 项有效指标） | 83.55% | 83.72% | — |
+
+四条结论，全部是负结果：
+
+1. **看起来的 −9.5 pt 劣势是抽取器造成的。** `runner.py --baseline` 相减的两个百分比来自*不同*的 26 例分母：关键词/正则抽取器在 + Skill 组有 4 个在域用例没解析出管线 id，纯 Prompt 组只有 2 个（`extractor_audit.unparsed_in_scope`）。在两组都解析出答案的 22 例上，结果是 19/22 对 19/22。同一抽取不对称再加上逐用例配对之后，v1.1.0 那个 +21.1 pt 的参考文献覆盖率优势也没能复现：本轮来源级覆盖是 18/28 对 17/28，配对到用例层面是 17/23 对 18/23，p = 1.0。
+2. **管线选择这一项，本轮样本量判不出任何差异。** 三种口径的不一致用例数是 2、4、3，全部偏向同一边也只有 p = 0.5、0.125、0.25（每行的 `paired_resolution`），怎么排都到不了 α = 0.05。参考文献覆盖率有 9 例不一致，理论上能判出 8:1（p = 0.039），但本轮实测是 4:5，p = 1.0。非配对口径下的灵敏度下限是 38.9 pt 差距，所以任何结论都要对着配对灵敏度这条线检查，而不是那个数字。诚实的说法是"本轮两个方向都测不出 skill 效应"，不是"skill 拖后腿"。
+3. **两组都不会在未覆盖题上主动拒答。** 4 道没有预期管线的题里，+ Skill 组答了 1 道、留下 3 道未解析，纯 Prompt 组答了 3 道、留下 1 道；拒答加分两边都是 0/4，所以 `workflow_accuracy.py` 里的 `__uncovered__` 分支至今没有被真实模型输出检验过。
+4. **若干用例声明的字段根本没被评分，它们的 100% 比看起来轻。** `must_flag_traps` 与 `must_apply_validations` 在 30 个用例上都有，但没有任何指标模块引用。`must_include_params` 声明了 37 条参数约束，而参数指标只对硬编码的 13 个参数名做区间检查、且只统计正文里恰好出现的次数（+ Skill 检出 12 处、纯 Prompt 检出 17 处）；它的 `PIPELINES_DIR` 常量（`metrics/parameter_correctness.py:12`）指向一个不存在的目录，也从未被读取。所以 100% 的含义是"抽出来的数都没越界"，不是"声明的参数都用了"。
+
+引用已公开运行请用上面的 v1.1.0 表，引用 30 例运行请用本节。两者都不能作为 skill 有增益的证据：20 例上管线选择只差 1 例、本就不显著（p = 1.0），30 例上配对之后两个方向表面的差异都被消掉了。
 
 ### Agent 工作流
 
