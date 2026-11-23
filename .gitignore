@@ -26,3 +26,6 @@ python/.hf_cache/
 # console transcripts of the ext30 generation runs; provenance lives in the
 # tracked outputs_ext30_*_meta.json sidecars instead (repo tracks no .log files)
 python/evaluation/results/*.log
+
+*.lnk
+start_flowseq.bat
